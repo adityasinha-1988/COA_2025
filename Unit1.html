@@ -1,0 +1,729 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>COA Unit 1: Basic Structure of Computers</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .section-card {
+            background-color: white;
+            border-radius: 0.75rem;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            border: 1px solid #e5e7eb;
+        }
+        .analogy-box {
+            background-color: #f3f4f6;
+            border-left: 4px solid #4f46e5;
+            padding: 1.5rem;
+            border-radius: 0.5rem;
+            margin-top: 1.5rem;
+        }
+        .key-takeaway {
+            background-color: #eef2ff;
+            border-left: 4px solid #6366f1;
+            padding: 1.5rem;
+            border-radius: 0.5rem;
+            margin-top: 1.5rem;
+        }
+        .tool-box {
+            background-color: #f9fafb;
+            border: 1px solid #e5e7eb;
+            padding: 2rem;
+            border-radius: 0.75rem;
+            margin-top: 2rem;
+        }
+        .slider {
+            -webkit-appearance: none; width: 100%; height: 8px; border-radius: 5px; background: #d1d5db; outline: none; opacity: 0.7; -webkit-transition: .2s; transition: opacity .2s;
+        }
+        .slider:hover { opacity: 1; }
+        .slider::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 20px; height: 20px; border-radius: 50%; background: #4f46e5; cursor: pointer; }
+        .slider::-moz-range-thumb { width: 20px; height: 20px; border-radius: 50%; background: #4f46e5; cursor: pointer; }
+        .register, .memory-loc {
+            border: 1px solid #ccc; padding: 8px; margin-bottom: 8px; border-radius: 4px; font-family: monospace; transition: all 0.3s ease;
+        }
+        .highlight {
+            background-color: #6366f1 !important; color: white !important; transform: scale(1.05); box-shadow: 0 0 15px rgba(99, 102, 241, 0.5);
+        }
+        .bloom-level {
+            padding: 0.75rem;
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+        }
+        .code-line {
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+            transition: background-color: 0.3s;
+        }
+        .code-line.active {
+            background-color: #dbeafe;
+        }
+        .timeline-item {
+            position: relative;
+            padding-left: 2.5rem;
+            padding-bottom: 2rem;
+            border-left: 2px solid #e5e7eb;
+        }
+        .timeline-item:last-child {
+            border-left: 2px solid transparent;
+        }
+        .timeline-marker {
+            position: absolute;
+            left: -0.5rem;
+            top: 0;
+            width: 1rem;
+            height: 1rem;
+            border-radius: 9999px;
+            background-color: #6366f1;
+            border: 2px solid white;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800">
+
+    <!-- Header -->
+    <header class="bg-white shadow-sm sticky top-0 z-10">
+        <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            <h1 class="text-2xl md:text-3xl font-bold text-gray-900">Computer Organization & Architecture</h1>
+            <p class="text-md text-indigo-600">Unit 1: Basic Structure of Computers</p>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+        <!-- Why Study COA Section -->
+        <section id="why-study-coa" class="section-card">
+            <h2 class="text-2xl font-bold mb-4">Why Study Computer Organization & Architecture? 🚀</h2>
+            <p>For a Computer Science student, COA is not just another subject; it is the foundation that connects the world of software to the world of hardware. It transforms "magic" into "logic." By understanding the concepts in this course, you will learn the answers to fundamental questions: How does code actually run on a screen? How are modern phones so powerful? How do AI models work so quickly? Let's explore the importance of COA from various perspectives.</p>
+            
+            <h3 class="text-xl font-semibold mt-6 mb-2">1. Core Engineering Skills: What You Will Learn</h3>
+            <ul class="list-disc list-inside space-y-2 mt-4">
+                <li><strong>Performance Optimization:</strong> You will learn that code quality depends not just on logic, but on how it runs on hardware. Understanding concepts like cache memory, pipelining, and memory hierarchy allows you to write code that can run 10 to 100 times faster.</li>
+                <li><strong>Deep Debugging:</strong> When a program crashes due to issues like memory corruption or a stack overflow, knowledge of COA is essential. Understanding registers, memory addresses, and assembly language helps you solve problems that are "impossible" for others.</li>
+                <li><strong>System-Level Thinking:</strong> You will learn to see software as part of an entire system, understanding its impact on the CPU, memory, and I/O devices.</li>
+            </ul>
+
+            <h3 class="text-xl font-semibold mt-6 mb-2">2. Foundation for Advanced Learning</h3>
+            <ul class="list-disc list-inside space-y-2 mt-4">
+                <li><strong>Operating Systems:</strong> Concepts like virtual memory, process scheduling, and interrupt handling are directly tied to hardware architecture.</li>
+                <li><strong>Compilers:</strong> COA explains the logic behind how a compiler translates a high-level language into machine code based on the Instruction Set Architecture (ISA).</li>
+                <li><strong>Cybersecurity:</strong> Modern attacks like Buffer Overflow, Spectre, and Meltdown operate at the hardware level. A deep knowledge of COA is essential to design secure systems.</li>
+            </ul>
+
+            <h3 class="text-xl font-semibold mt-6 mb-2">3. Gateway to Innovation: The Path to Research</h3>
+            <p class="mt-2">If you want to shape the future of technology, COA opens doors to research in areas like:</p>
+            <ul class="list-disc list-inside space-y-2 mt-4">
+                <li><strong>Future Architectures:</strong> With the slowing of Moore's Law for clock speeds, focus has shifted to multi-core processors, GPUs, and specialized hardware for AI/ML (like Google's TPU).</li>
+                <li><strong>Cutting-Edge Fields:</strong> Quantum Computing and Neuromorphic Computing are exploring new methods of computation, all based on new kinds of computer architecture.</li>
+            </ul>
+
+            <h3 class="text-xl font-semibold mt-6 mb-2">4. Career Opportunities: Your Value in the Job Market</h3>
+            <p class="mt-2">Knowledge of COA prepares you for high-paying, in-demand jobs that go far beyond standard application development. Here is a guide to some of the most exciting domains:</p>
+            
+            <div class="analogy-box mt-4">
+                <h4 class="font-semibold text-lg mb-2">Chip Design & Semiconductors</h4>
+                <p><strong>What it is:</strong> Designing the next generation of processors (CPUs, GPUs), memory controllers, and specialized chips.</p>
+                <p class="mt-2"><strong>Leading Companies:</strong> Intel, AMD, NVIDIA, ARM, Qualcomm, Apple, Samsung, TSMC.</p>
+                <p class="mt-2"><strong>Career Path & Skillset for CS Students:</strong>
+                    <ul class="list-disc list-inside space-y-1 mt-2 pl-4">
+                        <li><strong>Design Verification (DV) Engineer:</strong> Write sophisticated software (testbenches) to find bugs in a hardware design before manufacturing. Requires a deep understanding of the architecture to create effective tests.</li>
+                        <li><strong>RTL Design Engineer:</strong> Write code in Hardware Description Languages (Verilog/VHDL) to describe the functionality of processor components.</li>
+                        <li><strong>CPU/GPU Architect (often requires a Master's/PhD):</strong> Make high-level design decisions for future processors, modeling performance and trade-offs.</li>
+                        <li><strong>Firmware/BIOS Engineer:</strong> Write the low-level code that initializes hardware before the operating system starts.</li>
+                    </ul>
+                </p>
+            </div>
+
+            <div class="analogy-box mt-4">
+                <h4 class="font-semibold text-lg mb-2">Embedded Systems & IoT</h4>
+                <p><strong>What it is:</strong> Building the brains for smart devices like watches, self-driving cars, drones, and medical instruments.</p>
+                <p class="mt-2"><strong>Leading Companies:</strong> Apple, Google (Nest), Tesla, Bosch, Samsung.</p>
+                <p class="mt-2"><strong>Career Path & Skillset:</strong> Requires strong C/C++ skills, a deep understanding of microcontrollers (e.g., ARM Cortex-M), and a resource-constrained mindset focused on optimizing for minimal memory and power usage.</p>
+            </div>
+
+            <div class="analogy-box mt-4">
+                <h4 class="font-semibold text-lg mb-2">System Software Development</h4>
+                <p><strong>What it is:</strong> Creating foundational software like operating systems, compilers, and device drivers.</p>
+                <p class="mt-2"><strong>Leading Companies:</strong> Google (Android/ChromeOS), Microsoft (Windows), Apple (macOS/iOS), Red Hat.</p>
+                <p class="mt-2"><strong>Career Path & Skillset:</strong> Become an expert in C/C++ and Assembly. Deep knowledge of OS theory and compiler design is key. Contributions to open-source projects (like the Linux kernel) are highly valued.</p>
+            </div>
+
+            <h3 class="text-xl font-semibold mt-6 mb-2">5. Impact on Humanity</h3>
+            <ul class="list-disc list-inside space-y-2 mt-4">
+                <li><strong>Technology for All:</strong> Innovations like the RISC architecture led to ARM processors, which made the mobile revolution possible.</li>
+                <li><strong>Solving Global Challenges:</strong> Supercomputers, used for climate change modeling and drug discovery, are designed based on architectural principles.</li>
+                <li><strong>Ethical Responsibility:</strong> Understanding hardware helps you design technology that is not only powerful but also energy-efficient and secure.</li>
+            </ul>
+        </section>
+
+        <!-- Pedagogy Section -->
+        <section id="pedagogy" class="section-card">
+            <h2 class="text-2xl font-bold mb-4">Our Learning Framework 🎓</h2>
+            <p>Before we dive into the technical content, it's important to understand the educational framework for this course. This will help you understand <em>how</em> you are expected to learn and <em>what</em> you will be able to do by the end of the semester.</p>
+            <div class="mt-6"><h3 class="text-xl font-semibold text-indigo-700 mb-2">Outcome-Based Education (OBE)</h3><p>This course follows an Outcome-Based Education model. Instead of just focusing on the topics we will cover, OBE focuses on the <strong>outcomes</strong>—the specific skills and knowledge you will possess after completing the course.</p></div>
+            <div class="mt-6"><h3 class="text-xl font-semibold text-indigo-700 mb-2">The Washington Accord: Your Global Advantage</h3><p>The OBE framework is part of a larger commitment to global standards in engineering education. Manipal University Jaipur is a signatory to the <strong>Washington Accord</strong>, an international agreement between bodies responsible for accrediting engineering degree programs.</p><div class="key-takeaway"><p><strong>What this means for you:</strong> Your engineering degree is recognized by the other signatory countries (including the USA, UK, Australia, Canada, etc.) as substantially equivalent to their own. This provides a significant advantage for your career and further studies on a global platform.</p></div></div>
+            <div class="mt-8 grid md:grid-cols-3 gap-8 items-center"><div class="md:col-span-2"><h3 class="text-xl font-semibold text-indigo-700 mb-2">Bloom's Taxonomy: The Levels of Learning</h3><p>To define the depth of understanding required for each outcome, we use Bloom's Taxonomy. It's a hierarchy of cognitive skills, from basic recall to advanced creation.</p><div class="mt-4 p-4 bg-gray-50 rounded-lg border"><div class="bloom-level bg-purple-100 text-purple-800"><strong>6. Create:</strong> Produce new or original work.</div><div class="bloom-level bg-blue-100 text-blue-800"><strong>5. Evaluate:</strong> Justify a stand or decision.</div><div class="bloom-level bg-green-100 text-green-800"><strong>4. Analyze:</strong> Draw connections among ideas.</div><div class="bloom-level bg-yellow-100 text-yellow-800"><strong>3. Apply:</strong> Use information in new situations.</div><div class="bloom-level bg-orange-100 text-orange-800"><strong>2. Understand:</strong> Explain ideas or concepts.</div><div class="bloom-level bg-red-100 text-red-800"><strong>1. Remember:</strong> Recall facts and basic concepts.</div></div></div><div class="text-center"><a href="https://en.wikipedia.org/wiki/Benjamin_Bloom" target="_blank"><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/3/3d/Benjamin_Bloom.jpg/440px-Benjamin_Bloom.jpg" alt="[Benjamin Bloom ki Photo]" class="rounded-full mx-auto shadow-lg w-48 h-48 object-cover" onerror="this.onerror=null;this.src='https://placehold.co/200x200/e0e7ff/4338ca?text=B.+Bloom';"></a><p class="mt-2 text-sm text-gray-600 font-semibold">Benjamin Bloom, Educational Psychologist</p></div></div>
+            <div class="mt-8"><h3 class="text-xl font-semibold text-indigo-700 mb-2">How We Learn: Catering to Different Styles</h3><p>People learn in different ways. This course will provide materials that cater to various learning styles to help everyone grasp the concepts effectively.</p><div class="grid md:grid-cols-3 gap-6 mt-4"><div class="analogy-box !border-green-500 text-center"><p class="text-4xl">👁️</p><h4 class="font-semibold mt-2">Visual Learners (Seeing)</h4><p class="text-sm mt-1">Learn best through diagrams, charts, and watching demonstrations. The visualizers and diagrams on this site are for you.</p></div><div class="analogy-box !border-blue-500 text-center"><p class="text-4xl">🎧</p><h4 class="font-semibold mt-2">Auditory Learners (Hearing)</h4><p class="text-sm mt-1">Learn best by listening to lectures and participating in discussions. Pay close attention during class sessions.</p></div><div class="analogy-box !border-orange-500 text-center"><p class="text-4xl">🖐️</p><h4 class="font-semibold mt-2">Kinesthetic Learners (Doing)</h4><p class="text-sm mt-1">Learn best by doing, building, and interacting. The interactive tools on this site are designed for hands-on learning.</p></div></div></div>
+        </section>
+
+        <!-- Section 1: Introduction -->
+        <section id="introduction" class="section-card">
+            <h2 class="text-2xl font-bold mb-4">1. Architecture vs. Organization: The Blueprint and the Build 🏛️</h2>
+            <p>To begin our journey, we must understand the two fundamental viewpoints of a computer system: its architecture and its organization. They are distinct but deeply related.</p>
+            <div class="analogy-box"><h3 class="font-semibold text-lg mb-2">The House Analogy</h3><p><strong class="text-indigo-700">Computer Architecture</strong> is the <em class="font-semibold">architect's blueprint</em>. It defines what the house must do—its functional properties. For a computer, this is the <strong>Instruction Set Architecture (ISA)</strong>. It's the programmer's view of the machine—the "what."</p><p class="mt-4"><strong class="text-indigo-700">Computer Organization</strong> is the <em class="font-semibold">engineering and construction process</em>. It defines how the blueprint is realized. For a computer, this means asking: Is the processor pipelined? How is the cache structured? It's the "how."</p></div>
+            
+            <h2 class="text-2xl font-bold mt-8 mb-4">A Timeline of Performance & Pioneers 🚀</h2>
+            <p class="mb-6">The history of computing is a relentless quest for more performance, driven by technological breakthroughs and the brilliant minds behind them.</p>
+            <div class="timeline">
+                <div class="timeline-item">
+                    <div class="timeline-marker"></div>
+                    <h3 class="font-semibold text-lg">The Stored-Program Computer (1945)</h3>
+                    <p class="text-gray-600">Pioneered by **John von Neumann**, the concept of storing both instructions and data in the same memory (the Von Neumann architecture) becomes the blueprint for nearly all modern computers.</p>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-marker"></div>
+                    <h3 class="font-semibold text-lg">The Transistor Era (1947-1950s)</h3>
+                    <p class="text-gray-600">Invented by **John Bardeen, Walter Brattain, and William Shockley** at Bell Labs. Transistors replaced bulky, unreliable vacuum tubes, making computers smaller, faster, and commercially viable.</p>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-marker"></div>
+                    <h3 class="font-semibold text-lg">The Integrated Circuit (IC) Era (1958-1960s)</h3>
+                    <p class="text-gray-600">Co-invented by **Jack Kilby** (Texas Instruments) and **Robert Noyce** (Fairchild Semiconductor). Placing many transistors on a single silicon chip (the IC) was the key to miniaturization and mass production.</p>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-marker"></div>
+                    <h3 class="font-semibold text-lg">The First Microprocessor (1971)</h3>
+                    <p class="text-gray-600">The **Intel 4004**, the first commercial microprocessor, was developed by a team including **Federico Faggin, Ted Hoff, and Stanley Mazor** at Intel. This "computer on a chip" ignited the personal computer revolution.</p>
+                </div>
+                 <div class="timeline-item">
+                    <div class="timeline-marker"></div>
+                    <h3 class="font-semibold text-lg">The Multi-Core Era (2005-Present)</h3>
+                    <p class="text-gray-600">As clock speeds hit a physical wall, companies like **Intel** and **AMD** shifted focus to placing multiple processor "cores" on a single chip, making parallelism the primary driver of performance.</p>
+                </div>
+                 <div class="timeline-item">
+                    <div class="timeline-marker"></div>
+                    <h3 class="font-semibold text-lg">India's Supercomputing Journey (1991)</h3>
+                    <p class="text-gray-600">India's journey into high-performance computing was marked by the development of the **PARAM 8000**, the country's first supercomputer, by **C-DAC (Centre for Development of Advanced Computing)** led by Dr. Vijay P. Bhatkar. This initiative established India as a key player in supercomputing.</p>
+                </div>
+            </div>
+
+            <div class="analogy-box mt-8">
+                <h3 class="font-semibold text-lg mb-2">Moore's Law</h3>
+                <p>Co-founder of Intel, Gordon Moore, observed in 1965 that the number of transistors on a microchip doubles approximately every two years, while the cost is halved. This observation, now known as Moore's Law, has been the primary driver of the digital revolution.</p>
+                <a href="https://ourworldindata.org/moores-law" target="_blank" class="block text-center bg-indigo-100 text-indigo-800 p-3 rounded-lg hover:bg-indigo-200 transition mt-4">
+                    View Interactive Moore's Law Chart at Our World in Data
+                </a>
+            </div>
+        </section>
+
+        <!-- Section 2: Data Representation -->
+        <section id="data-representation" class="section-card">
+            <h2 class="text-2xl font-bold mb-4">2. Data Representation: Bits, Bytes, and Numbers 🔢</h2>
+            <p>Computers store all information—numbers, characters, instructions—as strings of binary digits (bits). Understanding how this data is represented is fundamental to computer organization.</p>
+            <h3 class="text-xl font-semibold mt-6 mb-2">Integers</h3>
+            <p>Positive integers are represented in standard binary. For negative numbers, modern computers use the **2's complement** system. This method makes arithmetic circuits (like adders) simpler, as they don't need to handle subtraction separately. A number is negated by inverting all its bits (1's complement) and then adding 1.</p>
+            <h3 class="text-xl font-semibold mt-6 mb-2">Characters</h3>
+            <p>Characters are represented using a standard code, where each character is assigned a unique binary number. The most common standard is **ASCII (American Standard Code for Information Interchange)**, which uses 7 or 8 bits per character.</p>
+
+            <div class="tool-box">
+                <h3 class="text-xl font-bold mb-4 text-center">8-bit 2's Complement Calculator 🧮</h3>
+                <p class="text-center text-gray-600 mb-6">Enter decimal numbers between -128 and 127 to see their 8-bit 2's complement binary representation and perform arithmetic.</p>
+                <div class="grid md:grid-cols-2 gap-6 items-start">
+                    <div>
+                        <label for="opA" class="block font-medium">Operand A (Decimal)</label>
+                        <input type="number" id="opA" value="5" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2">
+                        <p class="mt-2 font-mono text-center bg-gray-200 p-2 rounded" id="binA">00000101</p>
+                    </div>
+                    <div>
+                        <label for="opB" class="block font-medium">Operand B (Decimal)</label>
+                        <input type="number" id="opB" value="12" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2">
+                        <p class="mt-2 font-mono text-center bg-gray-200 p-2 rounded" id="binB">00001100</p>
+                    </div>
+                </div>
+                <div class="mt-4 flex justify-center space-x-4">
+                    <button id="addBtn" class="bg-indigo-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-indigo-700 transition">Add</button>
+                    <button id="subBtn" class="bg-gray-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-gray-600 transition">Subtract</button>
+                </div>
+                <div class="mt-6 border-t pt-4">
+                    <h4 class="text-lg font-semibold text-center">Result</h4>
+                    <p class="mt-2 font-mono text-center text-2xl bg-gray-200 p-3 rounded" id="binResult">00010001</p>
+                    <p class="mt-2 text-center text-lg" id="decResult">Decimal: 17</p>
+                    <div class="flex justify-center space-x-8 mt-4">
+                        <p>Carry Out: <span id="carryFlag" class="font-bold font-mono px-2 py-1 rounded bg-red-200 text-red-800">0</span></p>
+                        <p>Overflow: <span id="overflowFlag" class="font-bold font-mono px-2 py-1 rounded bg-red-200 text-red-800">0</span></p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 3: Functional Units -->
+        <section id="functional-units" class="section-card">
+            <h2 class="text-2xl font-bold mb-4">3. The Core Components: Functional Units 🧩</h2>
+            <p>Every computer is built from three fundamental components: Processor, Memory, and I/O.</p>
+            <h3 class="text-xl font-bold mt-8 mb-4">The Memory Hierarchy: Balancing Speed, Size, and Cost 🔺</h3>
+            <p>No single memory technology can be simultaneously fast, large, and cheap. Therefore, computers use a hierarchy of memory types to create a balanced system. The table below shows the trade-offs at each level.</p>
+            <div class="overflow-x-auto mt-6">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr>
+                            <th class="border-b-2 border-gray-200 p-4 font-bold">Level</th>
+                            <th class="border-b-2 border-gray-200 p-4 font-bold">Core Technology & Latest Milestone</th>
+                            <th class="border-b-2 border-gray-200 p-4 font-bold">Typical Access Time</th>
+                            <th class="border-b-2 border-gray-200 p-4 font-bold">Typical Capacity</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="hover:bg-gray-50">
+                            <td class="border-b border-gray-200 p-4"><strong>Registers</strong></td>
+                            <td class="border-b border-gray-200 p-4"><strong>SRAM (Static RAM):</strong> Made of flip-flops (6-8 transistors per bit).<br><em>Latest:</em> Integrated into CPUs on the latest process node (e.g., 3nm), advancements happen with each new processor generation (2024-2025).</td>
+                            <td class="border-b border-gray-200 p-4">&lt; 1 ns</td>
+                            <td class="border-b border-gray-200 p-4">&lt; 1 KB</td>
+                        </tr>
+                        <tr class="hover:bg-gray-50">
+                            <td class="border-b border-gray-200 p-4"><strong>L1/L2 Cache</strong></td>
+                            <td class="border-b border-gray-200 p-4"><strong>SRAM:</strong> Fast and on-chip, but less dense than DRAM.<br><em>Latest:</em> 3D V-Cache technology (AMD, 2022) where L3 cache is stacked vertically on top of the CPU die, dramatically increasing cache size.</td>
+                            <td class="border-b border-gray-200 p-4">1-10 ns</td>
+                            <td class="border-b border-gray-200 p-4">1-8 MB</td>
+                        </tr>
+                        <tr class="hover:bg-gray-50">
+                            <td class="border-b border-gray-200 p-4"><strong>Main Memory</strong></td>
+                            <td class="border-b border-gray-200 p-4"><strong>DRAM (Dynamic RAM):</strong> Made of a single transistor and capacitor per bit.<br><em>Latest:</em> DDR5 standard (released 2020) is mainstream. LPCAMM2 standard (2024) introduces a new, more power-efficient module for laptops.</td>
+                            <td class="border-b border-gray-200 p-4">50-100 ns</td>
+                            <td class="border-b border-gray-200 p-4">8-64 GB</td>
+                        </tr>
+                        <tr class="hover:bg-gray-50">
+                            <td class="border-b border-gray-200 p-4"><strong>Secondary Storage</strong></td>
+                            <td class="border-b border-gray-200 p-4"><strong>NAND Flash:</strong> Non-volatile memory that stores charge in floating-gate transistors.<br><em>Latest:</em> Move to PCIe 5.0 interface (2022-2023) for NVMe SSDs, enabling transfer speeds over 12,000 MB/s.</td>
+                            <td class="border-b border-gray-200 p-4">100,000 ns (0.1 ms)</td>
+                            <td class="border-b border-gray-200 p-4">512 GB - 4 TB</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="tool-box"><h3 class="text-xl font-bold mb-4 text-center">Memory Hierarchy Performance Simulator ⏱️</h3><p class="text-center text-gray-600 mb-6">This simulator demonstrates how Cache Hit Rate and Memory Access Time impact the 'Average Memory Access Time'.</p><div class="grid md:grid-cols-3 gap-6"><div><label for="hitRate" class="block mb-1">Cache Hit Rate (%): <span id="hr-val" class="font-bold"></span></label><input type="range" min="0" max="100" value="95" class="slider" id="hitRate"></div><div><label for="cacheTime" class="block mb-1">Cache Access Time (ns): <span id="ct-val" class="font-bold"></span></label><input type="range" min="1" max="10" value="1" class="slider" id="cacheTime"></div><div><label for="memTime" class="block mb-1">Main Memory Access Time (ns): <span id="mt-val" class="font-bold"></span></label><input type="range" min="50" max="200" value="100" class="slider" id="memTime"></div></div><div class="mt-8 text-center"><p class="text-lg">Average Memory Access Time (t_avg):</p><p id="avg-time" class="text-3xl font-bold text-indigo-600 mt-2"></p><p class="text-sm text-gray-500 mt-2">Formula: t_avg = (hit_rate &times; t_cache) + ((1 - hit_rate) &times; t_memory)</p></div></div>
+        </section>
+        
+        <!-- Von Neumann vs Harvard -->
+        <section id="von-neumann-harvard" class="section-card">
+            <h2 class="text-2xl font-bold mb-4">4. Fundamental Architectures: Von Neumann vs. Harvard 📖</h2>
+            <p>How a processor accesses its instructions and data is a fundamental architectural decision. There are two primary models.</p>
+            <div class="grid md:grid-cols-2 gap-8 mt-6">
+                <div><h3 class="text-xl font-semibold">Von Neumann Architecture</h3><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/e/e5/Von_Neumann_Architecture.svg/800px-Von_Neumann_Architecture.svg.png" alt="[Von Neumann Architecture ka Diagram]" class="w-full rounded-lg my-3 bg-white p-4 border" onerror="this.onerror=null;this.src='https://placehold.co/600x300/e0e7ff/4338ca?text=Von+Neumann+Arch';"><p>This is the most common model. It uses a single memory space and a single set of buses to fetch both instructions and data. </p><p class="mt-2"><strong>Key Feature:</strong> Simplicity and lower cost.</p><p class="mt-2"><strong>Major Limitation:</strong> The shared bus creates a performance bottleneck, known as the <strong>Von Neumann bottleneck</strong>, because the processor cannot fetch an instruction and read/write data at the exact same time.</p></div>
+                 <div><h3 class="text-xl font-semibold">Harvard Architecture</h3><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/3/3f/Harvard_architecture.svg/800px-Harvard_architecture.svg.png" alt="[Harvard Architecture ka Diagram]" class="w-full rounded-lg my-3 bg-white p-4 border" onerror="this.onerror=null;this.src='https://placehold.co/600x300/d1fae5/059669?text=Harvard+Arch';"><p>This model uses physically separate memory spaces and buses for instructions and data.</p><p class="mt-2"><strong>Key Feature:</strong> Higher performance. The CPU can fetch the next instruction while the current instruction is accessing data, as they use different buses.</p><p class="mt-2"><strong>Major Limitation:</strong> Increased hardware complexity and cost.</p></div>
+            </div>
+            <div class="analogy-box mt-8"><h3 class="font-semibold text-lg mb-2">The Cookbook Analogy</h3><p><strong class="text-indigo-700">Von Neumann:</strong> Imagine a chef using a single cookbook. They first read a step (fetch instruction), then go to the pantry to get ingredients (fetch data). They cannot read the next step and get ingredients simultaneously.</p><p class="mt-4"><strong class="text-indigo-700">Harvard:</strong> Imagine the chef has the recipe on a screen in front of them and an assistant who brings them ingredients. The chef can read the next step from the screen (fetch instruction) at the same time the assistant is getting the next ingredient from the pantry (fetch data).</p></div>
+            <div class="key-takeaway"><p><strong>Modern Hybrid Approach:</strong> Most modern processors are a hybrid. They use a Von Neumann architecture to access a unified main memory, but internally, they have separate Level 1 caches for instructions and data (L1-I and L1-D), which is a Harvard concept. This gives the performance benefit of simultaneous access for the most frequent operations.</p></div>
+        </section>
+
+        <!-- Instruction Execution -->
+        <section id="instruction-execution" class="section-card">
+            <h2 class="text-2xl font-bold mb-4">5. Anatomy of an Instruction: The Fetch-Execute Cycle 🔄</h2>
+            <p>A computer executes a program by repeatedly fetching an instruction from memory, and then executing it.</p>
+            <div class="tool-box"><h3 class="text-xl font-bold mb-4 text-center">Instruction Fetch-Execute Cycle Visualizer ⚙️</h3><p class="text-center text-gray-600 mb-6">Click "Next Step" to see how the <code class="bg-gray-200 p-1 rounded">Load R1, [1024]</code> instruction is executed.</p><div class="grid md:grid-cols-2 gap-8 items-start"><div><h4 class="font-semibold text-lg mb-2">CPU</h4><div class="register bg-gray-200" id="reg-pc">PC: <span>1000</span></div><div class="register bg-gray-200" id="reg-mar">MAR: <span>----</span></div><div class="register bg-gray-200" id="reg-ir">IR: <span>----------------</span></div><div class="register bg-gray-200" id="reg-mdr">MDR: <span>----</span></div><div class="register bg-gray-200" id="reg-r1">R1: <span>----</span></div></div><div><h4 class="font-semibold text-lg mb-2">Memory</h4><div class="memory-loc bg-gray-200" id="mem-1000">1000: <span>Load R1, [1024]</span></div><div class="memory-loc bg-gray-200" id="mem-1004">1004: <span>...</span></div><div class="memory-loc bg-gray-200" id="mem-1024">1024: <span>00AB</span></div></div></div><div class="mt-4 bg-white p-4 rounded-lg border"><h4 class="font-semibold">Current Step Description:</h4><p id="step-desc" class="text-gray-700 min-h-[40px]">Press the 'Next Step' button to begin the visualization.</p></div><div class="mt-4 flex justify-center space-x-4"><button id="next-step-btn" class="bg-indigo-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-indigo-700 transition">Next Step</button><button id="reset-btn" class="bg-gray-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-gray-600 transition">Reset</button></div></div>
+        </section>
+
+        <!-- Bus Structures -->
+        <section id="bus-structures" class="section-card">
+            <h2 class="text-2xl font-bold mb-4">6. Bus Structures: The Data Highways 🚌</h2>
+            <p>A bus is a shared communication link used to transfer data between the computer's functional units.</p>
+            <div class="overflow-x-auto mt-6"><table class="w-full text-left border-collapse"><thead><tr><th class="border-b-2 border-gray-200 p-4 font-bold">Feature</th><th class="border-b-2 border-gray-200 p-4 font-bold">Single-Bus Architecture</th><th class="border-b-2 border-gray-200 p-4 font-bold">Multi-Bus Architecture</th></tr></thead><tbody><tr class="hover:bg-gray-50"><td class="border-b border-gray-200 p-4"><strong>Cost & Simplicity</strong></td><td class="border-b border-gray-200 p-4">Low cost, simple design.</td><td class="border-b border-gray-200 p-4">Higher cost, more complex.</td></tr><tr class="hover:bg-gray-50"><td class="border-b border-gray-200 p-4"><strong>Performance</strong></td><td class="border-b border-gray-200 p-4">Low. The bus is a major bottleneck.</td><td class="border-b border-gray-200 p-4">High. Allows for parallel data transfers.</td></tr><tr class="hover:bg-gray-50"><td class="border-b border-gray-200 p-4"><strong>Example Use Case</strong></td><td class="border-b border-gray-200 p-4">Simple microcontrollers.</td><td class="border-b border-gray-200 p-4">Modern high-performance processors.</td></tr></tbody></table></div>
+        </section>
+
+        <!-- Performance -->
+        <section id="performance" class="section-card">
+            <h2 class="text-2xl font-bold mb-4">7. The Quest for Speed: Performance ⚡</h2>
+            <p>The classic performance equation gives us the "levers" we can pull to reduce the time it takes to execute a program.</p>
+            <div class="text-center bg-gray-100 p-6 rounded-lg my-6"><p class="font-mono text-xl md:text-2xl">T = (N &times; S) &divide; R</p></div>
+            <div class="grid md:grid-cols-3 gap-6"><div class="analogy-box !border-green-500"><h3 class="font-semibold text-lg mb-2">Lever 1: N (Instruction Count)</h3><p>Domain of the <strong>ISA and Compiler</strong>.</p></div><div class="analogy-box !border-blue-500"><h3 class="font-semibold text-lg mb-2">Lever 2: S (Cycles per Instruction)</h3><p>Domain of the <strong>Computer Organization</strong>.</p></div><div class="analogy-box !border-red-500"><h3 class="font-semibold text-lg mb-2">Lever 3: R (Clock Rate)</h3><p>Domain of the <strong>Implementation Technology</strong>.</p></div></div>
+            <h3 class="text-xl font-bold mt-8 mb-4">RISC vs. CISC: A Tale of Two Philosophies</h3>
+            <ul class="list-disc list-inside space-y-2 mt-4"><li><strong>CISC (Complex):</strong> Aims for a <strong>low N</strong> with powerful instructions, but often has a <strong>high S</strong>.</li><li><strong>RISC (Reduced):</strong> Aims for a <strong>low S</strong> with simple, fast instructions, but may have a <strong>higher N</strong>.</li></ul>
+            <div class="tool-box"><h3 class="text-xl font-bold mb-4 text-center">Interactive Performance Calculator 🔬</h3><p class="text-center text-gray-600 mb-6">This calculator demonstrates the RISC vs. CISC performance trade-offs in real-time. Adjust the sliders to see the impact on 'T' (Execution Time).</p><div class="grid md:grid-cols-2 gap-8"><div><h4 class="text-lg font-semibold mb-4 text-indigo-700">RISC Processor</h4><div class="mb-4"><label for="risc-n" class="block mb-1">N (Instruction Count): <span id="risc-n-val" class="font-bold"></span></label><input type="range" min="100" max="500" value="250" class="slider" id="risc-n"></div><div class="mb-4"><label for="risc-s" class="block mb-1">S (Avg. Cycles/Instruction): <span id="risc-s-val" class="font-bold"></span></label><input type="range" min="1" max="3" value="1.2" step="0.1" class="slider" id="risc-s"></div><div class="mb-4"><label for="risc-r" class="block mb-1">R (Clock Rate, GHz): <span id="risc-r-val" class="font-bold"></span></label><input type="range" min="1" max="5" value="2" step="0.1" class="slider" id="risc-r"></div></div><div><h4 class="text-lg font-semibold mb-4 text-purple-700">CISC Processor</h4><div class="mb-4"><label for="cisc-n" class="block mb-1">N (Instruction Count): <span id="cisc-n-val" class="font-bold"></span></label><input type="range" min="50" max="300" value="100" class="slider" id="cisc-n"></div><div class="mb-4"><label for="cisc-s" class="block mb-1">S (Avg. Cycles/Instruction): <span id="cisc-s-val" class="font-bold"></span></label><input type="range" min="2" max="8" value="4" step="0.1" class="slider" id="cisc-s"></div><div class="mb-4"><label for="cisc-r" class="block mb-1">R (Clock Rate, GHz): <span id="cisc-r-val" class="font-bold"></span></label><input type="range" min="1" max="5" value="2" step="0.1" class="slider" id="cisc-r"></div></div></div><div class="mt-8"><h4 class="text-lg font-semibold mb-4 text-center">Results (Lower Execution Time is Better)</h4><div class="space-y-4"><div><div class="flex justify-between mb-1"><span class="font-medium text-indigo-700">RISC Execution Time (T)</span><span id="risc-t-val" class="font-bold text-indigo-700"></span></div><div class="w-full bg-gray-200 rounded-full h-6"><div id="risc-bar" class="bg-indigo-600 h-6 rounded-full transition-all duration-300"></div></div></div><div><div class="flex justify-between mb-1"><span class="font-medium text-purple-700">CISC Execution Time (T)</span><span id="cisc-t-val" class="font-bold text-purple-700"></span></div><div class="w-full bg-gray-200 rounded-full h-6"><div id="cisc-bar" class="bg-purple-600 h-6 rounded-full transition-all duration-300"></div></div></div></div><div id="winner-text" class="text-center mt-4 font-bold text-xl"></div></div></div>
+        </section>
+        
+        <!-- RISC vs CISC Execution -->
+        <section id="risc-cisc-execution" class="section-card">
+            <h2 class="text-2xl font-bold mb-4">8. RISC vs. CISC Execution Showdown ⚔️</h2>
+            <p>This interactive tool demonstrates how a simple high-level task, <code>C = A + B</code>, where A and B are in memory, is executed on both RISC and CISC processors. Use the "Next Step" button to see the process unfold and observe the trade-offs in action.</p>
+            <div class="tool-box">
+                <div class="grid md:grid-cols-2 gap-8">
+                    <!-- RISC Side -->
+                    <div>
+                        <h4 class="text-lg font-semibold mb-2 text-indigo-700">RISC Execution</h4>
+                        <div class="bg-gray-800 text-white p-4 rounded-lg font-mono text-sm">
+                            <div id="risc-code-0" class="code-line">Load R1, A</div>
+                            <div id="risc-code-1" class="code-line">Load R2, B</div>
+                            <div id="risc-code-2" class="code-line">Add R3, R1, R2</div>
+                            <div id="risc-code-3" class="code-line">Store R3, C</div>
+                        </div>
+                    </div>
+                    <!-- CISC Side -->
+                    <div>
+                        <h4 class="text-lg font-semibold mb-2 text-purple-700">CISC Execution</h4>
+                        <div class="bg-gray-800 text-white p-4 rounded-lg font-mono text-sm">
+                            <div id="cisc-code-0" class="code-line">Add C, A, B</div>
+                        </div>
+                        <div class="mt-2 p-2 bg-purple-100 text-purple-800 rounded">
+                            <strong>Current Micro-operation:</strong> <span id="cisc-micro-op" class="font-mono">---</span>
+                        </div>
+                    </div>
+                </div>
+                <!-- State Display -->
+                <div class="grid md:grid-cols-2 gap-8 mt-6">
+                    <div>
+                        <h4 class="text-lg font-semibold mb-2">Processor & Memory State</h4>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <div class="register" id="reg-r1-val">R1: <span>----</span></div>
+                                <div class="register" id="reg-r2-val">R2: <span>----</span></div>
+                                <div class="register" id="reg-r3-val">R3: <span>----</span></div>
+                            </div>
+                            <div>
+                                <div class="memory-loc" id="mem-a-val">A (2000): <span>5</span></div>
+                                <div class="memory-loc" id="mem-b-val">B (2004): <span>12</span></div>
+                                <div class="memory-loc" id="mem-c-val">C (2008): <span>----</span></div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Controls -->
+                    <div class="flex flex-col items-center justify-center">
+                         <div class="mt-4 flex justify-center space-x-4">
+                            <button id="rc-next-step-btn" class="bg-indigo-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-indigo-700 transition">Next Step</button>
+                            <button id="rc-reset-btn" class="bg-gray-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-gray-600 transition">Reset</button>
+                        </div>
+                        <p id="rc-status" class="mt-2 text-center text-gray-600">Press 'Next Step' to begin.</p>
+                    </div>
+                </div>
+                <!-- Performance Summary -->
+                <div id="rc-summary" class="mt-8 hidden">
+                     <h4 class="text-lg font-semibold mb-4 text-center">Performance Summary</h4>
+                     <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr>
+                                    <th class="border-b-2 border-gray-200 p-4 font-bold">Metric</th>
+                                    <th class="border-b-2 border-gray-200 p-4 font-bold text-indigo-700">RISC</th>
+                                    <th class="border-b-2 border-gray-200 p-4 font-bold text-purple-700">CISC</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr class="hover:bg-gray-50">
+                                    <td class="border-b border-gray-200 p-4">Instruction Count (N)</td>
+                                    <td class="border-b border-gray-200 p-4" id="risc-n-summary">4</td>
+                                    <td class="border-b border-gray-200 p-4" id="cisc-n-summary">1</td>
+                                </tr>
+                                <tr class="hover:bg-gray-50">
+                                    <td class="border-b border-gray-200 p-4">Total Cycles / Micro-ops</td>
+                                    <td class="border-b border-gray-200 p-4" id="risc-s-summary">4</td>
+                                    <td class="border-b border-gray-200 p-4" id="cisc-s-summary">4</td>
+                                </tr>
+                                 <tr class="hover:bg-gray-50">
+                                    <td class="border-b border-gray-200 p-4"><strong>Relative Time (T)</strong></td>
+                                    <td class="border-b border-gray-200 p-4" id="risc-t-summary">4 Cycles</td>
+                                    <td class="border-b border-gray-200 p-4" id="cisc-t-summary">4 Cycles</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+    
+    <script>
+        window.onload = () => {
+            // --- Memory Hierarchy Simulator ---
+            const hitRate = document.getElementById('hitRate');
+            const cacheTime = document.getElementById('cacheTime');
+            const memTime = document.getElementById('memTime');
+            const hrVal = document.getElementById('hr-val');
+            const ctVal = document.getElementById('ct-val');
+            const mtVal = document.getElementById('mt-val');
+            const avgTime = document.getElementById('avg-time');
+
+            function calculateAvgTime() {
+                const h = parseFloat(hitRate.value) / 100;
+                const tc = parseFloat(cacheTime.value);
+                const tm = parseFloat(memTime.value);
+                
+                hrVal.textContent = hitRate.value;
+                ctVal.textContent = tc;
+                mtVal.textContent = tm;
+
+                const t_avg = (h * tc) + ((1 - h) * tm);
+                avgTime.textContent = t_avg.toFixed(2) + ' ns';
+            }
+            if(hitRate) {
+                [hitRate, cacheTime, memTime].forEach(el => el.addEventListener('input', calculateAvgTime));
+                calculateAvgTime();
+            }
+            
+            // --- Instruction Cycle Visualizer ---
+            const regPC = document.getElementById('reg-pc')?.querySelector('span');
+            const regMAR = document.getElementById('reg-mar')?.querySelector('span');
+            const regIR = document.getElementById('reg-ir')?.querySelector('span');
+            const regMDR = document.getElementById('reg-mdr')?.querySelector('span');
+            const regR1 = document.getElementById('reg-r1')?.querySelector('span');
+            const mem1000 = document.getElementById('mem-1000')?.querySelector('span');
+            const mem1024 = document.getElementById('mem-1024')?.querySelector('span');
+            const stepDesc = document.getElementById('step-desc');
+            const nextBtn = document.getElementById('next-step-btn');
+            const resetBtn = document.getElementById('reset-btn');
+            let currentStep = 0;
+            
+            const allElements = [
+                document.getElementById('reg-pc'), document.getElementById('reg-mar'), 
+                document.getElementById('reg-ir'), document.getElementById('reg-mdr'), 
+                document.getElementById('reg-r1'), document.getElementById('mem-1000'), 
+                document.getElementById('mem-1024')
+            ].filter(Boolean); // Filter out nulls if elements don't exist
+
+            const steps = [
+                { desc: "FETCH Phase Start: The content of the Program Counter (1000) is copied to the Memory Address Register (MAR).", action: () => { highlight(allElements[0]); regMAR.textContent = regPC.textContent; }},
+                { desc: "The CPU sends a read control signal to memory. Memory places the instruction at address 1000 onto the data bus.", action: () => { highlight(allElements[5]); regMDR.textContent = mem1000.textContent; }},
+                { desc: "The instruction is copied from the data bus via the Memory Data Register (MDR) into the Instruction Register (IR).", action: () => { highlight(allElements[3], allElements[2]); regIR.textContent = regMDR.textContent; }},
+                { desc: "The PC is incremented to point to the next instruction (1000 + 4 = 1004). Fetch phase is complete.", action: () => { highlight(allElements[0]); regPC.textContent = '1004'; }},
+                { desc: "EXECUTE Phase Start: The Control Unit decodes the instruction in the IR. It is a Load instruction with the address 1024.", action: () => { highlight(allElements[2]); }},
+                { desc: "The address (1024) is extracted from the instruction and placed into the MAR.", action: () => { highlight(allElements[2], allElements[1]); regMAR.textContent = '1024'; }},
+                { desc: "The CPU sends a read control signal to memory for the data at address 1024.", action: () => { highlight(allElements[6]); regMDR.textContent = mem1024.textContent; }},
+                { desc: "Data from memory (00AB) is transferred via the MDR to the destination register R1. Execute phase is complete.", action: () => { highlight(allElements[3], allElements[4]); regR1.textContent = regMDR.textContent; }},
+                { desc: "Instruction execution is complete. Ready for the next cycle.", action: () => {} }
+            ];
+            
+            function highlight(...elements) {
+                allElements.forEach(el => { if(el) el.classList.remove('highlight', 'bg-gray-200'); });
+                allElements.forEach(el => { if(el) el.style.backgroundColor = '#f3f4f6'; });
+                elements.forEach(el => {
+                    if(el) el.classList.add('highlight');
+                });
+            }
+
+            function resetVisualizer() {
+                currentStep = 0;
+                if(regPC) regPC.textContent = '1000';
+                if(regMAR) regMAR.textContent = '----';
+                if(regIR) regIR.textContent = '----------------';
+                if(regMDR) regMDR.textContent = '----';
+                if(regR1) regR1.textContent = '----';
+                if(stepDesc) stepDesc.textContent = "Press the 'Next Step' button to begin the visualization.";
+                allElements.forEach(el => {
+                    if(el) {
+                        el.classList.remove('highlight');
+                        el.style.backgroundColor = '#e5e7eb';
+                    }
+                });
+                if(nextBtn) nextBtn.disabled = false;
+            }
+            
+            if(nextBtn) {
+                nextBtn.addEventListener('click', () => {
+                    if (currentStep < steps.length) {
+                        const step = steps[currentStep];
+                        stepDesc.textContent = `Step ${currentStep + 1}: ${step.desc}`;
+                        step.action();
+                        currentStep++;
+                         if (currentStep === steps.length) {
+                            nextBtn.disabled = true;
+                        }
+                    }
+                });
+                resetBtn.addEventListener('click', resetVisualizer);
+                resetVisualizer();
+            }
+            
+            // --- RISC vs CISC Calculator ---
+            const riscN = document.getElementById('risc-n'), riscS = document.getElementById('risc-s'), riscR = document.getElementById('risc-r');
+            const ciscN = document.getElementById('cisc-n'), ciscS = document.getElementById('cisc-s'), ciscR = document.getElementById('cisc-r');
+            const riscNVal = document.getElementById('risc-n-val'), riscSVal = document.getElementById('risc-s-val'), riscRVal = document.getElementById('risc-r-val');
+            const ciscNVal = document.getElementById('cisc-n-val'), ciscSVal = document.getElementById('cisc-s-val'), ciscRVal = document.getElementById('cisc-r-val');
+            const riscTVal = document.getElementById('risc-t-val'), ciscTVal = document.getElementById('cisc-t-val');
+            const riscBar = document.getElementById('risc-bar'), ciscBar = document.getElementById('cisc-bar'), winnerText = document.getElementById('winner-text');
+
+            function calculatePerformance() {
+                const n_risc = parseFloat(riscN.value), s_risc = parseFloat(riscS.value), r_risc = parseFloat(riscR.value);
+                const n_cisc = parseFloat(ciscN.value), s_cisc = parseFloat(ciscS.value), r_cisc = parseFloat(ciscR.value);
+                riscNVal.textContent = n_risc; riscSVal.textContent = s_risc.toFixed(1); riscRVal.textContent = r_risc.toFixed(1);
+                ciscNVal.textContent = n_cisc; ciscSVal.textContent = s_cisc.toFixed(1); ciscRVal.textContent = r_cisc.toFixed(1);
+                const t_risc = (n_risc * s_risc) / r_risc;
+                const t_cisc = (n_cisc * s_cisc) / r_cisc;
+                riscTVal.textContent = t_risc.toFixed(2) + ' ns';
+                ciscTVal.textContent = t_cisc.toFixed(2) + ' ns';
+                
+                const max_t = Math.max(t_risc, t_cisc, 1);
+                riscBar.style.width = (t_risc / max_t) * 100 + '%';
+                ciscBar.style.width = (t_cisc / max_t) * 100 + '%';
+
+                if (t_risc < t_cisc) {
+                    winnerText.textContent = 'RISC is faster for these settings!';
+                    winnerText.className = "text-center mt-4 font-bold text-xl text-indigo-700";
+                } else if (t_cisc < t_risc) {
+                    winnerText.textContent = 'CISC is faster for these settings!';
+                    winnerText.className = "text-center mt-4 font-bold text-xl text-purple-700";
+                } else {
+                     winnerText.textContent = 'Both are equally fast!';
+                     winnerText.className = "text-center mt-4 font-bold text-xl text-gray-700";
+                }
+            }
+            if(riscN) {
+                [riscN, riscS, riscR, ciscN, ciscS, ciscR].forEach(el => el.addEventListener('input', calculatePerformance));
+                calculatePerformance();
+            }
+            
+            // --- RISC vs CISC Execution Showdown ---
+            const rcNextBtn = document.getElementById('rc-next-step-btn');
+            const rcResetBtn = document.getElementById('rc-reset-btn');
+            const rcStatus = document.getElementById('rc-status');
+            const ciscMicroOp = document.getElementById('cisc-micro-op');
+            const rcSummary = document.getElementById('rc-summary');
+            const regR1Val = document.getElementById('reg-r1-val')?.querySelector('span');
+            const regR2Val = document.getElementById('reg-r2-val')?.querySelector('span');
+            const regR3Val = document.getElementById('reg-r3-val')?.querySelector('span');
+            const memAVal = document.getElementById('mem-a-val')?.querySelector('span');
+            const memBVal = document.getElementById('mem-b-val')?.querySelector('span');
+            const memCVal = document.getElementById('mem-c-val')?.querySelector('span');
+            let rcCurrentStep = 0;
+            const rcSteps = [
+                { processor: 'RISC', line: 0, text: 'RISC: Fetch and execute "Load R1, A". R1 gets value from memory A.', action: () => { regR1Val.textContent = memAVal.textContent; }},
+                { processor: 'RISC', line: 1, text: 'RISC: Fetch and execute "Load R2, B". R2 gets value from memory B.', action: () => { regR2Val.textContent = memBVal.textContent; }},
+                { processor: 'RISC', line: 2, text: 'RISC: Fetch and execute "Add R3, R1, R2". R3 gets the sum.', action: () => { regR3Val.textContent = parseInt(regR1Val.textContent) + parseInt(regR2Val.textContent); }},
+                { processor: 'RISC', line: 3, text: 'RISC: Fetch and execute "Store R3, C". Memory C gets value from R3.', action: () => { memCVal.textContent = regR3Val.textContent; }},
+                { processor: 'CISC', line: 0, text: 'CISC: Fetch "Add C, A, B". Start micro-operations.', action: () => {}},
+                { processor: 'CISC', line: 0, text: 'CISC: Micro-op 1 - Read memory A into internal register.', micro: 'Read [A]', action: () => {}},
+                { processor: 'CISC', line: 0, text: 'CISC: Micro-op 2 - Read memory B into internal register.', micro: 'Read [B]', action: () => {}},
+                { processor: 'CISC', line: 0, text: 'CISC: Micro-op 3 - Add internal registers.', micro: 'ALU Add', action: () => {}},
+                { processor: 'CISC', line: 0, text: 'CISC: Micro-op 4 - Write result to memory C.', micro: 'Write [C]', action: () => { memCVal.textContent = parseInt(memAVal.textContent) + parseInt(memBVal.textContent); }},
+            ];
+
+            function rcReset() {
+                rcCurrentStep = 0;
+                if(regR1Val) regR1Val.textContent = '----';
+                if(regR2Val) regR2Val.textContent = '----';
+                if(regR3Val) regR3Val.textContent = '----';
+                if(memCVal) memCVal.textContent = '----';
+                if(ciscMicroOp) ciscMicroOp.textContent = '---';
+                if(rcStatus) rcStatus.textContent = "Press 'Next Step' to begin.";
+                if(rcNextBtn) rcNextBtn.disabled = false;
+                if(rcSummary) rcSummary.classList.add('hidden');
+                for(let i=0; i<4; i++) {
+                    const el = document.getElementById(`risc-code-${i}`);
+                    if(el) el.classList.remove('active');
+                }
+                const ciscEl = document.getElementById('cisc-code-0');
+                if(ciscEl) ciscEl.classList.remove('active');
+            }
+            if(rcNextBtn) {
+                rcResetBtn.addEventListener('click', rcReset);
+                rcNextBtn.addEventListener('click', () => {
+                    if (rcCurrentStep >= rcSteps.length) return;
+                    const step = rcSteps[rcCurrentStep];
+                    rcStatus.textContent = step.text;
+                    step.action();
+                    for(let i=0; i<4; i++) document.getElementById(`risc-code-${i}`).classList.remove('active');
+                    document.getElementById('cisc-code-0').classList.remove('active');
+                    if(step.processor === 'RISC') {
+                         document.getElementById(`risc-code-${step.line}`).classList.add('active');
+                         ciscMicroOp.textContent = '---';
+                    } else {
+                         document.getElementById(`cisc-code-${step.line}`).classList.add('active');
+                         ciscMicroOp.textContent = step.micro;
+                    }
+                    rcCurrentStep++;
+                    if (rcCurrentStep >= rcSteps.length) {
+                        rcStatus.textContent = 'Execution complete. See summary.';
+                        rcNextBtn.disabled = true;
+                        rcSummary.classList.remove('hidden');
+                    }
+                });
+                rcReset();
+            }
+
+            // --- 2's Complement Calculator ---
+            const opAInput = document.getElementById('opA');
+            const opBInput = document.getElementById('opB');
+            const binADisp = document.getElementById('binA');
+            const binBDisp = document.getElementById('binB');
+            const addBtn = document.getElementById('addBtn');
+            const subBtn = document.getElementById('subBtn');
+            const binResultDisp = document.getElementById('binResult');
+            const decResultDisp = document.getElementById('decResult');
+            const carryFlagDisp = document.getElementById('carryFlag');
+            const overflowFlagDisp = document.getElementById('overflowFlag');
+            const BITS = 8;
+
+            function toTwosComplement(dec) {
+                if (dec >= 0) {
+                    let bin = dec.toString(2);
+                    return bin.padStart(BITS, '0');
+                } else {
+                    let bin = (Math.pow(2, BITS) + dec).toString(2);
+                    return bin;
+                }
+            }
+
+            function fromTwosComplement(bin) {
+                if (bin[0] === '0') {
+                    return parseInt(bin, 2);
+                } else {
+                    return parseInt(bin, 2) - Math.pow(2, BITS);
+                }
+            }
+
+            function updateBinaryDisplays() {
+                let valA = parseInt(opAInput.value);
+                let valB = parseInt(opBInput.value);
+                const min = -Math.pow(2, BITS - 1);
+                const max = Math.pow(2, BITS - 1) - 1;
+                if (valA < min) { valA = min; opAInput.value = min; }
+                if (valA > max) { valA = max; opAInput.value = max; }
+                if (valB < min) { valB = min; opBInput.value = min; }
+                if (valB > max) { valB = max; opBInput.value = max; }
+                binADisp.textContent = toTwosComplement(valA);
+                binBDisp.textContent = toTwosComplement(valB);
+            }
+
+            function performOperation(isAddition) {
+                updateBinaryDisplays();
+                let valA = parseInt(opAInput.value);
+                let valB = parseInt(opBInput.value);
+                let binA = parseInt(binADisp.textContent, 2);
+                let binB = parseInt(binBDisp.textContent, 2);
+                let binResult = isAddition ? (binA + binB) : (binA - binB);
+                let carry = (binResult >= Math.pow(2, BITS)) ? 1 : 0;
+                let resultBinStr = (binResult & (Math.pow(2, BITS) - 1)).toString(2).padStart(BITS, '0');
+                let resultDec = fromTwosComplement(resultBinStr);
+                let overflow = 0;
+                const signA = valA < 0 ? 1 : 0;
+                const signB = valB < 0 ? 1 : 0;
+                const signR = resultDec < 0 ? 1 : 0;
+                if (isAddition) {
+                    if (signA === signB && signA !== signR) overflow = 1;
+                } else {
+                    if (signA !== signB && signA !== signR) overflow = 1;
+                }
+                binResultDisp.textContent = resultBinStr;
+                decResultDisp.textContent = `Decimal: ${resultDec}`;
+                carryFlagDisp.textContent = carry;
+                overflowFlagDisp.textContent = overflow;
+            }
+            
+            if(opAInput) {
+                opAInput.addEventListener('input', updateBinaryDisplays);
+                opBInput.addEventListener('input', updateBinaryDisplays);
+                addBtn.addEventListener('click', () => performOperation(true));
+                subBtn.addEventListener('click', () => performOperation(false));
+                updateBinaryDisplays();
+                performOperation(true);
+            }
+        };
+    </script>
+
+</body>
+</html>
