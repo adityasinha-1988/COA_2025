@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Agile Lab Planner</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc; /* slate-50 */
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 400px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 350px;
+            max-height: 400px;
+        }
+        .nav-link {
+            transition: all 0.3s ease;
+        }
+        .nav-link.active {
+            color: #0891b2; /* cyan-600 */
+            border-bottom-color: #0891b2; /* cyan-600 */
+        }
+        .accordion-header.open .accordion-arrow {
+            transform: rotate(90deg);
+        }
+        .accordion-arrow {
+            transition: transform 0.3s ease;
+        }
+        .modal {
+            display: none; /* Hidden by default */
+            position: fixed;
+            z-index: 50;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.5);
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-content {
+            background-color: #fefefe;
+            margin: auto;
+            padding: 2rem;
+            border: 1px solid #888;
+            width: 90%;
+            max-width: 900px;
+            border-radius: 0.75rem;
+            max-height: 90vh;
+            overflow-y: auto;
+            position: relative;
+        }
+        .close-button {
+            color: #aaa;
+            position: absolute;
+            top: 1rem;
+            right: 1.5rem;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .resource-card {
+            cursor: pointer;
+        }
+        .prose {
+            max-width: 65ch;
+        }
+        .prose pre {
+            background-color: #f3f4f6;
+            padding: 1em;
+            border-radius: 0.5rem;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+    </style>
+</head>
+<body class="text-slate-800">
+
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        
+        <header class="text-center mb-10">
+            <h1 class="text-4xl font-bold text-slate-900">Agile Software Engineering Lab Framework</h1>
+            <p class="mt-2 text-lg text-slate-600">An interactive guide to implementing a modern, project-based lab curriculum.</p>
+        </header>
+
+        <nav class="flex justify-center border-b border-slate-200 mb-12">
+            <ul class="flex flex-wrap -mb-px text-sm font-medium text-center text-slate-500">
+                <li class="mr-2">
+                    <a href="#overview" class="nav-link inline-block p-4 border-b-2 border-transparent rounded-t-lg hover:text-slate-600 hover:border-slate-300">
+                        <span class="hidden sm:inline">💡</span> Overview
+                    </a>
+                </li>
+                <li class="mr-2">
+                    <a href="#framework" class="nav-link inline-block p-4 border-b-2 border-transparent rounded-t-lg hover:text-slate-600 hover:border-slate-300">
+                        <span class="hidden sm:inline">⚙️</span> Framework
+                    </a>
+                </li>
+                <li class="mr-2">
+                    <a href="#schedule" class="nav-link inline-block p-4 border-b-2 border-transparent rounded-t-lg hover:text-slate-600 hover:border-slate-300">
+                        <span class="hidden sm:inline">🗓️</span> 12-Week Schedule
+                    </a>
+                </li>
+                <li class="mr-2">
+                    <a href="#assessment" class="nav-link inline-block p-4 border-b-2 border-transparent rounded-t-lg hover:text-slate-600 hover:border-slate-300">
+                        <span class="hidden sm:inline">📊</span> Assessment
+                    </a>
+                </li>
+                 <li class="mr-2">
+                    <a href="#workflow" class="nav-link inline-block p-4 border-b-2 border-transparent rounded-t-lg hover:text-slate-600 hover:border-slate-300">
+                        <span class="hidden sm:inline">🌿</span> Git Workflow
+                    </a>
+                </li>
+                 <li class="mr-2">
+                    <a href="#resources" class="nav-link inline-block p-4 border-b-2 border-transparent rounded-t-lg hover:text-slate-600 hover:border-slate-300">
+                        <span class="hidden sm:inline">📚</span> Resources
+                    </a>
+                </li>
+            </ul>
+        </nav>
+
+        <main>
+            <section id="overview" class="content-section">
+                <div class="max-w-4xl mx-auto">
+                    <h2 class="text-3xl font-bold text-center mb-2 text-slate-900">A Shift in Pedagogy</h2>
+                    <p class="text-center text-slate-600 mb-8">This framework shifts the lab's focus from producing isolated documents to an integrated, value-driven process that mirrors modern industry practices. The goal is to cultivate an Agile mindset: embracing change, prioritizing collaboration, and delivering working software incrementally.</p>
+                    <div class="grid md:grid-cols-2 gap-8">
+                        <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
+                            <h3 class="font-bold text-xl mb-3 text-red-600">Traditional "Waterfall" Approach</h3>
+                            <ul class="space-y-2 text-slate-700 list-disc list-inside">
+                                <li>Linear, sequential phases.</li>
+                                <li>Focus on comprehensive upfront documentation (SRS).</li>
+                                <li>Change is seen as a problem to be avoided.</li>
+                                <li>Lacks modern version control (Git).</li>
+                                <li>Assessment is heavily based on artifacts.</li>
+                                <li>Prepares for an outdated development model.</li>
+                            </ul>
+                        </div>
+                        <div class="bg-white p-6 rounded-lg shadow-sm border-2 border-cyan-500">
+                            <h3 class="font-bold text-xl mb-3 text-cyan-600">Proposed "Agile" Approach</h3>
+                            <ul class="space-y-2 text-slate-700 list-disc list-inside">
+                                <li>Iterative, cyclical development (Sprints).</li>
+                                <li>Focus on working software as the measure of progress.</li>
+                                <li>Change is welcomed as valuable feedback.</li>
+                                <li>Built on modern tooling (Git, Project Boards).</li>
+                                <li>Assessment balances product and process.</li>
+                                <li>Prepares students for current industry practices.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="framework" class="content-section hidden">
+                <div class="max-w-5xl mx-auto">
+                    <h2 class="text-3xl font-bold text-center mb-2 text-slate-900">The Scrum Framework</h2>
+                    <p class="text-center text-slate-600 mb-8">We will use a simplified Scrum framework to provide structure, roles, and a consistent rhythm to the lab and project work. This section outlines the key components.</p>
+                    
+                    <div class="mb-12">
+                        <h3 class="text-2xl font-semibold text-center mb-6">Team Roles</h3>
+                        <div class="grid md:grid-cols-3 gap-6 text-center">
+                            <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200 hover:shadow-md transition-shadow">
+                                <div class="text-4xl mb-2">🧑‍🏫</div>
+                                <h4 class="font-bold text-lg">Product Owner</h4>
+                                <p class="text-slate-600 text-sm">The **Instructor**. Defines goals, manages the project backlog, and acts as the "customer" for the project.</p>
+                            </div>
+                            <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200 hover:shadow-md transition-shadow">
+                                <div class="text-4xl mb-2">🧑‍💻🧑‍💻</div>
+                                <h4 class="font-bold text-lg">Development Team</h4>
+                                <p class="text-slate-600 text-sm">Each **two-person student team**. Self-organizing, they plan sprints and deliver working software.</p>
+                            </div>
+                            <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200 hover:shadow-md transition-shadow">
+                                <div class="text-4xl mb-2">🤖</div>
+                                <h4 class="font-bold text-lg">AI Scrum Master (Gemini)</h4>
+                                <p class="text-slate-600 text-sm">An AI assistant to facilitate meetings, answer questions, and help remove blockers through prompts.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-12">
+                        <h3 class="text-2xl font-semibold text-center mb-6">Lab Session as a Scrum Hub (90 Mins)</h3>
+                        <div class="grid md:grid-cols-4 gap-4 text-center">
+                             <div class="bg-white p-4 rounded-lg shadow-sm border border-slate-200">
+                                <h4 class="font-semibold text-cyan-700">0-15 min</h4>
+                                <p class="font-bold">Sprint Review</p>
+                                <p class="text-xs text-slate-500">Demonstrate completed work to the instructor.</p>
+                            </div>
+                             <div class="bg-white p-4 rounded-lg shadow-sm border border-slate-200">
+                                <h4 class="font-semibold text-cyan-700">15-30 min</h4>
+                                <p class="font-bold">Retrospective</p>
+                                <p class="text-xs text-slate-500">Use the AI Scrum Master to facilitate reflection.</p>
+                            </div>
+                             <div class="bg-white p-4 rounded-lg shadow-sm border border-slate-200">
+                                <h4 class="font-semibold text-cyan-700">30-45 min</h4>
+                                <p class="font-bold">Sprint Planning</p>
+                                <p class="text-xs text-slate-500">Use the AI Scrum Master to plan the next sprint.</p>
+                            </div>
+                             <div class="bg-white p-4 rounded-lg shadow-sm border border-slate-200">
+                                <h4 class="font-semibold text-cyan-700">45-90 min</h4>
+                                <p class="font-bold">Work & Coaching</p>
+                                <p class="text-xs text-slate-500">Begin development as instructor provides guidance.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="schedule" class="content-section hidden">
+                <div class="max-w-4xl mx-auto">
+                    <h2 class="text-3xl font-bold text-center mb-2 text-slate-900">12-Week Integrated Schedule</h2>
+                    <p class="text-center text-slate-600 mb-8">The semester is structured into five 2-week sprints, with initial setup and a final demo week. Click on any week to see the detailed plan.</p>
+                    <div id="schedule-accordion" class="space-y-2">
+                    </div>
+                </div>
+            </section>
+
+            <section id="assessment" class="content-section hidden">
+                <div class="max-w-5xl mx-auto">
+                    <h2 class="text-3xl font-bold text-center mb-2 text-slate-900">Assessment & Evaluation Strategy</h2>
+                    <p class="text-center text-slate-600 mb-8">The 60/40 evaluation scheme is designed to reward both the final product and the engineering process. This ensures students are graded on collaboration, quality, and adherence to modern practices.</p>
+                    <div class="grid md:grid-cols-2 gap-12 items-start">
+                        <div>
+                            <h3 class="text-2xl font-semibold text-center mb-4">Overall Mark Distribution</h3>
+                            <div class="chart-container">
+                                <canvas id="overall-marks-chart"></canvas>
+                            </div>
+                        </div>
+                        <div>
+                            <h3 class="text-2xl font-semibold text-center mb-4">Internal Assessment Breakdown (60 Marks)</h3>
+                            <div class="chart-container">
+                                <canvas id="internal-marks-chart"></canvas>
+                            </div>
+                            <div class="mt-4 text-sm text-slate-600 bg-white p-4 rounded-lg shadow-sm border">
+                                <p><strong>A. Sprint Deliverables (30):</strong> Quality of working software demonstrated in each sprint review.</p>
+                                <p><strong>B. Process & Quality (20):</strong> Quality of Git history, code reviews, project board management, and effective use of the AI Scrum Master.</p>
+                                <p><strong>C. Individual & Demo (10):</strong> Based on confidential peer evaluation and the final project presentation.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <section id="workflow" class="content-section hidden">
+                <div class="max-w-4xl mx-auto">
+                    <h2 class="text-3xl font-bold text-center mb-2 text-slate-900">Mandatory Git Workflow</h2>
+                    <p class="text-center text-slate-600 mb-8">To ensure collaboration and code quality, all teams must follow the Feature Branch with Pull Request (PR) workflow. The `main` branch is protected and can only be updated through a reviewed and approved PR.</p>
+                    <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
+                        <div class="flex flex-col space-y-4">
+                            <div class="text-center font-semibold p-3 bg-slate-100 rounded-md">1. Create a New Branch from `main`</div>
+                            <div class="self-center text-2xl">↓</div>
+                            <div class="text-center font-semibold p-3 bg-slate-100 rounded-md">2. Add Commits to Your Feature Branch</div>
+                            <div class="self-center text-2xl">↓</div>
+                            <div class="text-center font-semibold p-3 bg-slate-100 rounded-md">3. Open a Pull Request on GitHub</div>
+                            <div class="self-center text-2xl">↓</div>
+                            <div class="grid grid-cols-2 gap-4 items-center">
+                                <div class="text-center font-semibold p-3 bg-red-100 text-red-800 rounded-md">4a. Teammate Requests Changes</div>
+                                <div class="text-center font-semibold p-3 bg-green-100 text-green-800 rounded-md">4b. Teammate Approves PR</div>
+                                <div class="text-center text-2xl">↖</div>
+                                <div class="text-center text-2xl">↓</div>
+                                <div class="text-center text-sm text-slate-500 col-span-1">Go back to Step 2 and add more commits to address feedback.</div>
+                                <div class="text-center font-semibold p-3 bg-cyan-100 text-cyan-800 rounded-md col-span-1">5. Merge Pull Request into `main`</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="resources" class="content-section hidden">
+                <div class="max-w-5xl mx-auto">
+                    <h2 class="text-3xl font-bold text-center mb-8 text-slate-900">Student Resources & Tools</h2>
+                    <p class="text-center text-slate-600 mb-8 -mt-4">Click on a card to open the respective guide or toolkit.</p>
+                    <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <div class="resource-card block bg-white p-6 rounded-lg shadow-sm border border-slate-200 hover:shadow-md hover:border-cyan-500 transition-all" data-modal-target="sdlc-modal">
+                            <h3 class="font-bold text-xl mb-2 text-cyan-700">SDLC Models Guide</h3>
+                            <p class="text-slate-600">An interactive guide to understand Waterfall, V-Model, Spiral, and Agile with real-world examples.</p>
+                        </div>
+                        <div class="resource-card block bg-white p-6 rounded-lg shadow-sm border border-slate-200 hover:shadow-md hover:border-cyan-500 transition-all" data-modal-target="req-modal">
+                            <h3 class="font-bold text-xl mb-2 text-cyan-700">Requirements Analysis Toolkit</h3>
+                            <p class="text-slate-600">Learn modern techniques like User Stories, MoSCoW prioritization, and Acceptance Criteria for your project.</p>
+                        </div>
+                        <div class="resource-card block bg-white p-6 rounded-lg shadow-sm border border-slate-200 hover:shadow-md hover:border-cyan-500 transition-all" data-modal-target="pm-modal">
+                            <h3 class="font-bold text-xl mb-2 text-cyan-700">Project Board Alternatives</h3>
+                            <p class="text-slate-600">A guide to choosing the right project management tool, including GitHub Projects, Trello, and more.</p>
+                        </div>
+                         <div class="resource-card block bg-white p-6 rounded-lg shadow-sm border border-slate-200 hover:shadow-md hover:border-cyan-500 transition-all" data-modal-target="srs-modal">
+                            <h3 class="font-bold text-xl mb-2 text-cyan-700">SRS Template (IEEE)</h3>
+                            <p class="text-slate-600">A downloadable and editable IEEE-compliant SRS template for documenting your project.</p>
+                        </div>
+                        <div class="resource-card block bg-white p-6 rounded-lg shadow-sm border border-slate-200 hover:shadow-md hover:border-purple-500 transition-all md:col-span-2 lg:col-span-1" data-modal-target="ai-scrum-modal">
+                            <h3 class="font-bold text-xl mb-2 text-purple-700">🤖 Use Gemini as AI Scrum Master</h3>
+                            <p class="text-slate-600">A practical guide with prompts to use Gemini as your team's facilitator.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <!-- Modals Container -->
+    <div id="sdlc-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-button">&times;</span>
+            <div id="sdlc-content-wrapper"></div>
+        </div>
+    </div>
+    <div id="req-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-button">&times;</span>
+            <div id="req-content-wrapper"></div>
+        </div>
+    </div>
+    <div id="pm-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-button">&times;</span>
+            <div id="pm-content-wrapper"></div>
+        </div>
+    </div>
+    <div id="srs-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-button">&times;</span>
+            <div id="srs-content-wrapper"></div>
+        </div>
+    </div>
+    <div id="ai-scrum-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-button">&times;</span>
+            <div id="ai-scrum-content-wrapper"></div>
+        </div>
+    </div>
+
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // --- RESOURCE CONTENT ---
+            const srsContent = `
+                <div class="prose max-w-none">
+                    <h2 class="text-2xl font-bold mb-4">SRS Template (IEEE Format)</h2>
+                    <p class="mb-4">This is a standard template for a Software Requirements Specification document. You can use the provided .doc file as a base.</p>
+                    <div class="mt-6 p-4 border rounded-lg bg-gray-50 text-sm">
+                        <h3 class="font-bold">1. Introduction</h3>
+                        <p><strong>1.1 Purpose:</strong> Identify the product and its scope.</p>
+                        <p><strong>1.2 Document Conventions:</strong> Describe any standards used.</p>
+                        <hr class="my-4">
+                        <h3 class="font-bold">2. Overall Description</h3>
+                        <p><strong>2.1 Product Perspective:</strong> Is this a new product or part of a larger system?</p>
+                        <p><strong>2.2 Product Functions:</strong> High-level summary of major functions.</p>
+                    </div>
+                </div>
+            `;
+            const aiScrumContent = `
+                <div class="prose max-w-none">
+                    <h2 class="text-3xl font-bold mb-4">Using Gemini as Your AI Scrum Master: A Practical Guide</h2>
+                    <p>Welcome to the future of project management! In this lab, your team will have a unique member: Gemini, your AI Scrum Master. The goal is not to replace human responsibility but to use AI as a powerful tool to guide, facilitate, and improve your process.</p>
+                    
+                    <h3 class="text-2xl font-semibold mt-6 mb-2">The AI Scrum Master's Role</h3>
+                    <p>A human Scrum Master facilitates, coaches, and removes impediments. Your AI Scrum Master will do the same, but you'll need to interact with it through prompts.</p>
+                    
+                    <div class="grid grid-cols-2 gap-4 my-4">
+                        <div class="bg-green-50 border border-green-200 rounded-lg p-4">
+                            <h4 class="font-bold text-green-800">What Gemini CAN do:</h4>
+                            <ul class="list-disc list-inside mt-2">
+                                <li>Facilitate Meetings</li>
+                                <li>Coach on Agile/Scrum</li>
+                                <li>Help with Tasks</li>
+                                <li>Maintain Transparency</li>
+                            </ul>
+                        </div>
+                        <div class="bg-red-50 border border-red-200 rounded-lg p-4">
+                            <h4 class="font-bold text-red-800">What Gemini CANNOT do:</h4>
+                            <ul class="list-disc list-inside mt-2">
+                                <li>Hold you accountable</li>
+                                <li>Solve human problems</li>
+                                <li>Update your project board</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <h3 class="text-2xl font-semibold mt-8 mb-2">How to Use Your AI Scrum Master</h3>
+                    
+                    <h4 class="text-xl font-semibold mt-4 mb-2">1. For Sprint Planning</h4>
+                    <p>At the start of your sprint, use this prompt:</p>
+                    <pre class="bg-gray-100 p-3 rounded-md text-sm"><code>Act as our Scrum Master. We are starting Sprint [Number] for our project "[Project Name]". Our high-priority user stories are: [List stories]. Help us plan this sprint by breaking these down into technical tasks and estimating the effort in hours.</code></pre>
+
+                    <h4 class="text-xl font-semibold mt-6 mb-2">2. For Daily Stand-ups (Asynchronous)</h4>
+                    <p>At the end of each work session, use this prompt:</p>
+                    <pre class="bg-gray-100 p-3 rounded-md text-sm"><code>Act as our Scrum Master. Here is my daily stand-up report for [Date]:
+1. What I did yesterday: [Your tasks]
+2. What I will do today: [Your tasks]
+3. Blockers: [Any problems]
+Based on my report and my teammate's report "[paste teammate's report here]", please summarize our team's progress and highlight any potential risks or blockers.</code></pre>
+
+                    <h4 class="text-xl font-semibold mt-6 mb-2">3. For Sprint Retrospectives</h4>
+                    <p>At the end of a sprint, use this prompt:</p>
+                    <pre class="bg-gray-100 p-3 rounded-md text-sm"><code>Act as our Scrum Master. We have just completed Sprint [Number]. Please facilitate our Sprint Retrospective by asking us: 1. What went well? 2. What did not go so well? 3. What will we commit to improving? After we answer, summarize our discussion and identify action items.</code></pre>
+
+                    <h4 class="text-xl font-semibold mt-6 mb-2">4. For Removing Blockers</h4>
+                    <p>When you are stuck, use this prompt:</p>
+                    <pre class="bg-gray-100 p-3 rounded-md text-sm"><code>Act as our Scrum Master and expert programmer. I am facing a problem in our "[Project Name]" project.
+My Goal: [What you are trying to achieve]
+The Problem: [Describe the error or issue]
+My Code:
+[Paste your code snippet here]
+Please help me identify the problem and suggest a solution.</code></pre>
+
+                    <h3 class="text-2xl font-semibold mt-8 mb-2">The Golden Rule</h3>
+                    <p><strong>You and your teammate are still the owners of the project.</strong> Gemini is a facilitator and a guide. The rotating human Scrum Master's role is now to ensure the team is using the AI Scrum Master effectively and that everyone is following the process. Good luck!</p>
+                </div>
+            `;
+
+            // --- PAGE LOGIC ---
+            document.getElementById('sdlc-content-wrapper').innerHTML = document.getElementById('sdlc-html-content').innerHTML;
+            document.getElementById('req-content-wrapper').innerHTML = document.getElementById('requirement-html-content').innerHTML;
+            document.getElementById('pm-content-wrapper').innerHTML = document.getElementById('projectMgmt-html-content').innerHTML;
+            document.getElementById('srs-content-wrapper').innerHTML = srsContent;
+            document.getElementById('ai-scrum-content-wrapper').innerHTML = aiScrumContent;
+
+            const scheduleData = [
+                { week: 1, sprint: 0, topic: "Foundations & Project Kickoff", activities: "Intro to Agile, Scrum, Git/GitHub. Team formation. Setup Git/GitHub and Project boards. Brainstorm minor project ideas.", deliverables: "Team repository created on GitHub. Project board created. One-paragraph project concept statement." },
+                { week: 2, sprint: 0, topic: "Requirements & Product Backlog", activities: "Intro to user story format. Teams break down their project concept into an initial Product Backlog. Populate the backlog on your project board.", deliverables: "A Product Backlog with at least 15-20 user stories." },
+                { week: 3, sprint: 1, topic: "The Walking Skeleton", activities: "Conduct first full Sprint Planning. Select stories for a minimal 'walking skeleton'. Design a high-level architecture (e.g., simple class diagram).", deliverables: "Begin development on stories for Sprint 1. Collaborate using feature branches and PRs." },
+                { week: 4, sprint: 1, topic: "Review & Retrospective", activities: "Sprint 1 Review: Demonstrate the working walking skeleton to the instructor. Sprint 1 Retrospective: Discuss the process.", deliverables: "A demonstrable, running application with minimal functionality. Git history shows PRs and code reviews." },
+                { week: 5, sprint: 2, topic: "Core Feature Dev & UML", activities: "Plan Sprint 2. Create UML class and sequence diagrams *only for the features in this sprint*. Intro to Test-Driven Development (TDD).", deliverables: "Development on features for Sprint 2. UML diagrams committed to the repository. Write unit tests." },
+                { week: 6, sprint: 2, topic: "Review & Retrospective", activities: "Sprint 2 Review: Demonstrate newly implemented features. Sprint 2 Retrospective.", deliverables: "Two to three fully implemented and tested core features." },
+                { week: 7, sprint: 3, topic: "Interfaces & Non-Functional Req.", activities: "Plan Sprint 3. Create simple UI mockups. Discuss Non-Functional Requirements (NFRs) and document them in the backlog.", deliverables: "Development on features and UI improvements for Sprint 3." },
+                { week: 8, sprint: 3, topic: "Review & Retrospective", activities: "Sprint 3 Review: Demonstrate refined UI and new features. Sprint 3 Retrospective.", deliverables: "A more polished UI. Implementation of at least one NFR (e.g., password hashing)." },
+                { week: 9, sprint: 4, topic: "Integration & Testing", activities: "Plan Sprint 4, focusing on integrating different components. Introduce a testing framework (e.g., Selenium, JUnit).", deliverables: "Development on integration tasks and tests for Sprint 4." },
+                { week: 10, sprint: 4, topic: "Review & Retrospective", activities: "Sprint 4 Review: Demonstrate the integrated system. Sprint 4 Retrospective.", deliverables: "A more robust, integrated application. A suite of automated tests." },
+                { week: 11, sprint: 5, topic: "Refinement & Deployment", activities: "This is a final 'hardening' sprint. Focus on fixing bugs, improving code quality, writing a README.md, and preparing for deployment.", deliverables: "Polish the project. Write a comprehensive README.md." },
+                { week: 12, sprint: 'Final', topic: "Final Project Demo & Handover", activities: "Each team gives a final 10-minute presentation of their project, demonstrating all completed features. They present their backlog of remaining work.", deliverables: "A final presentation and a clean, well-documented codebase." }
+            ];
+
+            const scheduleContainer = document.getElementById('schedule-accordion');
+            scheduleData.forEach(item => {
+                const weekElement = document.createElement('div');
+                weekElement.className = 'bg-white rounded-lg shadow-sm border border-slate-200';
+                weekElement.innerHTML = `
+                    <button class="accordion-header w-full flex justify-between items-center p-4 text-left font-semibold">
+                        <span>Week ${item.week}: ${item.topic}</span>
+                        <span class="accordion-arrow text-cyan-600 text-2xl transform transition-transform duration-300">▸</span>
+                    </button>
+                    <div class="accordion-content hidden p-4 border-t border-slate-200 bg-slate-50">
+                        <h4 class="font-bold text-slate-800">Sprint ${item.sprint}</h4>
+                        <div class="mt-4 grid md:grid-cols-2 gap-4 text-sm">
+                            <div>
+                                <p class="font-semibold mb-1">In-Lab Activities:</p>
+                                <p class="text-slate-600">${item.activities}</p>
+                            </div>
+                            <div>
+                                <p class="font-semibold mb-1">Deliverables / Out-of-Lab Work:</p>
+                                <p class="text-slate-600">${item.deliverables}</p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                scheduleContainer.appendChild(weekElement);
+            });
+            
+            scheduleContainer.addEventListener('click', (e) => {
+                const header = e.target.closest('.accordion-header');
+                if (header) {
+                    const content = header.nextElementSibling;
+                    header.classList.toggle('open');
+                    content.classList.toggle('hidden');
+                }
+            });
+
+            const navLinks = document.querySelectorAll('.nav-link');
+            const sections = document.querySelectorAll('.content-section');
+            let overallChartInstance, internalChartInstance;
+
+            function navigateTo(hash) {
+                sections.forEach(section => section.classList.add('hidden'));
+                navLinks.forEach(link => link.classList.remove('active'));
+
+                const targetSection = document.querySelector(hash);
+                const targetLink = document.querySelector(`a[href="${hash}"]`);
+
+                if (targetSection) {
+                    targetSection.classList.remove('hidden');
+                }
+                if (targetLink) {
+                    targetLink.classList.add('active');
+                }
+
+                if (hash === '#assessment') {
+                    if (!overallChartInstance) renderAssessmentCharts();
+                }
+            }
+
+            navLinks.forEach(link => {
+                link.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const hash = e.currentTarget.getAttribute('href');
+                    window.location.hash = hash;
+                });
+            });
+            
+            window.addEventListener('hashchange', () => {
+                navigateTo(window.location.hash || '#overview');
+            });
+            
+            navigateTo(window.location.hash || '#overview');
+
+            function renderAssessmentCharts() {
+                const overallCtx = document.getElementById('overall-marks-chart').getContext('2d');
+                overallChartInstance = new Chart(overallCtx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Internal Assessment', 'External Examination'],
+                        datasets: [{
+                            label: 'Marks',
+                            data: [60, 40],
+                            backgroundColor: ['#06b6d4', '#64748b'],
+                            borderColor: '#f8fafc',
+                            borderWidth: 4,
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { position: 'bottom' },
+                            tooltip: { callbacks: { label: (context) => `${context.label}: ${context.raw} Marks` } }
+                        }
+                    }
+                });
+
+                const internalCtx = document.getElementById('internal-marks-chart').getContext('2d');
+                internalChartInstance = new Chart(internalCtx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['A. Sprint Deliverables', 'B. Process & Quality', 'C. Individual & Demo'],
+                        datasets: [{
+                            label: 'Marks',
+                            data: [30, 20, 10],
+                            backgroundColor: ['#14b8a6', '#f97316', '#f59e0b'],
+                            borderColor: '#f8fafc',
+                            borderWidth: 4,
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { position: 'bottom' },
+                            tooltip: { callbacks: { label: (context) => `${context.label}: ${context.raw} Marks` } }
+                        }
+                    }
+                });
+            }
+
+            // Modal Logic
+            const resourceCards = document.querySelectorAll('.resource-card');
+            resourceCards.forEach(card => {
+                card.addEventListener('click', () => {
+                    const modalId = card.getAttribute('data-modal-target');
+                    document.getElementById(modalId).style.display = 'flex';
+                });
+            });
+
+            const closeButtons = document.querySelectorAll('.close-button');
+            closeButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    button.closest('.modal').style.display = 'none';
+                });
+            });
+
+            window.addEventListener('click', (event) => {
+                if (event.target.classList.contains('modal')) {
+                    event.target.style.display = 'none';
+                }
+            });
+        });
+    </script>
+    
+    <!-- Hidden templates for modal content -->
+    <template id="sdlc-html-content">
+        <div class="model-card">
+             <h1 class="text-3xl font-bold text-gray-900 mb-4">Interactive Introduction to SDLC Models</h1>
+             <p class="text-gray-600 mb-6">Explore different ways software is built, each with its own strengths and weaknesses. For a detailed explanation, please refer to this article: <a href="https://medium.com/@nayanatharasamarakkody/software-development-life-cycle-sdlc-models-aa18fc085f28" target="_blank" class="text-blue-600 hover:underline">SDLC Models Explained</a>.</p>
+        </div>
+    </template>
+    <template id="requirement-html-content">
+        <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Requirements Analysis Toolkit</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body class="text-gray-800">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <header class="text-center mb-12">
+            <h1 class="text-4xl md:text-5xl font-bold text-gray-900">Modern Requirements Analysis Toolkit</h1>
+            <p class="mt-4 text-lg text-gray-600 max-w-3xl mx-auto">From simple lists to user-centric stories and testable criteria.</p>
+        </header>
+        <!-- Rest of the requirement.html content -->
+    </div>
+</body>
+</html>
+    </template>
+    <template id="projectMgmt-html-content">
+        <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Choosing Your Project Board: Jira Alternatives</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body class="text-gray-800">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <header class="text-center mb-16">
+            <h1 class="text-4xl md:text-5xl font-bold text-gray-900">Choosing Your Project Board</h1>
+            <p class="mt-4 text-lg text-gray-600 max-w-3xl mx-auto">The tool is less important than the process. The goal is to visualize your work: To Do, In Progress, and Done. Here are some great alternatives to Jira.</p>
+        </header>
+        <!-- Rest of the projectMgmt.html content -->
+    </div>
+</body>
+</html>
+    </template>
+</body>
+</html>

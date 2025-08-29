@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>COA Unit 2: Signed Number Arithmetic</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .section-card {
+            background-color: white;
+            border-radius: 0.75rem;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            border: 1px solid #e5e7eb;
+        }
+        .tool-box {
+            background-color: #f9fafb;
+            border: 1px solid #e5e7eb;
+            padding: 2rem;
+            border-radius: 0.75rem;
+            margin-top: 2rem;
+        }
+        .key-takeaway {
+            background-color: #eef2ff;
+            border-left: 4px solid #6366f1;
+            padding: 1.5rem;
+            border-radius: 0.5rem;
+            margin-top: 1.5rem;
+        }
+        .code-block {
+            background-color: #1f2937;
+            color: #d1d5db;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            font-family: monospace;
+        }
+        .highlight-sign {
+            color: #ef4444;
+            font-weight: bold;
+        }
+        .highlight-shift {
+            background-color: #fef3c7;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800">
+
+    <!-- Header -->
+    <header class="bg-white shadow-sm sticky top-0 z-10">
+        <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            <h1 class="text-2xl md:text-3xl font-bold text-gray-900">Computer Organization & Architecture</h1>
+            <p class="text-md text-indigo-600">Unit 2: Arithmetic</p>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+        <!-- Section 1: Signed Number Representation -->
+        <section id="representation" class="section-card">
+            <h2 class="text-2xl font-bold mb-4">1. Signed Number Representation ➕➖</h2>
+            <p>Computers need an efficient way to represent both positive and negative numbers. While sign-and-magnitude is intuitive for humans, it's inefficient for hardware. Therefore, computers primarily use **1's Complement** and **2's Complement** systems, with 2's Complement being the standard for modern arithmetic.</p>
+            
+            <div class="tool-box">
+                <h3 class="text-xl font-bold mb-4 text-center">Range & Representation Explorer</h3>
+                <p class="text-center text-gray-600 mb-6">Select the number of bits to see the representable range and check if a number fits within that range.</p>
+                
+                <div class="max-w-md mx-auto">
+                    <label for="bitWidth" class="block font-medium">Number of Bits (n): <span id="bitWidthVal" class="font-bold">5</span></label>
+                    <input type="range" id="bitWidth" min="2" max="16" value="5" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                </div>
+
+                <div class="grid md:grid-cols-2 gap-6 mt-6 text-center">
+                    <div class="p-4 bg-gray-100 rounded-lg">
+                        <h4 class="font-semibold">1's Complement Range</h4>
+                        <p id="onesCompRange" class="font-mono text-lg font-bold text-gray-700">[ -15 to 15 ]</p>
+                    </div>
+                    <div class="p-4 bg-indigo-100 rounded-lg">
+                        <h4 class="font-semibold text-indigo-800">2's Complement Range</h4>
+                        <p id="twosCompRange" class="font-mono text-lg font-bold text-indigo-800">[ -16 to 15 ]</p>
+                    </div>
+                </div>
+
+                <div class="mt-6 pt-6 border-t">
+                    <div class="max-w-md mx-auto">
+                         <label for="decInput" class="block font-medium">Convert Decimal to Binary:</label>
+                        <input type="number" id="decInput" value="-10" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 text-center">
+                    </div>
+                    <div id="representationResult" class="mt-4 p-4 rounded-lg text-center">
+                        <!-- Result will be shown here -->
+                    </div>
+                </div>
+                
+                <div class="mt-6 pt-6 border-t">
+                    <h4 class="text-lg font-semibold text-center mb-4">Convert 2's Complement Binary to Decimal</h4>
+                    <div class="max-w-md mx-auto">
+                         <label for="binInput" class="block font-medium">Enter Binary String:</label>
+                        <input type="text" id="binInput" value="10110" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 text-center font-mono">
+                    </div>
+                    <div id="binaryToDecResult" class="mt-4 p-4 rounded-lg text-center">
+                        <!-- Result will be shown here -->
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 2: Sign Extension -->
+        <section id="sign-extension" class="section-card">
+            <h2 class="text-2xl font-bold mb-4">2. Sign Extension</h2>
+            <p>When performing arithmetic with numbers of different bit-widths (e.g., adding an 8-bit number to a 16-bit number), the smaller number must be extended to match the larger width without changing its value. This is done through **sign extension**, where the sign bit (the most significant bit) of the smaller number is copied to fill the new, higher-order bits.</p>
+            <div class="tool-box">
+                <h3 class="text-xl font-bold mb-4 text-center">Sign Extension Visualizer</h3>
+                <div class="grid md:grid-cols-2 gap-6 items-center">
+                    <div>
+                        <label for="seInput" class="block font-medium">Enter 8-bit Decimal Number:</label>
+                        <input type="number" id="seInput" value="-45" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2">
+                    </div>
+                    <div>
+                        <label for="seTargetBits" class="block font-medium">Extend to:</label>
+                        <select id="seTargetBits" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2">
+                            <option value="16">16 Bits</option>
+                            <option value="32">32 Bits</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="mt-6">
+                    <p class="text-center">Original 8-bit (2's Complement):</p>
+                    <p id="seOriginal" class="text-center font-mono text-lg p-2 bg-gray-200 rounded mt-1"></p>
+                    <p class="text-center mt-4">Sign-Extended Result:</p>
+                    <p id="seExtended" class="text-center font-mono text-lg p-2 bg-indigo-100 rounded mt-1 break-all"></p>
+                </div>
+            </div>
+        </section>
+
+        <!-- NEW SECTION: Multiplication/Division by Shifting -->
+        <section id="shifting-math" class="section-card">
+            <h2 class="text-2xl font-bold mb-4">3. Multiplication & Division by Shifting 🚀</h2>
+            <p>For powers of 2, multiplication and division can be performed using very fast bit-shifting operations. A left shift multiplies a number by 2 for each position shifted, while a right shift divides it by 2. For signed numbers in 2's complement, a special **Arithmetic Right Shift** is needed for division to preserve the sign bit.</p>
+            <div class="tool-box">
+                <h3 class="text-xl font-bold mb-4 text-center">Bit-Shift Arithmetic Calculator</h3>
+                <div class="grid md:grid-cols-2 gap-6 items-center">
+                    <div>
+                        <label for="shiftNumInput" class="block font-medium">Decimal Number:</label>
+                        <input type="number" id="shiftNumInput" value="18" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2">
+                    </div>
+                    <div>
+                        <label for="shiftAmount" class="block font-medium">Shift by k =</label>
+                        <select id="shiftAmount" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2">
+                            <option value="1">1 bit (x2 or /2)</option>
+                            <option value="2" selected>2 bits (x4 or /4)</option>
+                            <option value="3">3 bits (x8 or /8)</option>
+                        </select>
+                    </div>
+                </div>
+                <p class="text-center mt-4">Original 8-bit (2's Complement):</p>
+                <p id="shiftOriginal" class="text-center font-mono text-lg p-2 bg-gray-200 rounded mt-1"></p>
+                <div class="grid md:grid-cols-2 gap-6 mt-6 text-center">
+                    <div class="p-4 bg-green-100 rounded-lg">
+                        <h4 class="font-semibold text-green-800">Multiplication (Left Shift)</h4>
+                        <p id="shiftLeftResult" class="font-mono text-lg font-bold mt-2"></p>
+                        <p id="shiftLeftDec" class="font-semibold"></p>
+                    </div>
+                    <div class="p-4 bg-yellow-100 rounded-lg">
+                        <h4 class="font-semibold text-yellow-800">Division (Arithmetic Right Shift)</h4>
+                        <p id="shiftRightResult" class="font-mono text-lg font-bold mt-2"></p>
+                        <p id="shiftRightDec" class="font-semibold"></p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 4: Multiplication -->
+        <section id="multiplication" class="section-card">
+            <h2 class="text-2xl font-bold mb-4">4. Multiplication of Signed Numbers (Booth's Algorithm)</h2>
+            <p>Multiplying signed numbers in 2's complement form can be complex. **Booth's Algorithm** is an efficient method that works for both positive and negative numbers. It examines the current and previous bits of the multiplier to decide whether to add the multiplicand, subtract it, or do nothing, followed by an arithmetic right shift.</p>
+            <div class="tool-box">
+                <h3 class="text-xl font-bold mb-4 text-center">Interactive Booth's Algorithm</h3>
+                <p class="text-center text-gray-600 mb-6">Multiply <strong>-5 (M = 1011)</strong> by <strong>-6 (Q = 1010)</strong> using 4 bits.</p>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-center font-mono">
+                        <thead>
+                            <tr>
+                                <th class="p-2 border">Cycle</th>
+                                <th class="p-2 border">A</th>
+                                <th class="p-2 border">Q</th>
+                                <th class="p-2 border">Q<sub>-1</sub></th>
+                                <th class="p-2 border">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="boothTable">
+                            <!-- Steps will be added here -->
+                        </tbody>
+                    </table>
+                </div>
+                <div class="mt-4 flex justify-center space-x-4">
+                    <button id="boothNextBtn" class="bg-indigo-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-indigo-700 transition">Next Step</button>
+                    <button id="boothResetBtn" class="bg-gray-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-gray-600 transition">Reset</button>
+                </div>
+                <div id="boothResult" class="mt-4 p-4 rounded-lg text-center font-bold text-xl hidden"></div>
+            </div>
+        </section>
+
+        <!-- Section 5: Division -->
+        <section id="division" class="section-card">
+            <h2 class="text-2xl font-bold mb-4">5. Division (Restoring Division)</h2>
+            <p>Division is a more complex operation, typically performed through a sequence of shifts and subtractions. The **Restoring Division** algorithm is a straightforward method for unsigned integers. It involves shifting the combined Remainder (A) and Quotient (Q) registers left, subtracting the Divisor (M), and then restoring the Remainder if the result is negative.</p>
+            <div class="tool-box">
+                <h3 class="text-xl font-bold mb-4 text-center">Interactive Restoring Division</h3>
+                <p class="text-center text-gray-600 mb-6">Divide <strong>13 (Dividend Q = 01101)</strong> by <strong>5 (Divisor M = 00101)</strong> using 5 bits.</p>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-center font-mono">
+                        <thead>
+                            <tr>
+                                <th class="p-2 border">Step</th>
+                                <th class="p-2 border">A</th>
+                                <th class="p-2 border">Q</th>
+                                <th class="p-2 border">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="divisionTable">
+                            <!-- Steps will be added here -->
+                        </tbody>
+                    </table>
+                </div>
+                <div class="mt-4 flex justify-center space-x-4">
+                    <button id="divNextBtn" class="bg-indigo-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-indigo-700 transition">Next Step</button>
+                    <button id="divResetBtn" class="bg-gray-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-gray-600 transition">Reset</button>
+                </div>
+                <div id="divResult" class="mt-4 p-4 rounded-lg text-center font-bold text-xl hidden"></div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        window.onload = () => {
+            // --- Representation & Range Explorer ---
+            const bitWidthSlider = document.getElementById('bitWidth');
+            const bitWidthVal = document.getElementById('bitWidthVal');
+            const onesCompRange = document.getElementById('onesCompRange');
+            const twosCompRange = document.getElementById('twosCompRange');
+            const decInput = document.getElementById('decInput');
+            const repResult = document.getElementById('representationResult');
+            const binInput = document.getElementById('binInput');
+            const binToDecResult = document.getElementById('binaryToDecResult');
+
+            function toTwosComplement(dec, bits) {
+                if (dec >= 0) {
+                    let bin = dec.toString(2);
+                    return bin.padStart(bits, '0');
+                } else {
+                    let bin = (Math.pow(2, bits) + dec).toString(2);
+                    return bin.length > bits ? bin.slice(bin.length - bits) : bin;
+                }
+            }
+            
+            function toOnesComplement(dec, bits) {
+                if (dec >= 0) {
+                    return dec.toString(2).padStart(bits, '0');
+                } else {
+                    let posBin = (-dec).toString(2).padStart(bits, '0');
+                    return posBin.split('').map(b => b === '0' ? '1' : '0').join('');
+                }
+            }
+            
+            function fromTwosComplement(bin) {
+                const bits = bin.length;
+                if (bin.length === 0) return 0;
+                if (bin[0] === '0') {
+                    return parseInt(bin, 2);
+                } else {
+                    return parseInt(bin, 2) - Math.pow(2, bits);
+                }
+            }
+
+            function updateRangeAndRepresentation() {
+                const bits = parseInt(bitWidthSlider.value);
+                bitWidthVal.textContent = bits;
+
+                const twosMax = Math.pow(2, bits - 1) - 1;
+                const twosMin = -Math.pow(2, bits - 1);
+                twosCompRange.textContent = `[ ${twosMin} to ${twosMax} ]`;
+                
+                const onesMax = Math.pow(2, bits - 1) - 1;
+                const onesMin = -(Math.pow(2, bits - 1) - 1);
+                onesCompRange.textContent = `[ ${onesMin} to ${onesMax} ]`;
+
+                const decVal = parseInt(decInput.value);
+                if (isNaN(decVal)) {
+                    repResult.innerHTML = '';
+                    return;
+                }
+
+                if (decVal >= twosMin && decVal <= twosMax) {
+                    const twosBin = toTwosComplement(decVal, bits);
+                    const onesBin = toOnesComplement(decVal, bits);
+                    repResult.innerHTML = `
+                        <p class="text-green-700 font-semibold">Number is representable in ${bits} bits.</p>
+                        <div class="mt-2">
+                            <p><strong>2's Complement:</strong> <span class="font-mono p-1 bg-indigo-100 rounded">${twosBin}</span></p>
+                            <p class="mt-1"><strong>1's Complement:</strong> <span class="font-mono p-1 bg-gray-200 rounded">${onesBin}</span></p>
+                        </div>
+                    `;
+                } else {
+                    repResult.innerHTML = `<p class="text-red-700 font-semibold">Number is out of range for ${bits}-bit 2's complement representation.</p>`;
+                }
+            }
+            
+            function updateBinaryToDecimal() {
+                const binStr = binInput.value.replace(/[^01]/g, '');
+                binInput.value = binStr;
+                if (binStr.length > 0) {
+                    const decVal = fromTwosComplement(binStr);
+                    let stepsHTML = '';
+                    if (binStr[0] === '1') {
+                        const inverted = binStr.split('').map(b => b === '0' ? '1' : '0').join('');
+                        const plusOne = (parseInt(inverted, 2) + 1).toString(2).padStart(binStr.length, '0');
+                        stepsHTML = `
+                            <div class="text-sm text-left font-mono p-2 bg-gray-100 rounded mt-2">
+                                <p>1. Original (Negative): ${binStr}</p>
+                                <p>2. Invert all bits:    ${inverted}</p>
+                                <p>3. Add 1:             ${plusOne}</p>
+                                <p>4. Decimal Value:       -${parseInt(plusOne, 2)}</p>
+                            </div>
+                        `;
+                    }
+                    binToDecResult.innerHTML = `Decimal Value: <span class="text-indigo-700">${decVal}</span>${stepsHTML}`;
+                } else {
+                    binToDecResult.innerHTML = '';
+                }
+            }
+
+            bitWidthSlider.addEventListener('input', updateRangeAndRepresentation);
+            decInput.addEventListener('input', updateRangeAndRepresentation);
+            binInput.addEventListener('input', updateBinaryToDecimal);
+
+            // --- Sign Extension ---
+            const seInput = document.getElementById('seInput');
+            const seTargetBits = document.getElementById('seTargetBits');
+            const seOriginal = document.getElementById('seOriginal');
+            const seExtended = document.getElementById('seExtended');
+
+            function updateSignExtension() {
+                let dec = parseInt(seInput.value);
+                if (isNaN(dec)) return;
+                
+                const min8 = -128, max8 = 127;
+                if(dec < min8) { dec = min8; seInput.value = min8; }
+                if(dec > max8) { dec = max8; seInput.value = max8; }
+
+                const targetBits = parseInt(seTargetBits.value);
+                const originalBin = toTwosComplement(dec, 8);
+                const signBit = originalBin[0];
+                const extendedBin = signBit.repeat(targetBits - 8) + originalBin;
+
+                seOriginal.innerHTML = `<span class="${signBit === '1' ? 'highlight-sign' : ''}">${originalBin.slice(0,1)}</span>${originalBin.slice(1)}`;
+                seExtended.innerHTML = `<span class="highlight-sign">${extendedBin.slice(0, targetBits - 8)}</span><span>${extendedBin.slice(targetBits - 8)}</span>`;
+            }
+
+            seInput.addEventListener('input', updateSignExtension);
+            seTargetBits.addEventListener('input', updateSignExtension);
+            
+            // --- Shifting Math ---
+            const shiftNumInput = document.getElementById('shiftNumInput');
+            const shiftAmountSelect = document.getElementById('shiftAmount');
+            const shiftOriginal = document.getElementById('shiftOriginal');
+            const shiftLeftResult = document.getElementById('shiftLeftResult');
+            const shiftLeftDec = document.getElementById('shiftLeftDec');
+            const shiftRightResult = document.getElementById('shiftRightResult');
+            const shiftRightDec = document.getElementById('shiftRightDec');
+
+            function updateShiftingMath() {
+                let dec = parseInt(shiftNumInput.value);
+                if (isNaN(dec)) return;
+                const shiftK = parseInt(shiftAmountSelect.value);
+                
+                const min8 = -128, max8 = 127;
+                if(dec < min8) { dec = min8; shiftNumInput.value = min8; }
+                if(dec > max8) { dec = max8; shiftNumInput.value = max8; }
+
+                const originalBin = toTwosComplement(dec, 8);
+                shiftOriginal.textContent = originalBin;
+
+                // Left Shift (Multiplication)
+                const shiftedLeft = (parseInt(originalBin, 2) << shiftK) & 0xFF;
+                const leftBin = shiftedLeft.toString(2).padStart(8, '0');
+                shiftLeftResult.innerHTML = `...${leftBin.slice(0, 8-shiftK)}<span class="highlight-sign">${'0'.repeat(shiftK)}</span>`;
+                shiftLeftDec.textContent = `Result: ${fromTwosComplement(leftBin)}`;
+
+                // Arithmetic Right Shift (Division)
+                const signBit = originalBin[0];
+                let rightBin = originalBin;
+                for(let i=0; i < shiftK; i++) {
+                    rightBin = signBit + rightBin.slice(0, -1);
+                }
+                shiftRightResult.innerHTML = `<span class="highlight-sign">${signBit.repeat(shiftK)}</span>${rightBin.slice(shiftK)}...`;
+                shiftRightDec.textContent = `Result: ${fromTwosComplement(rightBin)}`;
+            }
+            shiftNumInput.addEventListener('input', updateShiftingMath);
+            shiftAmountSelect.addEventListener('input', updateShiftingMath);
+
+
+            // --- Booth's Algorithm ---
+            const boothTable = document.getElementById('boothTable');
+            const boothNextBtn = document.getElementById('boothNextBtn');
+            const boothResetBtn = document.getElementById('boothResetBtn');
+            const boothResult = document.getElementById('boothResult');
+            let boothStep = 0;
+            const M_dec = -5, Q_dec = -6, BITS = 4;
+            
+            const boothSteps = [
+                { cycle: 0, A: "0000", Q: toTwosComplement(Q_dec, BITS), Q_1: "0", action: "Initialize" },
+                { cycle: 1, A: "0000", Q: toTwosComplement(Q_dec, BITS), Q_1: "0", action: "Q0Q-1 = 00 -> No op" },
+                { cycle: 1, A: "0000", Q: "1101", Q_1: "0", action: "Arithmetic Right Shift" },
+                { cycle: 2, A: "0000", Q: "1101", Q_1: "0", action: "Q0Q-1 = 10 -> A = A - M" },
+                { cycle: 2, A: toTwosComplement(0 - M_dec, BITS), Q: "1101", Q_1: "0", action: "A = 0000 + 0101 = 0101" },
+                { cycle: 2, A: "0010", Q: "1110", Q_1: "1", action: "Arithmetic Right Shift" },
+                { cycle: 3, A: "0010", Q: "1110", Q_1: "1", action: "Q0Q-1 = 01 -> A = A + M" },
+                { cycle: 3, A: toTwosComplement(2 + M_dec, BITS), Q: "1110", Q_1: "1", action: "A = 0010 + 1011 = 1101" },
+                { cycle: 3, A: "1110", Q: "1111", Q_1: "0", action: "Arithmetic Right Shift" },
+                { cycle: 4, A: "1110", Q: "1111", Q_1: "0", action: "Q0Q-1 = 10 -> A = A - M" },
+                { cycle: 4, A: toTwosComplement(-2 - M_dec, BITS), Q: "1111", Q_1: "0", action: "A = 1110 + 0101 = 0011" },
+                { cycle: 4, A: "0001", Q: "1111", Q_1: "1", action: "Arithmetic Right Shift" },
+            ];
+
+            function resetBooth() {
+                boothStep = 0;
+                boothTable.innerHTML = '';
+                boothNextBtn.disabled = false;
+                boothResult.classList.add('hidden');
+            }
+
+            function nextBoothStep() {
+                if(boothStep >= boothSteps.length) return;
+                const s = boothSteps[boothStep];
+                let rowHTML = `<tr><td class="p-2 border">${s.cycle}</td>`;
+                if (s.action.includes("Shift")) {
+                    rowHTML += `<td class="p-2 border"><span class="highlight-sign">${s.A[0]}</span><span class="highlight-shift">${s.A.slice(1)}</span></td><td class="p-2 border"><span class="highlight-shift">${s.Q}</span></td>`;
+                } else {
+                    rowHTML += `<td class="p-2 border">${s.A}</td><td class="p-2 border">${s.Q}</td>`;
+                }
+                rowHTML += `<td class="p-2 border">${s.Q_1}</td><td class="p-2 border text-left">${s.action}</td></tr>`;
+                boothTable.innerHTML += rowHTML;
+                boothStep++;
+                if(boothStep >= boothSteps.length) {
+                    boothNextBtn.disabled = true;
+                    const finalA = boothSteps[boothSteps.length-1].A;
+                    const finalQ = boothSteps[boothSteps.length-1].Q;
+                    const finalVal = fromTwosComplement(finalA + finalQ);
+                    boothResult.textContent = `Result: ${finalA}${finalQ} = ${finalVal} (Decimal: 30)`;
+                    boothResult.classList.remove('hidden');
+                }
+            }
+            boothNextBtn.addEventListener('click', nextBoothStep);
+            boothResetBtn.addEventListener('click', resetBooth);
+
+            // --- Restoring Division ---
+            const divisionTable = document.getElementById('divisionTable');
+            const divNextBtn = document.getElementById('divNextBtn');
+            const divResetBtn = document.getElementById('divResetBtn');
+            const divResult = document.getElementById('divResult');
+            let divStep = 0;
+            const divSteps = [
+                { A: "00000", Q: "01101", action: "Initialize" },
+                { A: "00001", Q: "1101_", action: "1. Left Shift AQ" },
+                { A: "11100", Q: "1101_", action: "2. A = A - M. A < 0, so set Q0=0" },
+                { A: "00001", Q: "11010", action: "3. Restore A" },
+                { A: "00011", Q: "1010_", action: "1. Left Shift AQ" },
+                { A: "11110", Q: "1010_", action: "2. A = A - M. A < 0, so set Q0=0" },
+                { A: "00011", Q: "10100", action: "3. Restore A" },
+                { A: "00111", Q: "0100_", action: "1. Left Shift AQ" },
+                { A: "00010", Q: "0100_", action: "2. A = A - M. A >= 0, so set Q0=1" },
+                { A: "00010", Q: "01001", action: "3. No Restore needed" },
+                { A: "00100", Q: "1001_", action: "1. Left Shift AQ" },
+                { A: "11111", Q: "1001_", action: "2. A = A - M. A < 0, so set Q0=0" },
+                { A: "00100", Q: "10010", action: "3. Restore A" },
+            ];
+            
+            function resetDivision() {
+                divStep = 0;
+                divisionTable.innerHTML = '';
+                divNextBtn.disabled = false;
+                divResult.classList.add('hidden');
+            }
+
+            function nextDivStep() {
+                if(divStep >= divSteps.length) return;
+                const s = divSteps[divStep];
+                let rowHTML = `<tr><td class="p-2 border">${Math.floor(divStep/3) + (divStep % 3 === 0 ? 0 : 1)}</td>`;
+                if (s.action.includes("Shift")) {
+                    rowHTML += `<td class="p-2 border"><span class="highlight-shift">${s.A}</span></td><td class="p-2 border"><span class="highlight-shift">${s.Q}</span></td>`;
+                } else {
+                    rowHTML += `<td class="p-2 border">${s.A}</td><td class="p-2 border">${s.Q}</td>`;
+                }
+                rowHTML += `<td class="p-2 border text-left">${s.action}</td></tr>`;
+                divisionTable.innerHTML += rowHTML;
+                divStep++;
+                if(divStep >= divSteps.length) {
+                    divNextBtn.disabled = true;
+                    const final = divSteps[divSteps.length-1];
+                    divResult.textContent = `Quotient (Q): ${parseInt(final.Q, 2)}, Remainder (A): ${parseInt(final.A, 2)}`;
+                    divResult.classList.remove('hidden');
+                }
+            }
+            divNextBtn.addEventListener('click', nextDivStep);
+            divResetBtn.addEventListener('click', resetDivision);
+
+            // Initial calls
+            updateRangeAndRepresentation();
+            updateSignExtension();
+            updateBinaryToDecimal();
+            updateShiftingMath();
+            resetBooth();
+            resetDivision();
+        };
+    </script>
+
+</body>
+</html>

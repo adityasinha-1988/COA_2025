@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VAK Learning Style Analyzer (Visual Dashboard)</title>
+    
+    <!-- Tailwind CSS for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- SheetJS (xlsx) for reading Excel files -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    
+    <!-- Chart.js for beautiful charts -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <style>
+        /* Custom styles to enhance Tailwind */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f4f8; /* Lighter gray background */
+        }
+        .card {
+            background-color: white;
+            border-radius: 1rem; /* 16px */
+            padding: 1.5rem; /* 24px */
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            transition: all 0.3s ease-in-out;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -2px rgb(0 0 0 / 0.1);
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen p-4">
+
+    <div class="bg-white w-full max-w-5xl p-6 sm:p-8 rounded-2xl shadow-xl">
+        
+        <!-- Header Section -->
+        <div class="text-center mb-8">
+            <h1 class="text-3xl sm:text-4xl font-extrabold text-slate-800 tracking-tight">VAK Learning Style Analyzer</h1>
+            <p class="text-slate-500 mt-2">Upload your raw Excel file exported from MS Forms to get an instant visual analysis.</p>
+        </div>
+
+        <!-- Upload Section -->
+        <div class="card mb-8">
+            <h2 class="text-xl font-bold text-slate-700 mb-2">Upload Your File</h2>
+            <p class="text-slate-600 mb-4">Select your MS Forms Excel file below and click 'Analyze'. All processing happens securely in your browser.</p>
+            <div class="flex flex-col sm:flex-row sm:items-center gap-4">
+                <label for="file-upload" class="cursor-pointer inline-flex items-center px-4 py-2 bg-indigo-600 text-white font-semibold rounded-lg shadow-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>
+                    Choose File
+                </label>
+                <input id="file-upload" type="file" class="hidden" accept=".xlsx, .xls, .csv">
+                <span id="file-name" class="text-slate-500 italic">No file selected</span>
+            </div>
+             <button id="analyze-btn" class="mt-4 w-full sm:w-auto inline-flex items-center justify-center px-6 py-2 bg-emerald-500 text-white font-bold rounded-lg shadow-md hover:bg-emerald-600 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 transition-all disabled:bg-slate-400 disabled:cursor-not-allowed" disabled>
+                Analyze Results
+            </button>
+        </div>
+
+        <!-- Results Section -->
+        <div id="results-section" class="hidden">
+             <!-- Loading Spinner -->
+            <div id="loader" class="hidden text-center py-10">
+                <div class="flex justify-center items-center">
+                    <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+                </div>
+                <p class="mt-4 text-slate-600 font-semibold">Reading file... Please wait.</p>
+            </div>
+            <!-- Error Message -->
+            <div id="error-message" class="hidden bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded-lg"></div>
+            <!-- Content: Chart and Cards -->
+            <div id="results-content"></div>
+        </div>
+    </div>
+
+    <script>
+        // --- VAK Questionnaire Mapping ---
+        const vakMapping = {
+            'When I operate new equipment I generally': { a: 'read the instructions first', b: 'listen to an explanation from someone who has used it before', c: 'go ahead and have a go, I can figure it out as I use it' },
+            'When I need directions for travelling I usually': { a: 'look at a map', b: 'ask for spoken directions', c: 'follow my nose and maybe use a compass' },
+            'When I cook a new dish, I like to': { a: 'follow a written recipe', b: 'call a friend for an explanation', c: 'follow my instincts, testing as I cook' },
+            'If I am teaching someone something new, I tend to': { a: 'write instructions down for them', b: 'give them a verbal explanation', c: 'demonstrate first and then let them have a go' },
+            'I tend to say': { a: 'watch how I do it', b: 'listen to me explain', c: 'you have a go' },
+            'I tend to say2': { a: 'I see what you mean', b: 'I hear what you are saying', c: 'I know how you feel' },
+            'During my free time I most enjoy': { a: 'going to museums and galleries', b: 'listening to music and talking to my friends', c: 'playing sport or doing DIY' },
+            'When I go shopping for clothes, I tend to': { a: 'imagine what they would look like on', b: 'discuss them with the shop staff', c: 'try them on and test them out' },
+            'When I am choosing a holiday I usually': { a: 'read lots of brochures', b: 'listen to recommendations from friends', c: 'imagine what it would be like to be there' },
+            'If I was buying a new car, I would': { a: 'read reviews in newspapers and magazines', b: 'discuss what I need with my friends', c: 'test-drive lots of different types' },
+            'When I am learning a new skill, I am most comfortable': { a: 'watching what the teacher is doing', b: "talking through with the teacher exactly what I'm supposed to do", c: 'giving it a try myself and work it out as I go' },
+            'If I am choosing food off a menu, I tend to': { a: 'imagine what the food will look like', b: 'talk through the options in my head or with my partner', c: 'imagine what the food will taste like' },
+            "When I listen to a band, I can't help": { a: 'watching the band members and other people in the audience', b: 'listening to the lyrics and the beats', c: 'moving in time with the music' },
+            'When I concentrate, I most often': { a: 'focus on the words or the pictures in front of me', b: 'discuss the problem and the possible solutions in my head', c: 'move around a lot, fiddle with pens and pencils and touch things' },
+            'I choose household furnishings because I like': { a: 'their colours and how they look', b: 'the descriptions the sales-people give me', c: 'their textures and what it feels like to touch them' },
+            'My first memory is of': { a: 'looking at something', b: 'being spoken to', c: 'doing something' },
+            'When I am anxious, I': { a: 'visualise the worst-case scenarios', b: 'talk over in my head what worries me most', c: "can't sit still, fiddle and move around constantly" },
+            'I feel especially connected to other people because of': { a: 'how they look', b: 'what they say to me', c: 'how they make me feel' },
+            'When I have to revise for an exam, I generally': { a: 'write lots of revision notes and diagrams', b: 'talk over my notes, alone or with other people', c: 'imagine making the movement or creating the formula' },
+            'If I am explaining to someone I tend to': { a: 'show them what I mean', b: 'explain to them in different ways until they understand', c: 'encourage them to try and talk them through my idea as they do it' },
+            'I really love': { a: 'watching films, photography, looking at art or people watching', b: 'listening to music, the radio or talking to friends', c: 'taking part in sporting activities, eating fine foods and wines or dancing' },
+            'Most of my free time is spent': { a: 'watching television', b: 'talking to friends', c: 'doing physical activity or making things' },
+            'When I first contact a new person, I usually': { a: 'arrange a face to face meeting', b: 'talk to them on the telephone', c: 'try to get together whilst doing something else, such as an activity or a meal' },
+            'I first notice how people': { a: 'look and dress', b: 'sound and speak', c: 'stand and move' },
+            'If I am angry , I tend to': { a: 'keep replaying in my mind what it is that has upset me', b: 'raise my voice and tell people how I feel', c: 'stamp about, slam doors and physically demonstrate my anger' },
+            'I find it easiest to remember': { a: 'faces', b: 'names', c: 'things I have done' },
+            'I think that you can tell if someone is lying if': { a: 'they avoid looking at you', b: 'their voices changes', c: 'they give me funny vibes' },
+            'When I meet an old friend': { a: "I say \" it's great to see you! \"", b: "I say \" it's great to hear from you!\"", c: 'I give them a hug or a handshake' },
+            'I remember things best by': { a: 'writing notes or keeping printed details', b: 'saying them aloud or repeating words and key points in my head', c: 'doing and practising the activity or imagining it being done' },
+            'If I have to complain about faulty goods, I am most comfortable': { a: 'writing a letter', b: 'complaining over the phone', c: 'taking the item back to the store or posting it to head office' }
+        };
+
+        const normalizeString = (str) => String(str || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+
+        const vakMappingNormalized = {};
+        for (const key in vakMapping) {
+            const normalizedKey = normalizeString(key);
+            vakMappingNormalized[normalizedKey] = {
+                a: normalizeString(vakMapping[key].a),
+                b: normalizeString(vakMapping[key].b),
+                c: normalizeString(vakMapping[key].c),
+            };
+        }
+
+        const fileUpload = document.getElementById('file-upload');
+        const fileNameSpan = document.getElementById('file-name');
+        const analyzeBtn = document.getElementById('analyze-btn');
+        const resultsSection = document.getElementById('results-section');
+        const loader = document.getElementById('loader');
+        const errorMessage = document.getElementById('error-message');
+        const resultsContent = document.getElementById('results-content');
+        let myChart = null; // Variable to hold the chart instance
+
+        fileUpload.addEventListener('change', () => {
+            if (fileUpload.files.length > 0) {
+                fileNameSpan.textContent = fileUpload.files[0].name;
+                analyzeBtn.disabled = false;
+            } else {
+                fileNameSpan.textContent = 'No file selected';
+                analyzeBtn.disabled = true;
+            }
+        });
+        analyzeBtn.addEventListener('click', handleAnalysis);
+        
+        function handleAnalysis() {
+            const file = fileUpload.files[0];
+            if (!file) { showError("Please select a file first."); return; }
+            showLoading();
+            
+            setTimeout(() => {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    try {
+                        const data = new Uint8Array(event.target.result);
+                        const workbook = XLSX.read(data, { type: 'array' });
+                        const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                        
+                        const sheetDataAsArray = XLSX.utils.sheet_to_json(firstSheet, { header: 1, defval: "" });
+
+                        if (sheetDataAsArray.length < 2) {
+                            showError("The Excel file is empty or has no student data.");
+                            return;
+                        }
+
+                        const headers = sheetDataAsArray[0];
+                        const studentRows = sheetDataAsArray.slice(1);
+                        
+                        const counts = analyzeStudentStyles(headers, studentRows);
+                        const studentCount = studentRows.length;
+
+                        if (counts.visual === 0 && counts.auditory === 0 && counts.kinaesthetic === 0 && counts.mixed === 0 && counts.incomplete === 0) {
+                            showError("Could not find any valid VAK answers in the file. Please ensure the column headers in your file correspond to the VAK questionnaire.");
+                            return;
+                        }
+                        displayVisualResults(counts, studentCount);
+                    } catch (err) {
+                        console.error("Error processing file:", err);
+                        showError("There was an error reading or processing the Excel file. Please ensure it's a valid .xlsx, .xls or .csv file.");
+                    }
+                };
+                reader.onerror = function() { showError("Failed to read the selected file."); };
+                reader.readAsArrayBuffer(file);
+            }, 500);
+        }
+        
+        // REWRITTEN FUNCTION FOR ACCURATE STUDENT-BASED ANALYSIS
+        function analyzeStudentStyles(headers, studentRows) {
+            const styleCounts = { visual: 0, auditory: 0, kinaesthetic: 0, mixed: 0, incomplete: 0 };
+            const normalizedHeaders = headers.map(h => normalizeString(h));
+            
+            const firstITendToSayIndex = normalizedHeaders.indexOf('itendtosay');
+            const secondITendToSayIndex = normalizedHeaders.lastIndexOf('itendtosay');
+
+            studentRows.forEach(row => {
+                const studentScores = { visual: 0, auditory: 0, kinaesthetic: 0 };
+                
+                headers.forEach((originalHeader, index) => {
+                    let normalizedHeader = normalizeString(originalHeader);
+                    
+                    if (index === secondITendToSayIndex && firstITendToSayIndex !== secondITendToSayIndex) {
+                         normalizedHeader = 'itendtosay2';
+                    }
+
+                    const questionMapping = vakMappingNormalized[normalizedHeader];
+                    const studentAnswer = normalizeString(row[index]);
+
+                    if (questionMapping && studentAnswer) {
+                        if (studentAnswer === questionMapping.a) studentScores.visual++;
+                        else if (studentAnswer === questionMapping.b) studentScores.auditory++;
+                        else if (studentAnswer === questionMapping.c) studentScores.kinaesthetic++;
+                    }
+                });
+
+                // Determine the dominant style for this student
+                const maxScore = Math.max(studentScores.visual, studentScores.auditory, studentScores.kinaesthetic);
+                
+                // If all scores are 0, the student is incomplete.
+                if (maxScore === 0) {
+                    styleCounts.incomplete++;
+                    return; // Move to the next student
+                }
+
+                const tiedStyles = [];
+                if (studentScores.visual === maxScore) tiedStyles.push('visual');
+                if (studentScores.auditory === maxScore) tiedStyles.push('auditory');
+                if (studentScores.kinaesthetic === maxScore) tiedStyles.push('kinaesthetic');
+
+                if (tiedStyles.length > 1) {
+                    styleCounts.mixed++;
+                } else {
+                    styleCounts[tiedStyles[0]]++;
+                }
+            });
+            return styleCounts;
+        }
+
+        function displayVisualResults(counts, studentCount) {
+            const totalStudents = studentCount; // Use the actual number of rows
+            if (totalStudents === 0) {
+                showError("No valid student data found to analyze.");
+                return;
+            }
+
+            const visualPercent = (counts.visual / totalStudents) * 100;
+            const auditoryPercent = (counts.auditory / totalStudents) * 100;
+            const kinaestheticPercent = (counts.kinaesthetic / totalStudents) * 100;
+            const mixedPercent = (counts.mixed / totalStudents) * 100;
+            const incompletePercent = (counts.incomplete / totalStudents) * 100;
+
+            // Main dashboard structure
+            resultsContent.innerHTML = `
+                <div class="text-center mb-6">
+                    <h3 class="text-2xl font-bold text-slate-800">Analysis Report (${studentCount} Students)</h3>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
+                    <div class="md:col-span-1 card h-full flex items-center justify-center">
+                        <canvas id="vakChart"></canvas>
+                    </div>
+                    <div id="dominant-style-card" class="md:col-span-2 card">
+                        <!-- Dominant style info will be injected here -->
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-4 gap-6 mt-6">
+                    <!-- Visual Card -->
+                    <div class="card border-t-4 border-blue-500">
+                        <div class="flex items-center mb-3">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-blue-500 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+                            <h4 class="text-xl font-bold text-slate-700">Visual</h4>
+                        </div>
+                        <p class="text-3xl font-extrabold text-slate-800">${counts.visual}</p>
+                        <p class="text-slate-500 font-medium">${visualPercent.toFixed(1)}% of students</p>
+                    </div>
+                    <!-- Auditory Card -->
+                    <div class="card border-t-4 border-green-500">
+                        <div class="flex items-center mb-3">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-green-500 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.636 5.636a9 9 0 0112.728 0M12 18.5a4.5 4.5 0 004.5-4.5H7.5A4.5 4.5 0 0012 18.5z" /></svg>
+                            <h4 class="text-xl font-bold text-slate-700">Auditory</h4>
+                        </div>
+                        <p class="text-3xl font-extrabold text-slate-800">${counts.auditory}</p>
+                        <p class="text-slate-500 font-medium">${auditoryPercent.toFixed(1)}% of students</p>
+                    </div>
+                    <!-- Kinaesthetic Card -->
+                    <div class="card border-t-4 border-orange-500">
+                        <div class="flex items-center mb-3">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-orange-500 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                            <h4 class="text-xl font-bold text-slate-700">Kinaesthetic</h4>
+                        </div>
+                        <p class="text-3xl font-extrabold text-slate-800">${counts.kinaesthetic}</p>
+                        <p class="text-slate-500 font-medium">${kinaestheticPercent.toFixed(1)}% of students</p>
+                    </div>
+                    <!-- Mixed/Incomplete Card -->
+                    <div class="card border-t-4 border-gray-500">
+                        <div class="flex items-center mb-3">
+                           <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-gray-500 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                            <h4 class="text-xl font-bold text-slate-700">Other</h4>
+                        </div>
+                        <p class="text-lg font-bold text-slate-800">Mixed: ${counts.mixed} (${mixedPercent.toFixed(1)}%)</p>
+                        <p class="text-lg font-bold text-slate-800">Incomplete: ${counts.incomplete} (${incompletePercent.toFixed(1)}%)</p>
+                    </div>
+                </div>
+            `;
+
+            // Determine dominant style and update the dominant style card
+            const dominantCard = document.getElementById('dominant-style-card');
+            let dominantStyle = 'Mixed';
+            let dominantStyleDescription = `Your group has a balance of learning styles. A mixed teaching approach will be most effective.`;
+            let dominantColor = 'slate';
+
+            const percentages = [
+                { style: 'Visual', percent: visualPercent, color: 'blue' },
+                { style: 'Auditory', percent: auditoryPercent, color: 'green' },
+                { style: 'Kinaesthetic', percent: kinaestheticPercent, color: 'orange' }
+            ].sort((a, b) => b.percent - a.percent);
+
+            if (percentages[0].percent > percentages[1].percent + 5) { // Check for a clear winner
+                dominantStyle = percentages[0].style;
+                dominantColor = percentages[0].color;
+                dominantStyleDescription = `The majority of your group are <strong>${dominantStyle}</strong> learners. Focus on their needs in your teaching approach.`;
+            }
+            
+            dominantCard.innerHTML = `
+                <h4 class="text-lg font-bold text-slate-700 mb-2">Overall Interpretation</h4>
+                <p class="text-2xl font-bold text-${dominantColor}-600 mb-2">Dominant Style: ${dominantStyle}</p>
+                <p class="text-slate-600">${dominantStyleDescription}</p>
+            `;
+            dominantCard.classList.add(`border-t-4`, `border-${dominantColor}-500`);
+
+
+            // Create the chart
+            const ctx = document.getElementById('vakChart').getContext('2d');
+            if (myChart) {
+                myChart.destroy(); // Destroy previous chart instance if it exists
+            }
+            myChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Visual', 'Auditory', 'Kinaesthetic', 'Mixed', 'Incomplete'],
+                    datasets: [{
+                        label: '# of Students',
+                        data: [counts.visual, counts.auditory, counts.kinaesthetic, counts.mixed, counts.incomplete],
+                        backgroundColor: [
+                            'rgba(59, 130, 246, 0.8)',  // Blue
+                            'rgba(34, 197, 94, 0.8)',   // Green
+                            'rgba(249, 115, 22, 0.8)',   // Orange
+                            'rgba(100, 116, 139, 0.8)', // Slate
+                            'rgba(203, 213, 225, 0.8)' // Light Slate
+                        ],
+                        borderColor: [
+                            'rgba(59, 130, 246, 1)',
+                            'rgba(34, 197, 94, 1)',
+                            'rgba(249, 115, 22, 1)',
+                            'rgba(100, 116, 139, 1)',
+                            'rgba(203, 213, 225, 1)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    const value = context.raw;
+                                    const percentage = ((value / totalStudents) * 100).toFixed(1);
+                                    return `${label} ${value} students (${percentage}%)`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            showResults();
+        }
+
+        // --- UI State Management Functions ---
+        function showLoading() {
+            resultsSection.classList.remove('hidden');
+            loader.classList.remove('hidden');
+            errorMessage.classList.add('hidden');
+            resultsContent.innerHTML = ''; // Clear previous results
+            analyzeBtn.disabled = true;
+        }
+
+        function showError(message) {
+            resultsSection.classList.remove('hidden');
+            loader.classList.add('hidden');
+            errorMessage.classList.remove('hidden');
+            errorMessage.textContent = message;
+            resultsContent.innerHTML = '';
+            analyzeBtn.disabled = false;
+        }
+
+        function showResults() {
+            resultsSection.classList.remove('hidden');
+            loader.classList.add('hidden');
+            errorMessage.classList.add('hidden');
+            analyzeBtn.disabled = false;
+        }
+    </script>
+</body>
+</html>

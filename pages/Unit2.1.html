@@ -1,0 +1,881 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive CPU Addressing Modes</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .highlight-cpu, .highlight-cpu-program {
+            transition: all 0.3s ease-in-out;
+            box-shadow: 0 0 15px 5px rgba(59, 130, 246, 0.6);
+            transform: scale(1.05);
+        }
+        .highlight-mem, .highlight-mem-program {
+            transition: all 0.3s ease-in-out;
+            box-shadow: 0 0 15px 5px rgba(16, 185, 129, 0.6);
+            transform: scale(1.05);
+        }
+        .highlight-alu, .highlight-alu-program {
+            transition: all 0.3s ease-in-out;
+            box-shadow: 0 0 15px 5px rgba(239, 68, 68, 0.6);
+            background-color: #fca5a5;
+        }
+        .highlight-hll {
+            background-color: rgba(253, 224, 71, 0.3);
+            border-left: 3px solid #facc15;
+            transition: all 0.3s ease-in-out;
+        }
+        .control-btn {
+            @apply text-white font-bold py-2 px-4 rounded w-full transition;
+        }
+        .disabled-btn {
+            @apply bg-gray-500 cursor-not-allowed;
+        }
+        .flag {
+            @apply px-3 py-1 rounded-full text-sm font-bold transition-all duration-300;
+        }
+        .flag-off {
+            @apply bg-gray-600 text-gray-400;
+        }
+        .flag-on {
+            @apply bg-green-500 text-white scale-110;
+        }
+        @keyframes pulse {
+            0% { stroke: white; }
+            50% { stroke: #facc15; stroke-width: 4; }
+            100% { stroke: white; }
+        }
+        .pulse-animation {
+            animation: pulse 0.6s ease-in-out;
+        }
+        .binary-bit {
+            @apply w-8 h-8 flex items-center justify-center font-mono text-lg border border-gray-600 rounded bg-gray-800 transition-all duration-300;
+        }
+        .bit-highlight {
+            @apply bg-blue-500 border-blue-300 scale-110;
+        }
+        .carry-highlight {
+            @apply bg-yellow-500 border-yellow-300 scale-110;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 text-gray-800">
+
+    <div class="container mx-auto p-4 md:p-8">
+        <header class="text-center mb-12">
+            <h1 class="text-4xl md:text-5xl font-bold text-gray-900">An Interactive Journey Through CPU Addressing Modes</h1>
+            <p class="text-lg text-gray-600 mt-2">Visualize how a CPU finds the data it needs.</p>
+        </header>
+
+        <!-- Section 1: The "Why?" -->
+        <section class="bg-white p-6 rounded-lg shadow-md mb-8">
+            <h2 class="text-2xl font-bold text-blue-600 mb-3">Why do we need so many ways to find data?</h2>
+            <p class="text-gray-700 leading-relaxed">
+                As we write programs in high-level languages, we use data in many different ways: simple variables, arrays, pointers, linked lists, and struct/objects. The CPU needs the same flexibility to access this data efficiently. Addressing modes provide this flexibility. They are the bridge between how we structure data in code and how the CPU finds it in memory.
+            </p>
+        </section>
+
+        <!-- Section 2: The Two Big Categories -->
+        <section class="mb-8">
+            <h2 class="text-3xl font-bold text-center mb-6">The Two Families of Addressing Modes</h2>
+            <div class="grid md:grid-cols-2 gap-8">
+                <div class="bg-white p-6 rounded-lg shadow-md">
+                    <h3 class="text-xl font-bold text-teal-600 mb-3">Non-Computable Modes</h3>
+                    <p class="text-gray-700 mb-4">These are the most straightforward modes. The CPU can find the operand or its address with no extra addition or subtraction. The location is either implied, inside the instruction itself, or in a register.</p>
+                    <div id="non-computable-modes" class="flex flex-wrap gap-2"></div>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow-md">
+                    <h3 class="text-xl font-bold text-rose-600 mb-3">Computable Modes</h3>
+                    <p class="text-gray-700 mb-4">These modes are more powerful and flexible. They require the CPU's Arithmetic Logic Unit (ALU) to perform a calculation to determine the final memory address of the operand. This is essential for working with data structures.</p>
+                    <div id="computable-modes" class="flex flex-wrap gap-2"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 3: Interactive Sandbox -->
+        <section id="interactive-sandbox" class="bg-gray-800 text-white p-6 rounded-lg shadow-2xl relative overflow-hidden mb-8">
+            <h2 class="text-3xl font-bold text-center mb-6">Interactive Addressing Modes</h2>
+            <div id="data-flow-container"></div>
+            <div class="grid lg:grid-cols-3 gap-6">
+                <!-- CPU -->
+                <div id="cpu-container" class="bg-gray-900 p-4 rounded-lg border border-gray-700">
+                    <h3 class="text-lg font-semibold mb-3 text-center text-blue-400">CPU</h3>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div id="R1" class="register bg-gray-700 p-2 rounded text-center">R1: <span class="font-mono">0</span></div>
+                        <div id="R2" class="register bg-gray-700 p-2 rounded text-center">R2: <span class="font-mono">0</span></div>
+                        <div id="R3" class="register bg-gray-700 p-2 rounded text-center">R3: <span class="font-mono">0</span></div>
+                        <div id="AC" class="register bg-gray-700 p-2 rounded text-center">AC: <span class="font-mono">0</span></div>
+                        <div id="PC" class="register bg-gray-700 p-2 rounded text-center">PC: <span class="font-mono">0</span></div>
+                        <div id="IR" class="register bg-gray-700 p-2 rounded text-center col-span-2">IR: <span class="font-mono">---</span></div>
+                    </div>
+                    <div id="ALU" class="bg-gray-700 p-3 mt-4 rounded text-center font-semibold">ALU</div>
+                </div>
+
+                <!-- Controls & Explanation -->
+                <div class="flex flex-col justify-between bg-gray-900 p-4 rounded-lg border border-gray-700">
+                    <div>
+                        <h3 id="mode-title" class="text-xl font-bold text-center mb-2 text-yellow-400">Select a Mode</h3>
+                        <p id="mode-description" class="text-sm text-gray-300 text-center mb-4 h-12">Description will appear here.</p>
+                        
+                        <div class="mb-3">
+                            <h4 class="text-sm font-semibold text-gray-400 mb-1">High-Level Code Example:</h4>
+                            <div id="hll-code-container" class="bg-black p-2 rounded h-20 text-sm font-mono">
+                                <code id="hll-code"></code>
+                            </div>
+                        </div>
+
+                        <div id="explanation-box" class="bg-gray-700 p-3 rounded h-32 overflow-y-auto text-sm">
+                            <p class="text-gray-400">Welcome! Click a mode button to begin.</p>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-4 gap-2 mt-4">
+                        <button id="back-btn" class="control-btn bg-gray-600 hover:bg-gray-700 disabled-btn" disabled>Back</button>
+                        <button id="next-btn" class="control-btn bg-blue-600 hover:bg-blue-700 disabled-btn" disabled>Next</button>
+                        <button id="play-btn" class="control-btn bg-green-600 hover:bg-green-700 disabled-btn col-span-2" disabled>Play All</button>
+                        <button id="reset-btn" class="control-btn bg-red-600 hover:bg-red-700 disabled-btn col-span-4" disabled>Reset</button>
+                    </div>
+                </div>
+
+                <!-- Memory -->
+                <div id="memory-container" class="bg-gray-900 p-4 rounded-lg border border-gray-700">
+                    <h3 class="text-lg font-semibold mb-3 text-center text-green-400">Memory</h3>
+                    <div id="memory-grid" class="grid grid-cols-2 gap-2 text-sm">
+                        <!-- Memory cells will be generated here -->
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- NEW Section 4: Program Flow Simulation -->
+        <section id="program-flow-sandbox" class="bg-gray-800 text-white p-6 rounded-lg shadow-2xl relative overflow-hidden mb-8">
+            <h2 class="text-3xl font-bold text-center mb-2">Program Flow Simulation</h2>
+            <p class="text-center text-gray-400 mb-6">See how instructions combine to form programs.</p>
+            <div id="data-flow-container-program"></div>
+            <div class="grid lg:grid-cols-3 gap-6">
+                <!-- Program CPU -->
+                <div id="cpu-container-program" class="bg-gray-900 p-4 rounded-lg border border-gray-700 flex flex-col">
+                    <div>
+                        <h3 class="text-lg font-semibold mb-3 text-center text-blue-400">CPU</h3>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div id="prog-R0" class="register bg-gray-700 p-2 rounded text-center">R0: <span class="font-mono">0</span></div>
+                            <div id="prog-R1" class="register bg-gray-700 p-2 rounded text-center">R1: <span class="font-mono">0</span></div>
+                            <div id="prog-R2" class="register bg-gray-700 p-2 rounded text-center">R2: <span class="font-mono">0</span></div>
+                            <div id="prog-Flags" class="register bg-gray-700 p-2 rounded text-center">Flags: <span class="font-mono">[Z:0]</span></div>
+                            <div id="prog-PC" class="register bg-gray-700 p-2 rounded text-center col-span-2">PC: <span class="font-mono">0</span></div>
+                            <div id="prog-IR" class="register bg-gray-700 p-2 rounded text-center col-span-2">IR: <span class="font-mono">---</span></div>
+                        </div>
+                        <div id="ALU-program" class="bg-gray-700 p-3 mt-4 rounded text-center font-semibold">ALU</div>
+                    </div>
+                     <div class="mt-4 pt-4 border-t border-gray-700 flex-grow flex flex-col">
+                        <h4 class="text-sm font-semibold text-gray-400 mb-1">High-Level Code:</h4>
+                        <div id="hll-code-container-program" class="bg-black p-2 rounded h-full text-sm font-mono flex-grow">
+                            <code id="hll-code-program"></code>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Program Controls & Explanation -->
+                <div class="flex flex-col justify-between bg-gray-900 p-4 rounded-lg border border-gray-700">
+                    <div>
+                        <h3 id="program-title" class="text-xl font-bold text-center mb-2 text-yellow-400">Select a Program</h3>
+                        <div class="flex justify-center gap-4 mb-4">
+                            <button id="select-straight" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition">C = A + B</button>
+                            <button id="select-branch" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded transition">Sum of N</button>
+                        </div>
+                        <div id="explanation-box-program" class="bg-gray-700 p-3 rounded h-56 overflow-y-auto text-sm">
+                             <p class="text-gray-400">Select a program to begin.</p>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-4 gap-2 mt-4">
+                         <button id="back-btn-program" class="control-btn bg-gray-600 hover:bg-gray-700 disabled-btn" disabled>Back</button>
+                        <button id="next-btn-program" class="control-btn bg-blue-600 hover:bg-blue-700 disabled-btn" disabled>Next</button>
+                        <button id="play-btn-program" class="control-btn bg-green-600 hover:bg-green-700 disabled-btn col-span-2" disabled>Play All</button>
+                        <button id="reset-btn-program" class="control-btn bg-red-600 hover:bg-red-700 disabled-btn col-span-4" disabled>Reset</button>
+                    </div>
+                </div>
+
+                <!-- Program Memory -->
+                <div id="memory-container-program" class="bg-gray-900 p-4 rounded-lg border border-gray-700">
+                    <h3 class="text-lg font-semibold mb-3 text-center text-green-400">Memory</h3>
+                    <div id="memory-grid-program" class="grid grid-cols-1 gap-1 text-sm">
+                        <!-- Memory cells will be generated here -->
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- FINAL Section 5: Condition Flags Sandbox -->
+        <section id="conditional-flags-sandbox" class="bg-gray-800 text-white p-6 rounded-lg shadow-2xl relative overflow-hidden">
+            <h2 class="text-3xl font-bold text-center mb-2">Interactive Condition Code Flags</h2>
+            <p class="text-center text-gray-400 mb-6">ALU operations change flags that control program branches.</p>
+            <div class="grid lg:grid-cols-2 gap-8">
+                <!-- General Arithmetic Flags -->
+                <div class="bg-gray-900 p-4 rounded-lg border border-gray-700">
+                    <h3 class="text-xl font-bold text-center mb-4 text-yellow-400">Arithmetic Flag Calculator</h3>
+                    <div class="flex items-center gap-4 mb-4">
+                        <label for="bit-select" class="font-medium">Bits:</label>
+                        <select id="bit-select" class="bg-gray-700 border-gray-600 rounded-md shadow-sm p-2">
+                            <option value="4">4-bit</option>
+                            <option value="8" selected>8-bit</option>
+                            <option value="16">16-bit</option>
+                            <option value="32">32-bit (No Overflow)</option>
+                        </select>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label for="opA" class="block text-sm font-medium">Operand A</label>
+                            <input type="number" id="opA" value="100" class="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm p-2">
+                        </div>
+                        <div>
+                            <label for="opB" class="block text-sm font-medium">Operand B</label>
+                            <input type="number" id="opB" value="50" class="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm p-2">
+                        </div>
+                    </div>
+                    <button id="add-btn-flags" class="mt-4 w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Animate Addition</button>
+                    
+                    <div id="binary-addition-visualizer" class="mt-4 p-3 bg-black rounded overflow-x-auto">
+                        <!-- Binary addition will be rendered here -->
+                    </div>
+
+                    <div class="mt-4 p-3 bg-gray-700 rounded">
+                        <h4 class="font-semibold mb-2">Flags:</h4>
+                        <div class="flex justify-around">
+                            <span id="flag-N" class="flag flag-off">N</span>
+                            <span id="flag-Z" class="flag flag-off">Z</span>
+                            <span id="flag-V" class="flag flag-off">V</span>
+                            <span id="flag-C" class="flag flag-off">C</span>
+                        </div>
+                    </div>
+                    <div id="flags-explanation" class="mt-4 text-xs text-gray-400 space-y-1"></div>
+                </div>
+                <!-- Overflow (V) Flag Logic -->
+                <div class="bg-gray-900 p-4 rounded-lg border border-gray-700">
+                     <h3 class="text-xl font-bold text-center mb-4 text-yellow-400">Overflow (V) Flag Logic</h3>
+                     <p class="text-center text-sm text-gray-400 mb-4">V = Carry-in to MSB ⊕ Carry-out from MSB</p>
+                     <div class="flex justify-around items-center h-48">
+                        <div class="text-center">
+                            <button id="cin-toggle" class="control-btn bg-gray-600 w-20">C-in = 0</button>
+                            <p class="text-xs mt-1">(Cn-1)</p>
+                        </div>
+                        <svg class="w-24 h-24" viewBox="0 0 100 100">
+                            <path id="xor-cin-path" d="M20 20 C 40 20, 40 50, 60 50" stroke="white" stroke-width="2" fill="none"/>
+                            <path id="xor-cout-path" d="M20 80 C 40 80, 40 50, 60 50" stroke="white" stroke-width="2" fill="none"/>
+                            <path d="M10 10 C 30 30, 30 70, 10 90" stroke="white" stroke-width="2" fill="none"/>
+                            <path id="xor-output-path" d="M60 50 L 90 50" stroke="white" stroke-width="2" fill="none"/>
+                        </svg>
+                         <div class="text-center">
+                            <button id="cout-toggle" class="control-btn bg-gray-600 w-20">C-out = 0</button>
+                            <p class="text-xs mt-1">(Cn)</p>
+                        </div>
+                     </div>
+                     <div class="mt-4 p-3 bg-gray-700 rounded flex items-center justify-center">
+                        <h4 class="font-semibold mr-4">Overflow Flag:</h4>
+                        <span id="flag-V-xor" class="flag flag-off">V</span>
+                     </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <script>
+        // --- ADDRESSING MODE SIMULATOR SCRIPT ---
+        (() => {
+            const nonComputableContainer = document.getElementById('non-computable-modes');
+            const computableContainer = document.getElementById('computable-modes');
+            const modeTitle = document.getElementById('mode-title');
+            const modeDescription = document.getElementById('mode-description');
+            const explanationBox = document.getElementById('explanation-box');
+            const hllCodeEl = document.getElementById('hll-code');
+            const playBtn = document.getElementById('play-btn');
+            const nextBtn = document.getElementById('next-btn');
+            const backBtn = document.getElementById('back-btn');
+            const resetBtn = document.getElementById('reset-btn');
+            const memoryGrid = document.getElementById('memory-grid');
+            
+            let state = {
+                registers: { R1: 0, R2: 0, R3: 0, AC: 0, PC: 0, IR: '---' },
+                memory: {},
+                currentMode: null,
+                animationTimeout: null,
+                currentStep: -1
+            };
+            
+            const addressingModes = {
+                implied: { name: "Implied", category: "non-computable", description: "The opcode itself defines the operand.", syntax: "INCA", hllCode: `int x = 5;\nx++;`, initialState: { registers: { R1: 0, R2: 0, R3: 0, AC: 5, PC: 100, IR: 'INCA' }, memory: {} }, steps: [ { text: "1. 'INCA' implies the operand is the Accumulator (AC).", highlights: { cpu: ['IR', 'AC'] }, hllLine: 1 }, { text: "2. The value from AC (5) is sent to the ALU.", highlights: { cpu: ['AC', 'ALU'] }, flow: { from: 'AC', to: 'ALU', value: 5 }, hllLine: 1 }, { text: "3. The ALU increments the value by 1.", highlights: { cpu: ['ALU'] }, hllLine: 1 }, { text: "4. The result (6) is written back to the AC.", highlights: { cpu: ['ALU', 'AC'] }, flow: { from: 'ALU', to: 'AC', value: 6, update: { reg: 'AC', value: 6 } }, hllLine: 1 } ] },
+                immediate: { name: "Immediate", category: "non-computable", description: "The operand is a constant value stored in the instruction.", syntax: "MOVE R1, #42", hllCode: `int y = 42;`, initialState: { registers: { R1: 0, R2: 0, R3: 0, AC: 0, PC: 100, IR: 'MOVE R1, #42' }, memory: {} }, steps: [ { text: "1. The instruction contains the operand value (42).", highlights: { cpu: ['IR'] }, hllLine: 0 }, { text: "2. The value 42 is extracted from the IR.", highlights: { cpu: ['IR'] }, flow: { from: 'IR', to: 'R1', value: 42 }, hllLine: 0 }, { text: "3. The value is moved directly into register R1.", highlights: { cpu: ['R1'] }, update: { reg: 'R1', value: 42 }, hllLine: 0 } ] },
+                direct: { name: "Direct", category: "non-computable", description: "The instruction contains the full memory address of the operand.", syntax: "LOAD R1, 2050", hllCode: `// global_var is at address 2050\nint x = global_var;`, initialState: { registers: { R1: 0, R2: 0, R3: 0, AC: 0, PC: 100, IR: 'LOAD R1, 2050' }, memory: { 2050: 99 } }, steps: [ { text: "1. The instruction contains the memory address (2050).", highlights: { cpu: ['IR'] }, hllLine: 1 }, { text: "2. Address 2050 is sent to the memory bus.", highlights: { cpu: ['IR'], mem: ['2050'] }, hllLine: 1 }, { text: "3. The value at address 2050 (99) is retrieved.", highlights: { mem: ['2050'] }, flow: { from: 'mem-2050', to: 'R1', value: 99 }, hllLine: 1 }, { text: "4. The value 99 is loaded into register R1.", highlights: { cpu: ['R1'] }, update: { reg: 'R1', value: 99 }, hllLine: 1 } ] },
+                indirect: { name: "Indirect", category: "non-computable", description: "The instruction contains the address of a pointer.", syntax: "LOAD R1, @2050", hllCode: `// *ptr_addr=3000\nint value = *ptr;`, initialState: { registers: { R1: 0, R2: 0, R3: 0, AC: 0, PC: 100, IR: 'LOAD R1, @2050' }, memory: { 2050: 3000, 3000: 77 } }, steps: [ { text: "1. Instruction contains pointer's address (2050).", highlights: { cpu: ['IR'] }, hllLine: 1 }, { text: "2. First memory access: Go to 2050.", highlights: { cpu: ['IR'], mem: ['2050'] }, hllLine: 1 }, { text: "3. Retrieve effective address (3000) from 2050.", highlights: { mem: ['2050'] }, hllLine: 1 }, { text: "4. Second memory access: Use 3000 to find data.", highlights: { mem: ['3000'] }, hllLine: 1 }, { text: "5. Retrieve final data (77) from address 3000.", highlights: { mem: ['3000'] }, flow: { from: 'mem-3000', to: 'R1', value: 77 }, hllLine: 1 }, { text: "6. The value 77 is loaded into R1.", highlights: { cpu: ['R1'] }, update: { reg: 'R1', value: 77 }, hllLine: 1 } ] },
+                register: { name: "Register", category: "non-computable", description: "The operand is in a CPU register.", syntax: "ADD R1, R2", hllCode: `// x in R1, y in R2\nx = x + y;`, initialState: { registers: { R1: 10, R2: 20, R3: 0, AC: 0, PC: 100, IR: 'ADD R1, R2' }, memory: {} }, steps: [ { text: "1. Instruction specifies registers R1 and R2.", highlights: { cpu: ['IR', 'R1', 'R2'] }, hllLine: 1 }, { text: "2. Values from R1 (10) and R2 (20) go to ALU.", highlights: { cpu: ['R1', 'R2', 'ALU'] }, flow: [{ from: 'R1', to: 'ALU', value: 10 }, { from: 'R2', to: 'ALU', value: 20 }], hllLine: 1 }, { text: "3. ALU performs addition (10 + 20 = 30).", highlights: { cpu: ['ALU'] }, hllLine: 1 }, { text: "4. The result (30) is stored back in R1.", highlights: { cpu: ['ALU', 'R1'] }, flow: { from: 'ALU', to: 'R1', value: 30, update: { reg: 'R1', value: 30 } }, hllLine: 1 } ] },
+                registerIndirect: { name: "Register Indirect", category: "computable", description: "A register contains the memory address of the operand.", syntax: "LOAD R1, (R2)", hllCode: `// R2 holds address\nint value = *my_ptr;`, initialState: { registers: { R1: 0, R2: 3000, R3: 0, AC: 0, PC: 100, IR: 'LOAD R1, (R2)' }, memory: { 3000: 99 } }, steps: [ { text: "1. R2 holds the address.", highlights: { cpu: ['IR', 'R2'] }, hllLine: 1 }, { text: "2. Value in R2 (3000) is used as memory address.", highlights: { cpu: ['R2'], mem: ['3000'] }, hllLine: 1 }, { text: "3. Data at address 3000 (99) is retrieved.", highlights: { mem: ['3000'] }, flow: { from: 'mem-3000', to: 'R1', value: 99 }, hllLine: 1 }, { text: "4. The value 99 is loaded into R1.", highlights: { cpu: ['R1'] }, update: { reg: 'R1', value: 99 }, hllLine: 1 } ] },
+                autoincrement: { name: "Autoincrement", category: "computable", description: "Like Register Indirect, but the register is automatically incremented.", syntax: "LOAD R1, (R2)+", hllCode: `// R2 is pointer 'i'\nvalue = array[i++];`, initialState: { registers: { R1: 0, R2: 4000, R3: 0, AC: 0, PC: 100, IR: 'LOAD R1, (R2)+' }, memory: { 4000: 88 } }, steps: [ { text: "1. Value in R2 (4000) is used as memory address.", highlights: { cpu: ['IR', 'R2'], mem: ['4000'] }, hllLine: 1 }, { text: "2. Data at address 4000 (88) is loaded into R1.", highlights: { cpu: ['R1'], mem: ['4000'] }, flow: { from: 'mem-4000', to: 'R1', value: 88, update: { reg: 'R1', value: 88 } }, hllLine: 1 }, { text: "3. Simultaneously, R2's value is sent to ALU.", highlights: { cpu: ['R2', 'ALU'] }, flow: { from: 'R2', to: 'ALU', value: 4000 }, hllLine: 1 }, { text: "4. ALU adds 4 (word size), result is 4004.", highlights: { cpu: ['ALU'] }, hllLine: 1 }, { text: "5. The new value (4004) is written back to R2.", highlights: { cpu: ['ALU', 'R2'] }, flow: { from: 'ALU', to: 'R2', value: 4004, update: { reg: 'R2', value: 4004 } }, hllLine: 1 } ] },
+                indexed: { name: "Indexed", category: "computable", description: "Effective Address = Base Address + Index.", syntax: "LOAD R1, 1000(R2)", hllCode: `// array at 1000, index in R2\nvalue = array[index];`, initialState: { registers: { R1: 0, R2: 16, R3: 0, AC: 0, PC: 100, IR: 'LOAD R1, 1000(R2)' }, memory: { 1016: 55 } }, steps: [ { text: "1. Base (1000) from IR and index (16) from R2 go to ALU.", highlights: { cpu: ['IR', 'R2', 'ALU'] }, flow: [{ from: 'IR', to: 'ALU', value: '1000' }, { from: 'R2', to: 'ALU', value: 16 }], hllLine: 1 }, { text: "2. ALU computes effective address: 1000 + 16 = 1016.", highlights: { cpu: ['ALU'] }, hllLine: 1 }, { text: "3. The result (1016) is sent to memory.", highlights: { cpu: ['ALU'], mem: ['1016'] }, hllLine: 1 }, { text: "4. Data at address 1016 (55) is loaded into R1.", highlights: { mem: ['1016'], cpu: ['R1'] }, flow: { from: 'mem-1016', to: 'R1', value: 55, update: { reg: 'R1', value: 55 } }, hllLine: 1 } ] },
+                pcRelative: { name: "PC-Relative", category: "computable", description: "Target Address = PC + Offset. For branches.", syntax: "BRANCH_IF_ZERO 80", hllCode: `if (x == 0) {\n  // jump 80 bytes\n}`, initialState: { registers: { R1: 0, R2: 0, R3: 0, AC: 0, PC: 500, IR: 'BRANCH_IF_ZERO 80' }, memory: {} }, steps: [ { text: "1. If branch taken, PC (500) and offset (80) go to ALU.", highlights: { cpu: ['PC', 'IR', 'ALU'] }, flow: [{ from: 'PC', to: 'ALU', value: 500 }, { from: 'IR', to: 'ALU', value: '80' }], hllLine: 0 }, { text: "2. ALU calculates target address: 500 + 80 = 580.", highlights: { cpu: ['ALU'] }, hllLine: 1 }, { text: "3. The result (580) is written into the PC.", highlights: { cpu: ['ALU', 'PC'] }, flow: { from: 'ALU', to: 'PC', value: 580, update: { reg: 'PC', value: 580 } }, hllLine: 1 }, { text: "4. Program will 'jump' to fetch from address 580.", highlights: { cpu: ['PC'] }, hllLine: 1 } ] },
+                baseRegister: { name: "Base Register", category: "computable", description: "Effective Address = Base Address (register) + Offset.", syntax: "LOAD R1, 20(R3)", hllCode: `// R3 points to struct\nint age = person.age;`, initialState: { registers: { R1: 0, R2: 0, R3: 6000, AC: 0, PC: 100, IR: 'LOAD R1, 20(R3)' }, memory: { 6020: 123 } }, steps: [ { text: "1. Base from R3 (6000) and offset (20) from IR go to ALU.", highlights: { cpu: ['R3', 'IR', 'ALU'] }, flow: [{ from: 'R3', to: 'ALU', value: 6000 }, { from: 'IR', to: 'ALU', value: '20' }], hllLine: 1 }, { text: "2. ALU computes effective address: 6000 + 20 = 6020.", highlights: { cpu: ['ALU'] }, hllLine: 1 }, { text: "3. The result (6020) is sent to memory.", highlights: { cpu: ['ALU'], mem: ['6020'] }, hllLine: 1 }, { text: "4. Data at address 6020 (123) is loaded into R1.", highlights: { mem: ['6020'], cpu: ['R1'] }, flow: { from: 'mem-6020', to: 'R1', value: 123, update: { reg: 'R1', value: 123 } }, hllLine: 1 } ] }
+            };
+
+            function renderCPU() { for (const reg in state.registers) { document.getElementById(reg).querySelector('span').textContent = state.registers[reg]; } }
+            function renderMemory() { memoryGrid.innerHTML = ''; const addresses = Object.keys(state.memory).sort((a, b) => a - b); if (addresses.length === 0) { memoryGrid.innerHTML = '<p class="text-gray-500 col-span-2 text-center">No memory used.</p>'; return; } addresses.forEach(addr => { const cell = document.createElement('div'); cell.id = `mem-${addr}`; cell.className = 'mem-cell bg-gray-700 p-2 rounded flex justify-between'; cell.innerHTML = `<span class="text-green-400">${addr}:</span> <span class="font-mono">${state.memory[addr]}</span>`; memoryGrid.appendChild(cell); }); }
+            function renderHLLCode() { const code = state.currentMode.hllCode; hllCodeEl.innerHTML = code.split('\n').map((line, index) => `<span id="hll-line-${index}" class="block px-2">${line || '&nbsp;'}</span>`).join(''); }
+            function clearHighlights() { document.querySelectorAll('.highlight-cpu, .highlight-mem, .highlight-alu, .highlight-hll').forEach(el => el.classList.remove('highlight-cpu', 'highlight-mem', 'highlight-alu', 'highlight-hll')); }
+            function applyHighlights(step) { if (step.highlights.cpu) { step.highlights.cpu.forEach(id => document.getElementById(id)?.classList.add('highlight-cpu')); } if (step.highlights.mem) { step.highlights.mem.forEach(id => document.getElementById(`mem-${id}`)?.classList.add('highlight-mem')); } if (step.hllLine !== undefined) { document.getElementById(`hll-line-${step.hllLine}`)?.classList.add('highlight-hll'); } }
+            
+            function setupMode(modeKey) {
+                clearTimeout(state.animationTimeout);
+                state.currentMode = addressingModes[modeKey];
+                modeTitle.textContent = state.currentMode.name;
+                modeDescription.textContent = state.currentMode.description;
+                resetSimulation();
+            }
+
+            function resetSimulation() {
+                clearTimeout(state.animationTimeout);
+                state.currentStep = -1;
+                if (!state.currentMode) return;
+                
+                state.registers = JSON.parse(JSON.stringify(state.currentMode.initialState.registers));
+                state.memory = JSON.parse(JSON.stringify(state.currentMode.initialState.memory));
+                
+                renderCPU();
+                renderMemory();
+                renderHLLCode();
+                clearHighlights();
+                explanationBox.innerHTML = `<p class="text-yellow-200"><strong>Assembly:</strong> ${state.currentMode.syntax}</p><p class="mt-2">Ready. Press 'Next' or 'Play All'.</p>`;
+                updateButtons();
+            }
+
+            function goToStep(stepIndex) {
+                if (!state.currentMode || stepIndex < -1 || stepIndex >= state.currentMode.steps.length) return;
+                
+                clearTimeout(state.animationTimeout);
+                state.currentStep = stepIndex;
+                
+                state.registers = JSON.parse(JSON.stringify(state.currentMode.initialState.registers));
+                state.memory = JSON.parse(JSON.stringify(state.currentMode.initialState.memory));
+
+                for (let i = 0; i < stepIndex; i++) {
+                    const step = state.currentMode.steps[i];
+                    if (step.flow) {
+                        const flows = Array.isArray(step.flow) ? step.flow : [step.flow];
+                        flows.forEach(flow => {
+                            if (flow.update) state.registers[flow.update.reg] = flow.update.value;
+                        });
+                    }
+                }
+                renderCPU();
+                renderMemory();
+
+                if (stepIndex > -1) {
+                    const step = state.currentMode.steps[stepIndex];
+                    explanationBox.innerHTML = state.currentMode.steps.slice(0, stepIndex + 1).map((s, i) => `<p class="${i === stepIndex ? 'text-white' : 'text-gray-400'}">${s.text}</p>`).join('');
+                    explanationBox.scrollTop = explanationBox.scrollHeight;
+                    clearHighlights();
+                    applyHighlights(step);
+                    if (step.flow) {
+                        const flows = Array.isArray(step.flow) ? step.flow : [step.flow];
+                        flows.forEach(flow => {
+                            if (flow.update) {
+                                setTimeout(() => {
+                                    state.registers[flow.update.reg] = flow.update.value;
+                                    renderCPU();
+                                }, 500);
+                            }
+                        });
+                    }
+                } else {
+                    resetSimulation();
+                }
+                updateButtons();
+            }
+
+            function playAll() {
+                playBtn.disabled = true;
+                backBtn.disabled = true;
+                nextBtn.disabled = true;
+
+                function next() {
+                    if (state.currentStep < state.currentMode.steps.length - 1) {
+                        goToStep(state.currentStep + 1);
+                        state.animationTimeout = setTimeout(next, 1500);
+                    } else {
+                        updateButtons();
+                    }
+                }
+                next();
+            }
+
+            function updateButtons() {
+                if (!state.currentMode) {
+                    [backBtn, nextBtn, playBtn, resetBtn].forEach(b => { b.disabled = true; b.classList.add('disabled-btn'); });
+                    return;
+                }
+                resetBtn.disabled = false;
+                resetBtn.classList.remove('disabled-btn');
+                playBtn.disabled = state.currentStep >= state.currentMode.steps.length - 1;
+                playBtn.classList.toggle('disabled-btn', playBtn.disabled);
+                backBtn.disabled = state.currentStep < 0;
+                backBtn.classList.toggle('disabled-btn', backBtn.disabled);
+                nextBtn.disabled = state.currentStep >= state.currentMode.steps.length - 1;
+                nextBtn.classList.toggle('disabled-btn', nextBtn.disabled);
+            }
+
+            function initialize() {
+                Object.keys(addressingModes).forEach(key => {
+                    const mode = addressingModes[key];
+                    const button = document.createElement('button');
+                    button.textContent = mode.name;
+                    button.className = `font-semibold py-2 px-3 rounded-md text-sm transition ${ mode.category === 'non-computable' ? 'bg-teal-100 text-teal-800 hover:bg-teal-200' : 'bg-rose-100 text-rose-800 hover:bg-rose-200' }`;
+                    button.onclick = () => setupMode(key);
+                    if (mode.category === 'non-computable') { nonComputableContainer.appendChild(button); } else { computableContainer.appendChild(button); }
+                });
+                playBtn.onclick = playAll;
+                nextBtn.onclick = () => goToStep(state.currentStep + 1);
+                backBtn.onclick = () => goToStep(state.currentStep - 1);
+                resetBtn.onclick = resetSimulation;
+                hllCodeEl.innerHTML = '<span class="text-gray-500">Select a mode to see code.</span>';
+            }
+            initialize();
+        })();
+
+        // --- PROGRAM FLOW SIMULATOR SCRIPT ---
+        (() => {
+            const programTitle = document.getElementById('program-title');
+            const explanationBoxProgram = document.getElementById('explanation-box-program');
+            const hllCodeProgramEl = document.getElementById('hll-code-program');
+            const playBtnProgram = document.getElementById('play-btn-program');
+            const nextBtnProgram = document.getElementById('next-btn-program');
+            const backBtnProgram = document.getElementById('back-btn-program');
+            const resetBtnProgram = document.getElementById('reset-btn-program');
+            const memoryGridProgram = document.getElementById('memory-grid-program');
+            const selectStraightBtn = document.getElementById('select-straight');
+            const selectBranchBtn = document.getElementById('select-branch');
+
+            let state = {
+                registers: { R0: 0, R1: 0, R2: 0, Flags: { Z: 0 }, PC: 0, IR: '---' },
+                memory: {},
+                currentProgram: null,
+                animationTimeout: null,
+                currentStep: -1
+            };
+
+            const programs = {
+                straight: {
+                    name: "Straight-Line: C = A + B",
+                    hllCode: `int A = 5;\nint B = 10;\nint C = A + B;`,
+                    initialState: {
+                        registers: { R0: 0, R1: 0, R2: 0, Flags: { Z: 0 }, PC: 1000, IR: '---' },
+                        memory: { 1000: { type: 'instr', value: 'MOVE R0, A', label: 'Start' }, 1004: { type: 'instr', value: 'ADD R0, B' }, 1008: { type: 'instr', value: 'MOVE C, R0' }, 1012: { type: 'instr', value: 'HALT' }, 2000: { type: 'data', value: 5, label: 'A' }, 2004: { type: 'data', value: 10, label: 'B' }, 2008: { type: 'data', value: 0, label: 'C' } }
+                    },
+                    steps: [
+                        { phase: 'FETCH', description: "Read instruction at PC (1000).", highlights: { cpu: ['prog-PC'], mem: ['1000'] }, hllLine: 2 },
+                        { phase: 'DECODE', description: "Instruction is 'MOVE R0, A'. PC increments to 1004.", update: { reg: 'PC', value: 1004 }, update_ir: 'MOVE R0, A', hllLine: 2 },
+                        { phase: 'EXECUTE', description: "Get data from address A (2000) and load value (5) into R0.", update: { reg: 'R0', value: 5 }, highlights: { cpu: ['prog-IR', 'prog-R0'], mem: ['2000'] }, hllLine: 2 },
+                        { phase: 'FETCH', description: "Read instruction at PC (1004).", highlights: { cpu: ['prog-PC'], mem: ['1004'] }, hllLine: 2 },
+                        { phase: 'DECODE', description: "Instruction is 'ADD R0, B'. PC increments to 1008.", update: { reg: 'PC', value: 1008 }, update_ir: 'ADD R0, B', hllLine: 2 },
+                        { phase: 'EXECUTE', description: "Get data from B (2004) and R0 (5). ALU computes 5 + 10 = 15. Store in R0.", update: { reg: 'R0', value: 15 }, highlights: { cpu: ['prog-IR', 'prog-R0', 'ALU-program'], mem: ['2004'] }, hllLine: 2 },
+                        { phase: 'FETCH', description: "Read instruction at PC (1008).", highlights: { cpu: ['prog-PC'], mem: ['1008'] }, hllLine: 2 },
+                        { phase: 'DECODE', description: "Instruction is 'MOVE C, R0'. PC increments to 1012.", update: { reg: 'PC', value: 1012 }, update_ir: 'MOVE C, R0', hllLine: 2 },
+                        { phase: 'EXECUTE', description: "Move value from R0 (15) to address C (2008).", update_mem: { addr: 2008, value: 15 }, highlights: { cpu: ['prog-IR', 'prog-R0'], mem: ['2008'] }, hllLine: 2 },
+                        { phase: 'FETCH', description: "Read instruction at PC (1012).", highlights: { cpu: ['prog-PC'], mem: ['1012'] } },
+                        { phase: 'DECODE', description: "HALT. Program finished.", update_ir: 'HALT' }
+                    ]
+                },
+                branch: {
+                    name: "Branching: Sum of N (Book Example)",
+                    hllCode: `int sum = 0;\nint N = 3;\nint nums[] = {10, 20, 30};\nfor (int i=0; i<N; i++) {\n  sum = sum + nums[i];\n}`,
+                    initialState: {
+                        registers: { R0: 0, R1: 0, R2: 3000, Flags: { Z: 0 }, PC: 1000, IR: '---' },
+                        memory: { 1000: { type: 'instr', value: 'MOVE N,R1' }, 1004: { type: 'instr', value: 'CLEAR R0' }, 1008: { type: 'instr', value: 'ADD (R2)+,R0', label: 'LOOP'}, 1012: { type: 'instr', value: 'DECREMENT R1' }, 1016: { type: 'instr', value: 'BRANCH>0 LOOP' }, 1020: { type: 'instr', value: 'MOVE SUM,R0' }, 1024: { type: 'instr', value: 'HALT' }, 2000: { type: 'data', value: 3, label: 'N' }, 3000: { type: 'data', value: 10, label: 'NUM1' }, 3004: { type: 'data', value: 20, label: 'NUM2' }, 3008: { type: 'data', value: 30, label: 'NUM3' }, 4000: { type: 'data', value: 0, label: 'SUM' } }
+                    },
+                    steps: [
+                        { phase: 'FETCH', loop: 'Setup', description: "Read from PC (1000).", highlights: { cpu: ['prog-PC'], mem: ['1000'] }, hllLine: 1 },
+                        { phase: 'DECODE', loop: 'Setup', description: "Instruction: 'MOVE N,R1'. PC -> 1004.", update: { reg: 'PC', value: 1004 }, update_ir: 'MOVE N,R1', hllLine: 1 },
+                        { phase: 'EXECUTE', loop: 'Setup', description: "Load counter from N (3) into R1.", update: { reg: 'R1', value: 3 }, highlights: { cpu: ['prog-R1'], mem:['2000']}, hllLine: 1 },
+                        { phase: 'FETCH', loop: 'Setup', description: "Read from PC (1004).", highlights: { cpu: ['prog-PC'], mem: ['1004'] }, hllLine: 0 },
+                        { phase: 'DECODE', loop: 'Setup', description: "Instruction: 'CLEAR R0'. PC -> 1008.", update: { reg: 'PC', value: 1008 }, update_ir: 'CLEAR R0', hllLine: 0 },
+                        { phase: 'EXECUTE', loop: 'Setup', description: "Set sum register R0 to 0.", update: { reg: 'R0', value: 0 }, highlights: { cpu: ['prog-R0']}, hllLine: 0 },
+                        
+                        { phase: 'FETCH', loop: 1, description: "Read from PC (1008).", highlights: { cpu: ['prog-PC'], mem: ['1008'] }, hllLine: 4 },
+                        { phase: 'DECODE', loop: 1, description: "Instruction: 'ADD (R2)+,R0'. PC -> 1012.", update: { reg: 'PC', value: 1012 }, update_ir: 'ADD (R2)+,R0', hllLine: 4 },
+                        { phase: 'EXECUTE', loop: 1, description: "Add value at (R2)=3000 to R0. R0=10. R2 -> 3004.", update: {reg: 'R0', value: 10}, update2: {reg: 'R2', value: 3004}, highlights: {cpu: ['prog-R0', 'prog-R2'], mem:['3000']}, hllLine: 4 },
+                        { phase: 'FETCH', loop: 1, description: "Read from PC (1012).", highlights: { cpu: ['prog-PC'], mem: ['1012'] }, hllLine: 3 },
+                        { phase: 'DECODE', loop: 1, description: "Instruction: 'DECREMENT R1'. PC -> 1016.", update: { reg: 'PC', value: 1016 }, update_ir: 'DECREMENT R1', hllLine: 3 },
+                        { phase: 'EXECUTE', loop: 1, description: "R1 becomes 2. Result is not zero, so Z Flag = 0.", update: {reg: 'R1', value: 2}, update_flags: {Z: 0}, highlights: {cpu: ['prog-R1', 'prog-Flags']}, hllLine: 3 },
+                        { phase: 'FETCH', loop: 1, description: "Read from PC (1016).", highlights: { cpu: ['prog-PC'], mem: ['1016'] }, hllLine: 3 },
+                        { phase: 'DECODE', loop: 1, description: "Instruction: 'BRANCH>0 LOOP'.", update_ir: 'BRANCH>0 LOOP', hllLine: 3 },
+                        { phase: 'EXECUTE', loop: 1, description: "Z flag is 0, so condition is TRUE. JUMP! PC is loaded with LOOP address (1008).", update: { reg: 'PC', value: 1008 }, highlights: {cpu: ['prog-PC', 'prog-Flags']}, hllLine: 3 },
+
+                        { phase: 'FETCH', loop: 2, description: "Read from PC (1008).", highlights: { cpu: ['prog-PC'], mem: ['1008'] }, hllLine: 4 },
+                        { phase: 'DECODE', loop: 2, description: "Instruction: 'ADD (R2)+,R0'. PC -> 1012.", update: { reg: 'PC', value: 1012 }, update_ir: 'ADD (R2)+,R0', hllLine: 4 },
+                        { phase: 'EXECUTE', loop: 2, description: "Add value at (R2)=3004 to R0. R0=30. R2 -> 3008.", update: {reg: 'R0', value: 30}, update2: {reg: 'R2', value: 3008}, highlights: {cpu: ['prog-R0', 'prog-R2'], mem:['3004']}, hllLine: 4 },
+                        { phase: 'FETCH', loop: 2, description: "Read from PC (1012).", highlights: { cpu: ['prog-PC'], mem: ['1012'] }, hllLine: 3 },
+                        { phase: 'DECODE', loop: 2, description: "Instruction: 'DECREMENT R1'. PC -> 1016.", update: { reg: 'PC', value: 1016 }, update_ir: 'DECREMENT R1', hllLine: 3 },
+                        { phase: 'EXECUTE', loop: 2, description: "R1 becomes 1. Result is not zero, so Z Flag = 0.", update: {reg: 'R1', value: 1}, update_flags: {Z: 0}, highlights: {cpu: ['prog-R1', 'prog-Flags']}, hllLine: 3 },
+                        { phase: 'FETCH', loop: 2, description: "Read from PC (1016).", highlights: { cpu: ['prog-PC'], mem: ['1016'] }, hllLine: 3 },
+                        { phase: 'DECODE', loop: 2, description: "Instruction: 'BRANCH>0 LOOP'.", update_ir: 'BRANCH>0 LOOP', hllLine: 3 },
+                        { phase: 'EXECUTE', loop: 2, description: "Z flag is 0, so condition is TRUE. JUMP! PC is loaded with LOOP address (1008).", update: { reg: 'PC', value: 1008 }, highlights: {cpu: ['prog-PC', 'prog-Flags']}, hllLine: 3 },
+
+                        { phase: 'FETCH', loop: 3, description: "Read from PC (1008).", highlights: { cpu: ['prog-PC'], mem: ['1008'] }, hllLine: 4 },
+                        { phase: 'DECODE', loop: 3, description: "Instruction: 'ADD (R2)+,R0'. PC -> 1012.", update: { reg: 'PC', value: 1012 }, update_ir: 'ADD (R2)+,R0', hllLine: 4 },
+                        { phase: 'EXECUTE', loop: 3, description: "Add value at (R2)=3008 to R0. R0=60. R2 -> 3012.", update: {reg: 'R0', value: 60}, update2: {reg: 'R2', value: 3012}, highlights: {cpu: ['prog-R0', 'prog-R2'], mem:['3008']}, hllLine: 4 },
+                        { phase: 'FETCH', loop: 3, description: "Read from PC (1012).", highlights: { cpu: ['prog-PC'], mem: ['1012'] }, hllLine: 3 },
+                        { phase: 'DECODE', loop: 3, description: "Instruction: 'DECREMENT R1'. PC -> 1016.", update: { reg: 'PC', value: 1016 }, update_ir: 'DECREMENT R1', hllLine: 3 },
+                        { phase: 'EXECUTE', loop: 3, description: "R1 becomes 0. Result is zero, so Z Flag = 1.", update: {reg: 'R1', value: 0}, update_flags: {Z: 1}, highlights: {cpu: ['prog-R1', 'prog-Flags']}, hllLine: 3 },
+                        { phase: 'FETCH', loop: 3, description: "Read from PC (1016).", highlights: { cpu: ['prog-PC'], mem: ['1016'] }, hllLine: 3 },
+                        { phase: 'DECODE', loop: 3, description: "Instruction: 'BRANCH>0 LOOP'.", update_ir: 'BRANCH>0 LOOP', hllLine: 3 },
+                        { phase: 'EXECUTE', loop: 3, description: "Z flag is 1, so condition is FALSE. No jump. PC increments normally to 1020.", update: { reg: 'PC', value: 1020 }, highlights: {cpu: ['prog-PC', 'prog-Flags']}, hllLine: 3 },
+
+                        { phase: 'FETCH', loop: 'End', description: "Read from PC (1020).", highlights: { cpu: ['prog-PC'], mem: ['1020'] } },
+                        { phase: 'DECODE', loop: 'End', description: "Instruction: 'MOVE SUM,R0'. PC -> 1024.", update: { reg: 'PC', value: 1024 }, update_ir: 'MOVE SUM,R0' },
+                        { phase: 'EXECUTE', loop: 'End', description: "Store R0 (60) in SUM.", update_mem: {addr: 4000, value: 60}, highlights: {cpu: ['prog-R0'], mem:['4000']} },
+                        { phase: 'FETCH', loop: 'End', description: "Read from PC (1024).", highlights: { cpu: ['prog-PC'], mem: ['1024'] } },
+                        { phase: 'DECODE', loop: 'End', description: "HALT. Program finished.", update_ir: 'HALT' }
+                    ]
+                }
+            };
+
+            function renderCPU() { for (const reg in state.registers) { if(reg === 'Flags') { document.getElementById('prog-Flags').querySelector('span').textContent = `[Z:${state.registers.Flags.Z}]`; } else { const el = document.getElementById(`prog-${reg}`); if (el) { el.querySelector('span').textContent = state.registers[reg]; } } } }
+            function renderMemory() { memoryGridProgram.innerHTML = ''; const addresses = Object.keys(state.memory).sort((a, b) => a - b); addresses.forEach(addr => { const memObj = state.memory[addr]; const cell = document.createElement('div'); cell.id = `prog-mem-${addr}`; cell.className = 'mem-cell bg-gray-700 p-2 rounded flex justify-between items-center'; let labelHtml = memObj.label ? `<span class="text-xs text-yellow-400 mr-2">${memObj.label}</span>` : ''; let contentHtml = memObj.type === 'instr' ? `<span class="font-mono text-cyan-300">'${memObj.value}'</span>` : `<span class="font-mono">${memObj.value}</span>`; cell.innerHTML = `<span class="text-green-400">${addr}:</span> <div class="flex items-center">${labelHtml}${contentHtml}</div>`; memoryGridProgram.appendChild(cell); }); }
+            function renderHLLCode() { if (!state.currentProgram) return; const code = state.currentProgram.hllCode; hllCodeProgramEl.innerHTML = code.split('\n').map((line, index) => `<span id="prog-hll-line-${index}" class="block px-2">${line || '&nbsp;'}</span>`).join(''); }
+            function clearHighlights() { document.querySelectorAll('.highlight-cpu-program, .highlight-mem-program, .highlight-alu-program, .highlight-hll').forEach(el => el.classList.remove('highlight-cpu-program', 'highlight-mem-program', 'highlight-alu-program', 'highlight-hll')); }
+            
+            function applyHighlights(step) {
+                if (step.highlights) {
+                    if (step.highlights.cpu) { step.highlights.cpu.forEach(id => document.getElementById(id)?.classList.add('highlight-cpu-program')); }
+                    if (step.highlights.mem) { step.highlights.mem.forEach(id => document.getElementById(`prog-mem-${id}`)?.classList.add('highlight-mem-program')); }
+                }
+                if (step.hllLine !== undefined) {
+                    document.getElementById(`prog-hll-line-${step.hllLine}`)?.classList.add('highlight-hll');
+                }
+            }
+            
+            function setupProgram(programKey) {
+                clearTimeout(state.animationTimeout);
+                state.currentProgram = programs[programKey];
+                programTitle.textContent = state.currentProgram.name;
+                resetProgram();
+            }
+
+            function resetProgram() {
+                clearTimeout(state.animationTimeout);
+                state.currentStep = -1;
+                if (!state.currentProgram) return;
+                state.registers = JSON.parse(JSON.stringify(state.currentProgram.initialState.registers));
+                state.memory = JSON.parse(JSON.stringify(state.currentProgram.initialState.memory));
+                renderCPU();
+                renderMemory();
+                renderHLLCode();
+                clearHighlights();
+                updateExplanationUI();
+                updateButtons();
+            }
+
+            function goToStep(stepIndex) {
+                 if (!state.currentProgram || stepIndex < -1 || stepIndex >= state.currentProgram.steps.length) return;
+                
+                clearTimeout(state.animationTimeout);
+                state.currentStep = stepIndex;
+                
+                state.registers = JSON.parse(JSON.stringify(state.currentProgram.initialState.registers));
+                state.memory = JSON.parse(JSON.stringify(state.currentProgram.initialState.memory));
+
+                for (let i = 0; i <= stepIndex; i++) {
+                    const step = state.currentProgram.steps[i];
+                    if (step.update) { state.registers[step.update.reg] = step.update.value; }
+                    if (step.update2) { state.registers[step.update2.reg] = step.update2.value; }
+                    if (step.update3) { state.registers[step.update3.reg] = step.update3.value; }
+                    if (step.update_ir) { state.registers.IR = step.update_ir; }
+                    if (step.update_flags) { state.registers.Flags = step.update_flags; }
+                    if (step.update_mem) { state.memory[step.update_mem.addr].value = step.update_mem.value; }
+                }
+                
+                renderCPU();
+                renderMemory();
+                updateExplanationUI();
+                
+                clearHighlights();
+                if (stepIndex > -1) {
+                    const step = state.currentProgram.steps[stepIndex];
+                    applyHighlights(step);
+                }
+                updateButtons();
+            }
+
+            function updateExplanationUI() {
+                if (state.currentStep === -1) {
+                    explanationBoxProgram.innerHTML = `<p class="text-gray-400">Ready. Press 'Next' or 'Play All'.</p>`;
+                    return;
+                }
+
+                const currentStepData = state.currentProgram.steps[state.currentStep];
+                const loopInfo = currentStepData.loop ? `<strong>Loop ${currentStepData.loop}</strong><br>` : `<strong>Step ${state.currentStep + 1}</strong><br>`;
+                
+                explanationBoxProgram.innerHTML = `
+                    <p class="mb-2">${loopInfo}</p>
+                    <p><strong class="text-yellow-400">${currentStepData.phase}:</strong> ${currentStepData.description}</p>
+                `;
+            }
+
+            function playAll() {
+                playBtnProgram.disabled = true;
+                backBtnProgram.disabled = true;
+                nextBtnProgram.disabled = true;
+                
+                function next() {
+                    if (state.currentStep < state.currentProgram.steps.length - 1) {
+                        goToStep(state.currentStep + 1);
+                        state.animationTimeout = setTimeout(next, 1000);
+                    } else {
+                        updateButtons();
+                    }
+                }
+                next();
+            }
+
+            function updateButtons() {
+                if (!state.currentProgram) {
+                    [backBtnProgram, nextBtnProgram, playBtnProgram, resetBtnProgram].forEach(b => { b.disabled = true; b.classList.add('disabled-btn'); });
+                    return;
+                }
+                resetBtnProgram.disabled = false;
+                resetBtnProgram.classList.remove('disabled-btn');
+                playBtnProgram.disabled = state.currentStep >= state.currentProgram.steps.length - 1;
+                playBtnProgram.classList.toggle('disabled-btn', playBtnProgram.disabled);
+                backBtnProgram.disabled = state.currentStep < 0;
+                backBtnProgram.classList.toggle('disabled-btn', backBtnProgram.disabled);
+                nextBtnProgram.disabled = state.currentStep >= state.currentProgram.steps.length - 1;
+                nextBtnProgram.classList.toggle('disabled-btn', nextBtnProgram.disabled);
+            }
+
+            selectStraightBtn.onclick = () => setupProgram('straight');
+            selectBranchBtn.onclick = () => setupProgram('branch');
+            playBtnProgram.onclick = playAll;
+            nextBtnProgram.onclick = () => goToStep(state.currentStep + 1);
+            backBtnProgram.onclick = () => goToStep(state.currentStep - 1);
+            resetBtnProgram.onclick = resetProgram;
+        })();
+
+        // --- CONDITIONAL FLAGS SCRIPT ---
+        (() => {
+            const bitSelect = document.getElementById('bit-select');
+            const opAInput = document.getElementById('opA');
+            const opBInput = document.getElementById('opB');
+            const addBtn = document.getElementById('add-btn-flags');
+            const visualizer = document.getElementById('binary-addition-visualizer');
+            const flagN = document.getElementById('flag-N');
+            const flagZ = document.getElementById('flag-Z');
+            const flagV = document.getElementById('flag-V');
+            const flagC = document.getElementById('flag-C');
+            const flagsExplanation = document.getElementById('flags-explanation');
+
+            const cinToggle = document.getElementById('cin-toggle');
+            const coutToggle = document.getElementById('cout-toggle');
+            const flagVXor = document.getElementById('flag-V-xor');
+            const xorCinPath = document.getElementById('xor-cin-path');
+            const xorCoutPath = document.getElementById('xor-cout-path');
+            const xorOutputPath = document.getElementById('xor-output-path');
+            let cin = 0;
+            let cout = 0;
+            let animationTimeout;
+
+            function toBinaryString(num, bits) {
+                let bin = (num >>> 0).toString(2);
+                if (bin.length > bits) {
+                    bin = bin.slice(bin.length - bits);
+                }
+                while (bin.length < bits) {
+                    bin = "0" + bin;
+                }
+                return bin;
+            }
+
+            function updateFlagUI(el, state) {
+                if (state) {
+                    el.classList.remove('flag-off');
+                    el.classList.add('flag-on');
+                } else {
+                    el.classList.remove('flag-on');
+                    el.classList.add('flag-off');
+                }
+            }
+            
+            function animateAddition() {
+                clearTimeout(animationTimeout);
+                addBtn.disabled = true;
+                addBtn.classList.add('disabled-btn');
+
+                const bits = parseInt(bitSelect.value);
+                let valA = parseInt(opAInput.value) || 0;
+                let valB = parseInt(opBInput.value) || 0;
+
+                const binA = toBinaryString(valA, bits);
+                const binB = toBinaryString(valB, bits);
+
+                visualizer.innerHTML = `
+                    <div class="flex justify-end space-x-1" id="carry-row"><div class="binary-bit opacity-0"></div></div>
+                    <div class="flex justify-end space-x-1" id="valA-row"></div>
+                    <div class="flex justify-end space-x-1" id="valB-row"></div>
+                    <hr class="my-2 border-gray-600">
+                    <div class="flex justify-end space-x-1" id="result-row"></div>
+                `;
+
+                const carryRow = document.getElementById('carry-row');
+                const valARow = document.getElementById('valA-row');
+                const valBRow = document.getElementById('valB-row');
+                const resultRow = document.getElementById('result-row');
+
+                for(let i=0; i<bits; i++) {
+                    carryRow.innerHTML += `<span id="carry-${i}" class="binary-bit text-yellow-400 opacity-0">0</span>`;
+                    valARow.innerHTML += `<span id="bitA-${i}" class="binary-bit">${binA[i]}</span>`;
+                    valBRow.innerHTML += `<span id="bitB-${i}" class="binary-bit">${binB[i]}</span>`;
+                    resultRow.innerHTML += `<span id="res-${i}" class="binary-bit">?</span>`;
+                }
+
+                let carry = 0;
+                let resultBin = "";
+                let step = 0;
+
+                function processBit() {
+                    if (step >= bits) {
+                        const finalResult = parseInt(resultBin, 2);
+                        let signedResult;
+                         switch(bits) {
+                            case 4: signedResult = (finalResult > 7) ? finalResult - 16 : finalResult; break;
+                            case 16: let a16 = new Int16Array(1); a16[0] = finalResult; signedResult = a16[0]; break;
+                            case 32: let a32 = new Int32Array(1); a32[0] = finalResult; signedResult = a32[0]; break;
+                            default: let a8 = new Int8Array(1); a8[0] = finalResult; signedResult = a8[0]; break;
+                        }
+                        
+                        const n = (signedResult < 0) ? 1 : 0;
+                        const z = (signedResult === 0) ? 1 : 0;
+                        
+                        setTimeout(() => updateFlagUI(flagN, n), 200);
+                        setTimeout(() => updateFlagUI(flagZ, z), 400);
+
+                        flagsExplanation.innerHTML = `
+                            <p><strong>N:</strong> ${n ? 'Set (Result is negative)' : 'Clear (Result is positive)'}</p>
+                            <p><strong>Z:</strong> ${z ? 'Set (Result is zero)' : 'Clear (Result is not zero)'}</p>
+                            <p id="v-flag-exp"><strong>V:</strong> ...</p>
+                            <p><strong>C:</strong> ...</p>
+                        `;
+                        addBtn.disabled = false;
+                        addBtn.classList.remove('disabled-btn');
+                        return;
+                    }
+
+                    const i = bits - 1 - step;
+                    
+                    document.querySelectorAll('.bit-highlight, .carry-highlight').forEach(el => el.classList.remove('bit-highlight', 'carry-highlight'));
+                    
+                    const bitAEl = document.getElementById(`bitA-${i}`);
+                    const bitBEl = document.getElementById(`bitB-${i}`);
+                    const carryInEl = document.getElementById(`carry-${i}`);
+                    
+                    bitAEl.classList.add('bit-highlight');
+                    bitBEl.classList.add('bit-highlight');
+                    if(carry > 0) carryInEl.classList.add('carry-highlight');
+
+                    const bitA = parseInt(binA[i]);
+                    const bitB = parseInt(binB[i]);
+                    const sum = bitA + bitB + carry;
+                    const resultBit = sum % 2;
+                    const carryOut = Math.floor(sum / 2);
+
+                    setTimeout(() => {
+                        document.getElementById(`res-${i}`).textContent = resultBit;
+                        resultBin = resultBit + resultBin;
+                        
+                        const carryOutEl = document.getElementById(`carry-${i-1}`);
+                        if(carryOutEl) {
+                            carryOutEl.textContent = carryOut;
+                            carryOutEl.style.opacity = 1;
+                        }
+
+                        if (i === 0) { // MSB
+                            const v = (carry ^ carryOut);
+                            updateFlagUI(flagV, v);
+                            updateFlagUI(flagC, carryOut);
+
+                            document.getElementById('flags-explanation').innerHTML = `
+                                <p><strong>N:</strong> ${resultBit ? 'Set (Result is negative)' : 'Clear (Result is positive)'}</p>
+                                <p><strong>Z:</strong> ...</p>
+                                <p id="v-flag-exp"><strong>V:</strong> ${v ? '<span class="text-red-400 font-bold">Set (Signed overflow occurred)</span>' : 'Clear (No overflow)'}</p>
+                                <p><strong>C:</strong> ${carryOut ? 'Set (Unsigned carry occurred)' : 'Clear (No carry)'}</p>
+                            `;
+                            
+                            cin = carry;
+                            cout = carryOut;
+                            cinToggle.textContent = `C-in = ${cin}`;
+                            coutToggle.textContent = `C-out = ${cout}`;
+                            cinToggle.classList.toggle('bg-blue-600', cin === 1);
+                            cinToggle.classList.toggle('bg-gray-600', cin === 0);
+                            coutToggle.classList.toggle('bg-blue-600', cout === 1);
+                            coutToggle.classList.toggle('bg-gray-600', cout === 0);
+                            triggerPulse(xorCinPath);
+                            triggerPulse(xorCoutPath);
+                            updateXor();
+                        }
+
+                        carry = carryOut;
+                        step++;
+                        animationTimeout = setTimeout(processBit, 600);
+                    }, 300);
+                }
+
+                [flagN, flagZ, flagV, flagC].forEach(f => updateFlagUI(f, 0));
+                flagsExplanation.innerHTML = '';
+                processBit();
+            }
+
+            function triggerPulse(el) {
+                el.classList.add('pulse-animation');
+                el.addEventListener('animationend', () => {
+                    el.classList.remove('pulse-animation');
+                }, {once: true});
+            }
+
+            function updateXor() {
+                const v = cin ^ cout;
+                updateFlagUI(flagVXor, v);
+                triggerPulse(xorOutputPath);
+            }
+
+            cinToggle.addEventListener('click', () => {
+                cin = 1 - cin;
+                cinToggle.textContent = `C-in = ${cin}`;
+                cinToggle.classList.toggle('bg-blue-600', cin === 1);
+                cinToggle.classList.toggle('bg-gray-600', cin === 0);
+                triggerPulse(xorCinPath);
+                updateXor();
+            });
+
+            coutToggle.addEventListener('click', () => {
+                cout = 1 - cout;
+                coutToggle.textContent = `C-out = ${cout}`;
+                coutToggle.classList.toggle('bg-blue-600', cout === 1);
+                coutToggle.classList.toggle('bg-gray-600', cout === 0);
+                triggerPulse(xorCoutPath);
+                updateXor();
+            });
+            
+            bitSelect.addEventListener('change', () => {
+                const bits = parseInt(bitSelect.value);
+                const is32bit = bits === 32;
+                opAInput.disabled = is32bit;
+                opBInput.disabled = is32bit;
+                if(is32bit) {
+                    opAInput.value = 100000;
+                    opBInput.value = 200000;
+                }
+            });
+
+            addBtn.addEventListener('click', animateAddition);
+            
+        })();
+    </script>
+</body>
+</html>
