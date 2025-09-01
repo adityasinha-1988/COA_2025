@@ -1,0 +1,755 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive CPU Simulator & Assembly Tutorial</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f1f5f9;
+        }
+        .font-mono {
+            font-family: 'Roboto Mono', monospace;
+        }
+        .card {
+            background-color: white;
+            border-radius: 0.75rem;
+            box-shadow: 0 4px_6px -1px rgb(0 0 0 / 0.1), 0 2px_4px -2px rgb(0 0 0 / 0.1);
+        }
+        .code-block {
+            background-color: #0f172a;
+            color: #e2e8f0;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            min-height: 100px;
+        }
+        .code-line {
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+            transition: background-color 0.3s;
+            white-space: pre-wrap;
+        }
+        .code-line.highlight {
+            background-color: #4f46e5;
+            color: white;
+        }
+        .btn {
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            background-color: #4f46e5;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s, opacity 0.2s;
+            border: none;
+        }
+        .btn:hover:not(:disabled) {
+            background-color: #4338ca;
+        }
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .btn-secondary {
+            background-color: #64748b;
+        }
+        .btn-secondary:hover:not(:disabled) {
+            background-color: #475569;
+        }
+        .register, .memory-cell {
+            background-color: #e2e8f0;
+            padding: 0.5rem;
+            border-radius: 0.375rem;
+            text-align: center;
+            transition: background-color 0.3s, transform 0.3s;
+        }
+        .register.highlight, .memory-cell.highlight {
+            background-color: #a5b4fc;
+            transform: scale(1.05);
+            font-weight: bold;
+        }
+        .explanation-box {
+            background-color: #f8fafc;
+            border: 1px dashed #cbd5e1;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            min-height: 60px;
+            color: #1e293b;
+            font-weight: 500;
+        }
+    </style>
+</head>
+<body class="p-4 sm:p-6 md:p-8">
+    <div class="max-w-6xl mx-auto">
+        <header class="text-center mb-10">
+            <h1 class="text-3xl md:text-4xl font-bold text-slate-800">Interactive CPU Simulator</h1>
+            <p class="mt-2 text-lg text-slate-600">Visualize assembly execution step-by-step.</p>
+        </header>
+
+        <main class="space-y-12">
+            <!-- Question 1: Conditional Logic -->
+            <section id="q1" class="card p-6 md:p-8">
+                <h2 class="text-2xl font-bold text-slate-700 mb-2">1. Conditional Logic (`if` statement)</h2>
+                <p class="text-slate-600 mb-6"><strong>Problem:</strong> Translate the C code for an OR condition into assembly. `x` is in R1, `y` in R2, `z` in R3, and `a` in R8.</p>
+                <div class="grid lg:grid-cols-2 gap-8">
+                    <div class="bg-slate-50 p-6 rounded-lg border">
+                        <h3 class="font-semibold text-lg text-slate-700 mb-4">Initial Register Values</h3>
+                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
+                            <div><label class="font-medium text-sm text-slate-600">R1 (x)</label><input id="q1_r1_initial" type="number" value="10" class="w-full p-2 border rounded" onchange="sim1.init()"></div>
+                            <div><label class="font-medium text-sm text-slate-600">R2 (y)</label><input id="q1_r2_initial" type="number" value="5" class="w-full p-2 border rounded" onchange="sim1.init()"></div>
+                            <div><label class="font-medium text-sm text-slate-600">R3 (z)</label><input id="q1_r3_initial" type="number" value="-1" class="w-full p-2 border rounded" onchange="sim1.init()"></div>
+                            <div><label class="font-medium text-sm text-slate-600">R8 (a)</label><input id="q1_r8_initial" type="number" value="100" class="w-full p-2 border rounded" onchange="sim1.init()"></div>
+                        </div>
+                         <div class="flex items-center gap-4">
+                            <button onclick="sim1.init()" class="btn">Reset / Start</button>
+                             <div class="flex gap-2">
+                                <button id="q1_prev" onclick="sim1.prev()" class="btn btn-secondary">Previous</button>
+                                <button id="q1_next" onclick="sim1.next()" class="btn">Next</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <h3 class="font-semibold text-lg text-slate-700 mb-2">CPU State</h3>
+                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-4">
+                            <div id="q1_reg_r1" class="register"><span class="text-xs font-bold">R1 (x)</span><div class="font-mono text-lg">?</div></div>
+                            <div id="q1_reg_r2" class="register"><span class="text-xs font-bold">R2 (y)</span><div class="font-mono text-lg">?</div></div>
+                            <div id="q1_reg_r3" class="register"><span class="text-xs font-bold">R3 (z)</span><div class="font-mono text-lg">?</div></div>
+                            <div id="q1_reg_r8" class="register"><span class="text-xs font-bold">R8 (a)</span><div class="font-mono text-lg">?</div></div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <h3 class="font-semibold text-lg text-slate-700 mb-2">High-Level Code</h3>
+                                <div id="q1_hll_code" class="code-block font-mono text-sm">
+                                    <div class="code-line">if ((x > y) || (z > 0)) {</div>
+                                    <div class="code-line">  a++;</div>
+                                    <div class="code-line">}</div>
+                                </div>
+                            </div>
+                            <div>
+                                <h3 class="font-semibold text-lg text-slate-700 mb-2">Assembly Code</h3>
+                                <div id="q1_code" class="code-block font-mono text-sm">
+                                    <div class="code-line">CMP R1, R2</div>
+                                    <div class="code-line">BGT L1</div>
+                                    <div class="code-line">CMP R3, #0</div>
+                                    <div class="code-line">BLE L2</div>
+                                    <div class="code-line">L1: INC R8</div>
+                                    <div class="code-line">L2: ...</div>
+                                </div>
+                            </div>
+                        </div>
+                         <h3 class="font-semibold text-lg text-slate-700 mt-4 mb-2">Explanation</h3>
+                        <div id="q1_exp" class="explanation-box">Press 'Reset / Start' to begin the simulation.</div>
+                    </div>
+                </div>
+            </section>
+            
+             <!-- Question 2: Endianness -->
+            <section id="q2" class="card p-6 md:p-8">
+                <h2 class="text-2xl font-bold text-slate-700 mb-2">2. Memory and Endianness</h2>
+                <p class="text-slate-600 mb-6"><strong>Problem:</strong> A processor uses big-endian representation. If a 32-bit integer `int x = 127;` is stored starting at memory address `100`, what is in memory location `103`? And how is `12345678H` stored?</p>
+                <div class="grid lg:grid-cols-2 gap-8">
+                    <div class="bg-slate-50 p-6 rounded-lg border">
+                        <h3 class="font-semibold text-lg text-slate-700 mb-4">Input Value</h3>
+                        <label class="font-medium text-sm text-slate-600">Enter a 32-bit Hex value (e.g., 12345678)</label>
+                        <input id="q2_hex_input" type="text" value="12345678" class="w-full p-2 border rounded font-mono mt-1" oninput="endian.update()">
+                        <p class="text-sm mt-4 text-slate-600">For `int x = 127`, the 32-bit hex value is `0000007F`.</p>
+                    </div>
+                    <div>
+                        <h3 class="font-semibold text-lg text-slate-700 mb-2">Memory Layout (starting at address 100)</h3>
+                        <div class="grid grid-cols-2 gap-6">
+                            <div>
+                                <h4 class="font-semibold mb-2">Big-Endian</h4>
+                                <div class="space-y-2">
+                                    <div id="q2_be_100" class="memory-cell"><span class="text-xs font-bold">Addr 100</span><div class="font-mono text-lg">?</div></div>
+                                    <div id="q2_be_101" class="memory-cell"><span class="text-xs font-bold">Addr 101</span><div class="font-mono text-lg">?</div></div>
+                                    <div id="q2_be_102" class="memory-cell"><span class="text-xs font-bold">Addr 102</span><div class="font-mono text-lg">?</div></div>
+                                    <div id="q2_be_103" class="memory-cell"><span class="text-xs font-bold">Addr 103</span><div class="font-mono text-lg">?</div></div>
+                                </div>
+                            </div>
+                             <div>
+                                <h4 class="font-semibold mb-2">Little-Endian</h4>
+                                <div class="space-y-2">
+                                    <div id="q2_le_100" class="memory-cell"><span class="text-xs font-bold">Addr 100</span><div class="font-mono text-lg">?</div></div>
+                                    <div id="q2_le_101" class="memory-cell"><span class="text-xs font-bold">Addr 101</span><div class="font-mono text-lg">?</div></div>
+                                    <div id="q2_le_102" class="memory-cell"><span class="text-xs font-bold">Addr 102</span><div class="font-mono text-lg">?</div></div>
+                                    <div id="q2_le_103" class="memory-cell"><span class="text-xs font-bold">Addr 103</span><div class="font-mono text-lg">?</div></div>
+                                </div>
+                            </div>
+                        </div>
+                         <h3 class="font-semibold text-lg text-slate-700 mt-4 mb-2">Explanation</h3>
+                        <div id="q2_exp" class="explanation-box">Big-endian stores the most significant byte at the lowest address. Little-endian stores the least significant byte at the lowest address.</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Question 3: While Loop -->
+            <section id="q4" class="card p-6 md:p-8">
+                <h2 class="text-2xl font-bold text-slate-700 mb-2">3. The `while` Loop</h2>
+                <p class="text-slate-600 mb-6"><strong>Problem:</strong> Translate a `while` loop into assembly. `a` is in R1 and `i` is in R2.</p>
+                 <div class="grid lg:grid-cols-2 gap-8">
+                    <div class="bg-slate-50 p-6 rounded-lg border">
+                        <h3 class="font-semibold text-lg text-slate-700 mb-4">Initial Register Values</h3>
+                        <div class="grid grid-cols-2 gap-4 mb-6">
+                            <div><label class="font-medium text-sm text-slate-600">R1 (a)</label><input id="q4_r1_initial" type="number" value="4" class="w-full p-2 border rounded" onchange="sim4.init()"></div>
+                            <div><label class="font-medium text-sm text-slate-600">R2 (i)</label><input id="q4_r2_initial" type="number" value="0" class="w-full p-2 border rounded" onchange="sim4.init()"></div>
+                        </div>
+                         <div class="flex items-center gap-4">
+                            <button onclick="sim4.init()" class="btn">Reset / Start</button>
+                             <div class="flex gap-2">
+                                <button id="q4_prev" onclick="sim4.prev()" class="btn btn-secondary">Previous</button>
+                                <button id="q4_next" onclick="sim4.next()" class="btn">Next</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <h3 class="font-semibold text-lg text-slate-700 mb-2">CPU State</h3>
+                        <div class="grid grid-cols-2 gap-4 mb-4">
+                            <div id="q4_reg_r1" class="register"><span class="text-xs font-bold">R1 (a)</span><div class="font-mono text-lg">?</div></div>
+                            <div id="q4_reg_r2" class="register"><span class="text-xs font-bold">R2 (i)</span><div class="font-mono text-lg">?</div></div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <h3 class="font-semibold text-lg text-slate-700 mb-2">High-Level Code</h3>
+                                <div id="q4_hll_code" class="code-block font-mono text-sm">
+                                    <div class="code-line">while (a != 1) {</div>
+                                    <div class="code-line">  a--;</div>
+                                    <div class="code-line">  i++;</div>
+                                    <div class="code-line">}</div>
+                                </div>
+                            </div>
+                            <div>
+                                <h3 class="font-semibold text-lg text-slate-700 mb-2">Assembly Code</h3>
+                                <div id="q4_code" class="code-block font-mono text-sm">
+                                    <div class="code-line">LOOP: CMP R1, #1</div>
+                                    <div class="code-line">BEZ EXIT</div>
+                                    <div class="code-line">DEC R1</div>
+                                    <div class="code-line">INC R2</div>
+                                    <div class="code-line">JMP LOOP</div>
+                                    <div class="code-line">EXIT: ...</div>
+                                </div>
+                            </div>
+                        </div>
+                         <h3 class="font-semibold text-lg text-slate-700 mt-4 mb-2">Explanation</h3>
+                        <div id="q4_exp" class="explanation-box">Press 'Reset / Start' to begin the simulation.</div>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Question 4: For Loop -->
+            <section id="q5" class="card p-6 md:p-8">
+                <h2 class="text-2xl font-bold text-slate-700 mb-2">4. The `for` Loop</h2>
+                <p class="text-slate-600 mb-6"><strong>Problem:</strong> Translate a `for` loop that sums numbers into assembly. `i` is in R1 and the sum `a` is in R8.</p>
+                 <div class="grid lg:grid-cols-2 gap-8">
+                    <div class="bg-slate-50 p-6 rounded-lg border">
+                        <h3 class="font-semibold text-lg text-slate-700 mb-4">Initial Register Values</h3>
+                        <div class="grid grid-cols-2 gap-4 mb-6">
+                             <div><label class="font-medium text-sm text-slate-600">R1 (i)</label><input id="q5_r1_initial" type="number" value="5" class="w-full p-2 border rounded" onchange="sim5.init()"></div>
+                        </div>
+                         <div class="flex items-center gap-4">
+                            <button onclick="sim5.init()" class="btn">Reset / Start</button>
+                             <div class="flex gap-2">
+                                <button id="q5_prev" onclick="sim5.prev()" class="btn btn-secondary">Previous</button>
+                                <button id="q5_next" onclick="sim5.next()" class="btn">Next</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <h3 class="font-semibold text-lg text-slate-700 mb-2">CPU State</h3>
+                        <div class="grid grid-cols-2 gap-4 mb-4">
+                            <div id="q5_reg_r1" class="register"><span class="text-xs font-bold">R1 (i)</span><div class="font-mono text-lg">?</div></div>
+                            <div id="q5_reg_r8" class="register"><span class="text-xs font-bold">R8 (a)</span><div class="font-mono text-lg">?</div></div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <h3 class="font-semibold text-lg text-slate-700 mb-2">High-Level Code</h3>
+                                <div id="q5_hll_code" class="code-block font-mono text-sm">
+                                    <div class="code-line">for (i=x, a=0; i>0; i--) {</div>
+                                    <div class="code-line">  a += i;</div>
+                                    <div class="code-line">}</div>
+                                </div>
+                            </div>
+                            <div>
+                                <h3 class="font-semibold text-lg text-slate-700 mb-2">Assembly Code</h3>
+                                <div id="q5_code" class="code-block font-mono text-sm">
+                                    <div class="code-line">MOV R1_INIT, R1</div>
+                                    <div class="code-line">MOV #0, R8</div>
+                                    <div class="code-line">LOOP: CMP R1, #0</div>
+                                    <div class="code-line">BLE END</div>
+                                    <div class="code-line">ADD R8, R1</div>
+                                    <div class="code-line">DEC R1</div>
+                                    <div class="code-line">JMP LOOP</div>
+                                    <div class="code-line">END: ...</div>
+                                </div>
+                            </div>
+                        </div>
+                         <h3 class="font-semibold text-lg text-slate-700 mt-4 mb-2">Explanation</h3>
+                        <div id="q5_exp" class="explanation-box">Press 'Reset / Start' to begin the simulation.</div>
+                    </div>
+                </div>
+            </section>
+
+             <!-- Question 5: Instruction Format -->
+            <section id="q7" class="card p-6 md:p-8">
+                <h2 class="text-2xl font-bold text-slate-700 mb-2">5. Instruction Format Design</h2>
+                <p class="text-slate-600 mb-6"><strong>Problem:</strong> A computer has a 32-bit instruction format. Given the memory size, number of registers, and addressing modes, calculate the bits required for each field.</p>
+                <div class="grid lg:grid-cols-2 gap-8">
+                    <div class="bg-slate-50 p-6 rounded-lg border">
+                        <h3 class="font-semibold text-lg text-slate-700 mb-4">System Parameters</h3>
+                        <div class="space-y-4">
+                            <div>
+                                <label class="font-medium text-sm text-slate-600">Memory Size (K words)</label>
+                                <input id="q7_mem_size" type="number" value="256" class="w-full p-2 border rounded" oninput="instrCalc.update()">
+                            </div>
+                            <div>
+                                <label class="font-medium text-sm text-slate-600">Number of Registers</label>
+                                <input id="q7_num_regs" type="number" value="60" class="w-full p-2 border rounded" oninput="instrCalc.update()">
+                            </div>
+                            <div>
+                                <label class="font-medium text-sm text-slate-600">Number of Addressing Modes</label>
+                                <input id="q7_num_modes" type="number" value="8" class="w-full p-2 border rounded" oninput="instrCalc.update()">
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <h3 class="font-semibold text-lg text-slate-700 mb-2">Calculated Field Sizes (Total 32 bits)</h3>
+                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-4">
+                            <div id="q7_field_opcode" class="register"><span class="text-xs font-bold">Opcode</span><div class="font-mono text-lg">? bits</div></div>
+                            <div id="q7_field_mode" class="register"><span class="text-xs font-bold">Mode</span><div class="font-mono text-lg">? bits</div></div>
+                            <div id="q7_field_reg" class="register"><span class="text-xs font-bold">Register</span><div class="font-mono text-lg">? bits</div></div>
+                            <div id="q7_field_addr" class="register"><span class="text-xs font-bold">Address</span><div class="font-mono text-lg">? bits</div></div>
+                        </div>
+                        <h3 class="font-semibold text-lg text-slate-700 mt-4 mb-2">Explanation</h3>
+                        <div id="q7_exp" class="explanation-box">The number of bits `n` needed to represent `N` items is `ceil(log2(N))`. The opcode field takes the remaining bits.</div>
+                    </div>
+                </div>
+            </section>
+            
+             <!-- Question 6: Bitwise Operations -->
+            <section id="q6" class="card p-6 md:p-8">
+                <h2 class="text-2xl font-bold text-slate-700 mb-2">6. Bitwise & Arithmetic Operations</h2>
+                <p class="text-slate-600 mb-6"><strong>Problem:</strong> Execute a sequence of arithmetic and bitwise instructions. Initial values: R0 = 77H, R1 = 80H.</p>
+                 <div class="grid lg:grid-cols-2 gap-8">
+                    <div class="bg-slate-50 p-6 rounded-lg border">
+                        <h3 class="font-semibold text-lg text-slate-700 mb-4">Initial Register Values (8-bit Hex)</h3>
+                        <div class="grid grid-cols-2 gap-4 mb-6">
+                             <div><label class="font-medium text-sm text-slate-600">R0</label><input id="q6_r0_initial" type="text" value="77" class="w-full p-2 border rounded font-mono" onchange="sim6.init()"></div>
+                             <div><label class="font-medium text-sm text-slate-600">R1</label><input id="q6_r1_initial" type="text" value="80" class="w-full p-2 border rounded font-mono" onchange="sim6.init()"></div>
+                        </div>
+                         <div class="flex items-center gap-4">
+                            <button onclick="sim6.init()" class="btn">Reset / Start</button>
+                             <div class="flex gap-2">
+                                <button id="q6_prev" onclick="sim6.prev()" class="btn btn-secondary">Previous</button>
+                                <button id="q6_next" onclick="sim6.next()" class="btn">Next</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <h3 class="font-semibold text-lg text-slate-700 mb-2">CPU State (Hex)</h3>
+                        <div class="grid grid-cols-2 gap-4 mb-4">
+                            <div id="q6_reg_r0" class="register"><span class="text-xs font-bold">R0</span><div class="font-mono text-lg">?</div></div>
+                            <div id="q6_reg_r1" class="register"><span class="text-xs font-bold">R1</span><div class="font-mono text-lg">?</div></div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                             <div>
+                                <h3 class="font-semibold text-lg text-slate-700 mb-2">C Equivalents</h3>
+                                <div id="q6_hll_code" class="code-block font-mono text-sm">
+                                    <div class="code-line">R1 = R1 - R0;</div>
+                                    <div class="code-line">R0 = R0 ^ R0;</div>
+                                    <div class="code-line">R1 = R1 >> 3; // Arithmetic</div>
+                                    <div class="code-line">R0 = rotl(R0, 3);</div>
+                                </div>
+                            </div>
+                            <div>
+                                <h3 class="font-semibold text-lg text-slate-700 mb-2">Assembly Code</h3>
+                                <div id="q6_code" class="code-block font-mono text-sm">
+                                    <div class="code-line">Subtract R1, R0</div>
+                                    <div class="code-line">XOR R0, R0</div>
+                                    <div class="code-line">AShiftR #3, R1</div>
+                                    <div class="code-line">RotateL #3, R0</div>
+                                    <div class="code-line">...</div>
+                                </div>
+                            </div>
+                        </div>
+                         <h3 class="font-semibold text-lg text-slate-700 mt-4 mb-2">Explanation</h3>
+                        <div id="q6_exp" class="explanation-box">Press 'Reset / Start' to begin the simulation.</div>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Question 7: Array Copy Loop -->
+            <section id="q9" class="card p-6 md:p-8">
+                <h2 class="text-2xl font-bold text-slate-700 mb-2">7. Array Copy Loop</h2>
+                <p class="text-slate-600 mb-6"><strong>Problem:</strong> Implement `for (i=0; i<10; i++) {a[i] = b[i];}` in assembly. R1 points to array `a`, R2 points to array `b`, and R3 is the counter `i`.</p>
+                 <div class="grid lg:grid-cols-2 gap-8">
+                    <div class="bg-slate-50 p-6 rounded-lg border">
+                         <div class="flex items-center gap-4">
+                            <button onclick="sim9.init()" class="btn">Reset / Start</button>
+                             <div class="flex gap-2">
+                                <button id="q9_prev" onclick="sim9.prev()" class="btn btn-secondary">Previous</button>
+                                <button id="q9_next" onclick="sim9.next()" class="btn">Next</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <h3 class="font-semibold text-lg text-slate-700 mb-2">CPU & Memory State</h3>
+                        <div class="grid grid-cols-3 gap-4 mb-4">
+                            <div id="q9_reg_r1" class="register"><span class="text-xs font-bold">R1 (ptr_a)</span><div class="font-mono text-lg">?</div></div>
+                            <div id="q9_reg_r2" class="register"><span class="text-xs font-bold">R2 (ptr_b)</span><div class="font-mono text-lg">?</div></div>
+                            <div id="q9_reg_r3" class="register"><span class="text-xs font-bold">R3 (i)</span><div class="font-mono text-lg">?</div></div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-6">
+                             <div>
+                                <h4 class="font-semibold mb-2">Array b (Source)</h4>
+                                <div id="q9_mem_b" class="space-y-2"></div>
+                            </div>
+                             <div>
+                                <h4 class="font-semibold mb-2">Array a (Destination)</h4>
+                                <div id="q9_mem_a" class="space-y-2"></div>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4 mt-4">
+                             <div>
+                                <h3 class="font-semibold text-lg text-slate-700 mb-2">High-Level Code</h3>
+                                <div id="q9_hll_code" class="code-block font-mono text-sm">
+                                    <div class="code-line">for(i=0; i<10; i++) {</div>
+                                    <div class="code-line">  a[i] = b[i];</div>
+                                    <div class="code-line">}</div>
+                                </div>
+                            </div>
+                            <div>
+                                <h3 class="font-semibold text-lg text-slate-700 mb-2">Assembly Code</h3>
+                                <div id="q9_code" class="code-block font-mono text-sm">
+                                    <div class="code-line">MOV #A_ADDR, R1</div>
+                                    <div class="code-line">MOV #B_ADDR, R2</div>
+                                    <div class="code-line">MOV #0, R3</div>
+                                    <div class="code-line">LOOP: CMP R3, #10</div>
+                                    <div class="code-line">BGE END</div>
+                                    <div class="code-line">MOV (R2)+, (R1)+</div>
+                                    <div class="code-line">INC R3</div>
+                                    <div class="code-line">JMP LOOP</div>
+                                    <div class="code-line">END: ...</div>
+                                </div>
+                            </div>
+                        </div>
+                         <h3 class="font-semibold text-lg text-slate-700 mt-4 mb-2">Explanation</h3>
+                        <div id="q9_exp" class="explanation-box">Press 'Reset / Start' to begin the simulation.</div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+<script>
+class CPUSimulator {
+    constructor(id) {
+        this.id = id;
+        this.steps = [];
+        this.currentStep = -1;
+        this.ui = {
+            codeContainer: document.getElementById(`${id}_code`),
+            hllCodeContainer: document.getElementById(`${id}_hll_code`),
+            exp: document.getElementById(`${id}_exp`),
+            prevBtn: document.getElementById(`${id}_prev`),
+            nextBtn: document.getElementById(`${id}_next`),
+            registers: {}
+        };
+    }
+
+    addRegister(regName) {
+        this.ui.registers[regName] = document.getElementById(`${this.id}_reg_${regName}`);
+    }
+
+    generateSteps() { /* Override in child */ }
+
+    init() {
+        this.currentStep = -1;
+        this.steps = [];
+        this.generateSteps();
+        this.currentStep = 0;
+        this.render();
+    }
+
+    next() {
+        if (this.currentStep < this.steps.length - 1) {
+            this.currentStep++;
+            this.render();
+        }
+    }
+
+    prev() {
+        if (this.currentStep > 0) {
+            this.currentStep--;
+            this.render();
+        }
+    }
+
+    render() {
+        if (this.steps.length === 0) return;
+        const step = this.steps[this.currentStep];
+        if(this.ui.exp) this.ui.exp.textContent = step.desc;
+        
+        if(this.ui.codeContainer) {
+             this.ui.codeContainer.querySelectorAll('.code-line').forEach((line, index) => {
+                line.classList.toggle('highlight', index === step.line);
+            });
+        }
+       
+        if (this.ui.hllCodeContainer) {
+            this.ui.hllCodeContainer.querySelectorAll('.code-line').forEach((line, index) => {
+                line.classList.toggle('highlight', index === step.hll_line);
+            });
+        }
+
+        Object.keys(this.ui.registers).forEach(regName => {
+            const regEl = this.ui.registers[regName];
+            if(regEl) regEl.querySelector('div').textContent = step.state[regName];
+            if(regEl) regEl.classList.toggle('highlight', step.changed === regName);
+        });
+
+        if(this.ui.prevBtn) this.ui.prevBtn.disabled = this.currentStep === 0;
+        if(this.ui.nextBtn) this.ui.nextBtn.disabled = this.currentStep === this.steps.length - 1;
+    }
+}
+
+// --- SIMULATOR 1: CONDITIONAL LOGIC ---
+const sim1 = new CPUSimulator('q1');
+sim1.addRegister('r1'); sim1.addRegister('r2'); sim1.addRegister('r3'); sim1.addRegister('r8');
+sim1.generateSteps = function() {
+    const r1 = parseInt(document.getElementById('q1_r1_initial').value) || 0;
+    const r2 = parseInt(document.getElementById('q1_r2_initial').value) || 0;
+    const r3 = parseInt(document.getElementById('q1_r3_initial').value) || 0;
+    let r8 = parseInt(document.getElementById('q1_r8_initial').value) || 0;
+    const s = { r1, r2, r3, r8 };
+    this.steps.push({ line: -1, hll_line: -1, desc: "Initial state. Click 'Next' to begin.", state: { ...s }, changed: null });
+    this.steps.push({ line: 0, hll_line: 0, desc: `CMP R1, R2: Compare R1 (${r1}) with R2 (${r2}).`, state: { ...s }, changed: null });
+    if (r1 > r2) {
+        this.steps.push({ line: 1, hll_line: 0, desc: `BGT L1: Since ${r1} > ${r2}, the branch is TAKEN. Jumping to L1.`, state: { ...s }, changed: null });
+        s.r8++;
+        this.steps.push({ line: 4, hll_line: 1, desc: `INC R8: Increment R8. Value is now ${s.r8}.`, state: { ...s }, changed: 'r8' });
+    } else {
+        this.steps.push({ line: 1, hll_line: 0, desc: `BGT L1: Since ${r1} is not > ${r2}, the branch is NOT taken.`, state: { ...s }, changed: null });
+        this.steps.push({ line: 2, hll_line: 0, desc: `CMP R3, #0: Compare R3 (${r3}) with 0.`, state: { ...s }, changed: null });
+        if (r3 > 0) {
+            this.steps.push({ line: 3, hll_line: 0, desc: `BLE L2: Since ${r3} is not <= 0, the branch is NOT taken.`, state: { ...s }, changed: null });
+            s.r8++;
+            this.steps.push({ line: 4, hll_line: 1, desc: `INC R8: Increment R8. Value is now ${s.r8}.`, state: { ...s }, changed: 'r8' });
+        } else {
+            this.steps.push({ line: 3, hll_line: 0, desc: `BLE L2: Since ${r3} <= 0, the branch is TAKEN. Jumping to L2.`, state: { ...s }, changed: null });
+        }
+    }
+    this.steps.push({ line: 5, hll_line: 2, desc: "Execution finished.", state: { ...s }, changed: null });
+};
+
+// --- SIMULATOR 2: ENDIANNESS ---
+const endian = {
+    update: function() {
+        const hexInput = document.getElementById('q2_hex_input').value.replace(/[^0-9a-fA-F]/g, '').padStart(8, '0').substring(0, 8);
+        const b1 = hexInput.substring(0, 2).toUpperCase();
+        const b2 = hexInput.substring(2, 4).toUpperCase();
+        const b3 = hexInput.substring(4, 6).toUpperCase();
+        const b4 = hexInput.substring(6, 8).toUpperCase();
+
+        document.getElementById('q2_be_100').querySelector('div').textContent = b1;
+        document.getElementById('q2_be_101').querySelector('div').textContent = b2;
+        document.getElementById('q2_be_102').querySelector('div').textContent = b3;
+        document.getElementById('q2_be_103').querySelector('div').textContent = b4;
+
+        document.getElementById('q2_le_100').querySelector('div').textContent = b4;
+        document.getElementById('q2_le_101').querySelector('div').textContent = b3;
+        document.getElementById('q2_le_102').querySelector('div').textContent = b2;
+        document.getElementById('q2_le_103').querySelector('div').textContent = b1;
+    }
+};
+
+// --- SIMULATOR 3: WHILE LOOP ---
+const sim4 = new CPUSimulator('q4');
+sim4.addRegister('r1'); sim4.addRegister('r2');
+sim4.generateSteps = function() {
+    let s = {
+        r1: parseInt(document.getElementById('q4_r1_initial').value) || 0,
+        r2: parseInt(document.getElementById('q4_r2_initial').value) || 0
+    };
+    this.steps.push({ line: -1, hll_line: -1, desc: "Initial state. Click 'Next' to begin.", state: { ...s }, changed: null });
+    for (let i = 0; i < 100; i++) { // Safety break
+        this.steps.push({ line: 0, hll_line: 0, desc: `LOOP: CMP R1, #1: Compare R1 (${s.r1}) with 1.`, state: { ...s }, changed: null });
+        if (s.r1 === 1) {
+            this.steps.push({ line: 1, hll_line: 0, desc: `BEZ EXIT: Condition is true. Branch is TAKEN.`, state: { ...s }, changed: null });
+            break; 
+        }
+        this.steps.push({ line: 1, hll_line: 0, desc: `BEZ EXIT: Condition is false. Branch is NOT taken.`, state: { ...s }, changed: null });
+        s.r1--;
+        this.steps.push({ line: 2, hll_line: 1, desc: `DEC R1: Decrement R1. Value is now ${s.r1}.`, state: { ...s }, changed: 'r1' });
+        s.r2++;
+        this.steps.push({ line: 3, hll_line: 2, desc: `INC R2: Increment R2. Value is now ${s.r2}.`, state: { ...s }, changed: 'r2' });
+        this.steps.push({ line: 4, hll_line: 0, desc: `JMP LOOP: Jump back to the start of the loop.`, state: { ...s }, changed: null });
+    }
+    this.steps.push({ line: 5, hll_line: 3, desc: "EXIT: Execution halted.", state: { ...s }, changed: null });
+};
+
+// --- SIMULATOR 4: FOR LOOP ---
+const sim5 = new CPUSimulator('q5');
+sim5.addRegister('r1'); sim5.addRegister('r8');
+sim5.generateSteps = function() {
+    let s = {
+        r1: parseInt(document.getElementById('q5_r1_initial').value) || 0,
+        r8: 0
+    };
+    const r1_init = s.r1;
+    this.steps.push({ line: -1, hll_line: -1, desc: "Initial state.", state: { r1: '?', r8: '?' }, changed: null });
+    this.steps.push({ line: 0, hll_line: 0, desc: `MOV R1_INIT, R1: Move initial value (${r1_init}) to R1.`, state: { ...s, r8: '?' }, changed: 'r1' });
+    s.r8 = 0;
+    this.steps.push({ line: 1, hll_line: 0, desc: `MOV #0, R8: Initialize R8 to 0.`, state: { ...s }, changed: 'r8' });
+    for (let i = 0; i < 100; i++) { // Safety break
+        this.steps.push({ line: 2, hll_line: 0, desc: `LOOP: CMP R1, #0: Compare R1 (${s.r1}) with 0.`, state: { ...s }, changed: null });
+        if (s.r1 <= 0) {
+            this.steps.push({ line: 3, hll_line: 0, desc: `BLE END: Condition (${s.r1} <= 0) is true. Branch is TAKEN.`, state: { ...s }, changed: null });
+            break;
+        }
+        this.steps.push({ line: 3, hll_line: 0, desc: `BLE END: Condition (${s.r1} <= 0) is false. Branch is NOT taken.`, state: { ...s }, changed: null });
+        const old_r8 = s.r8;
+        s.r8 += s.r1;
+        this.steps.push({ line: 4, hll_line: 1, desc: `ADD R8, R1: Add R1 (${s.r1}) to R8 (${old_r8}). R8 is now ${s.r8}.`, state: { ...s }, changed: 'r8' });
+        s.r1--;
+        this.steps.push({ line: 5, hll_line: 0, desc: `DEC R1: Decrement R1. Value is now ${s.r1}.`, state: { ...s }, changed: 'r1' });
+        this.steps.push({ line: 6, hll_line: 0, desc: `JMP LOOP: Jump back to the start of the loop.`, state: { ...s }, changed: null });
+    }
+    this.steps.push({ line: 7, hll_line: 2, desc: "END: Execution halted.", state: { ...s }, changed: null });
+};
+
+// --- SIMULATOR 5: INSTRUCTION CALC ---
+const instrCalc = {
+    update: function() {
+        const memSize = parseInt(document.getElementById('q7_mem_size').value) || 256;
+        const numRegs = parseInt(document.getElementById('q7_num_regs').value) || 60;
+        const numModes = parseInt(document.getElementById('q7_num_modes').value) || 8;
+        
+        const addrBits = Math.ceil(Math.log2(memSize * 1024));
+        const regBits = Math.ceil(Math.log2(numRegs));
+        const modeBits = Math.ceil(Math.log2(numModes));
+        const opcodeBits = 32 - addrBits - regBits - modeBits;
+
+        document.getElementById('q7_field_addr').querySelector('div').textContent = `${addrBits} bits`;
+        document.getElementById('q7_field_reg').querySelector('div').textContent = `${regBits} bits`;
+        document.getElementById('q7_field_mode').querySelector('div').textContent = `${modeBits} bits`;
+        document.getElementById('q7_field_opcode').querySelector('div').textContent = `${opcodeBits} bits`;
+    }
+}
+
+// --- SIMULATOR 6: BITWISE ---
+const sim6 = new CPUSimulator('q6');
+sim6.addRegister('r0'); sim6.addRegister('r1');
+sim6.generateSteps = function() {
+    const toHex = (v) => (v & 0xFF).toString(16).toUpperCase().padStart(2, '0');
+    let s = {
+        r0: parseInt(document.getElementById('q6_r0_initial').value, 16) || 0,
+        r1: parseInt(document.getElementById('q6_r1_initial').value, 16) || 0
+    };
+    const s_hex = { r0: toHex(s.r0), r1: toHex(s.r1) };
+    this.steps.push({ line: -1, hll_line: -1, desc: "Initial state.", state: { ...s_hex }, changed: null });
+
+    let r1_old = s.r1;
+    s.r1 = (s.r1 - s.r0) & 0xFF;
+    this.steps.push({ line: 0, hll_line: 0, desc: `Subtract R1, R0: R1 = ${toHex(r1_old)} - ${toHex(s.r0)}. R1 is now ${toHex(s.r1)}.`, state: { r0: toHex(s.r0), r1: toHex(s.r1) }, changed: 'r1' });
+    
+    s.r0 = (s.r0 ^ s.r0) & 0xFF;
+    this.steps.push({ line: 1, hll_line: 1, desc: `XOR R0, R0: R0 = R0 XOR R0. R0 is now ${toHex(s.r0)}.`, state: { r0: toHex(s.r0), r1: toHex(s.r1) }, changed: 'r0' });
+    
+    let msb = s.r1 & 0x80;
+    s.r1 = s.r1 >> 3;
+    if (msb) { s.r1 |= 0b11100000; }
+    s.r1 &= 0xFF;
+    this.steps.push({ line: 2, hll_line: 2, desc: `AShiftR #3, R1: Arithmetic shift right. R1 is now ${toHex(s.r1)}.`, state: { r0: toHex(s.r0), r1: toHex(s.r1) }, changed: 'r1' });
+
+    s.r0 = ((s.r0 << 3) | (s.r0 >> 5)) & 0xFF;
+    this.steps.push({ line: 3, hll_line: 3, desc: `RotateL #3, R0: Rotate left. R0 is now ${toHex(s.r0)}.`, state: { r0: toHex(s.r0), r1: toHex(s.r1) }, changed: 'r0' });
+
+    this.steps.push({ line: 4, hll_line: -1, desc: "Execution finished.", state: { r0: toHex(s.r0), r1: toHex(s.r1) }, changed: null });
+};
+
+// --- SIMULATOR 7: ARRAY COPY ---
+const sim9 = new CPUSimulator('q9');
+sim9.addRegister('r1'); sim9.addRegister('r2'); sim9.addRegister('r3');
+sim9.render = function() { // Override render for custom memory display
+    if (this.steps.length === 0) return;
+    const step = this.steps[this.currentStep];
+    this.ui.exp.textContent = step.desc;
+    this.ui.codeContainer.querySelectorAll('.code-line').forEach((line, index) => line.classList.toggle('highlight', index === step.line));
+    this.ui.hllCodeContainer.querySelectorAll('.code-line').forEach((line, index) => line.classList.toggle('highlight', index === step.hll_line));
+    Object.keys(this.ui.registers).forEach(regName => {
+        const regEl = this.ui.registers[regName];
+        regEl.querySelector('div').textContent = step.state.regs[regName];
+        regEl.classList.toggle('highlight', step.changed === regName);
+    });
+
+    const mem_b = document.getElementById('q9_mem_b');
+    const mem_a = document.getElementById('q9_mem_a');
+    mem_b.innerHTML = '';
+    mem_a.innerHTML = '';
+    step.state.b.forEach((val, i) => {
+        const isReading = step.mem_read_idx === i;
+        mem_b.innerHTML += `<div class="memory-cell ${isReading ? 'highlight' : ''}"><span class="text-xs font-bold">B[${i}]</span><div class="font-mono text-lg">${val}</div></div>`;
+    });
+     step.state.a.forEach((val, i) => {
+        const isWriting = step.mem_write_idx === i;
+        mem_a.innerHTML += `<div class="memory-cell ${isWriting ? 'highlight' : ''}"><span class="text-xs font-bold">A[${i}]</span><div class="font-mono text-lg">${val}</div></div>`;
+    });
+
+    this.ui.prevBtn.disabled = this.currentStep === 0;
+    this.ui.nextBtn.disabled = this.currentStep === this.steps.length - 1;
+};
+sim9.generateSteps = function() {
+    let s = {
+        regs: { r1: 'A_ADDR', r2: 'B_ADDR', r3: 0 },
+        a: Array(10).fill('?'),
+        b: Array.from({length: 10}, () => Math.floor(Math.random() * 90) + 10) // Random data
+    };
+    this.steps.push({ line: -1, hll_line: -1, desc: "Initial state. Array 'b' has random data. Array 'a' is uninitialized.", state: JSON.parse(JSON.stringify(s)), changed: null });
+    this.steps.push({ line: 0, hll_line: 0, desc: "MOV #A_ADDR, R1: Load base address of array 'a' into R1.", state: JSON.parse(JSON.stringify(s)), changed: 'r1' });
+    this.steps.push({ line: 1, hll_line: 0, desc: "MOV #B_ADDR, R2: Load base address of array 'b' into R2.", state: JSON.parse(JSON.stringify(s)), changed: 'r2' });
+    this.steps.push({ line: 2, hll_line: 0, desc: "MOV #0, R3: Initialize counter 'i' to 0.", state: JSON.parse(JSON.stringify(s)), changed: 'r3' });
+
+    for (let i = 0; i < 10; i++) {
+        s.regs.r3 = i;
+        this.steps.push({ line: 3, hll_line: 0, desc: `LOOP: CMP R3, #10: Compare counter i (${i}) with 10.`, state: JSON.parse(JSON.stringify(s)), changed: null });
+        this.steps.push({ line: 4, hll_line: 0, desc: `BGE END: Condition (${i} >= 10) is false. Continue loop.`, state: JSON.parse(JSON.stringify(s)), changed: null });
+        
+        // This is a conceptual step
+        const step_before_mov = JSON.parse(JSON.stringify(s));
+        step_before_mov.mem_read_idx = i;
+        this.steps.push({ line: 5, hll_line: 1, desc: `MOV (R2)+, (R1)+: Preparing to copy value from b[${i}].`, state: step_before_mov, changed: null, mem_read_idx: i });
+        
+        s.a[i] = s.b[i];
+        const step_after_mov = JSON.parse(JSON.stringify(s));
+        step_after_mov.mem_read_idx = i;
+        step_after_mov.mem_write_idx = i;
+        this.steps.push({ line: 5, hll_line: 1, desc: `Value ${s.b[i]} is copied to a[${i}]. Pointers R1 and R2 are auto-incremented.`, state: step_after_mov, changed: null, mem_read_idx: i, mem_write_idx: i });
+        
+        s.regs.r3++;
+        this.steps.push({ line: 6, hll_line: 0, desc: `INC R3: Increment counter 'i'. It is now ${s.regs.r3}.`, state: JSON.parse(JSON.stringify(s)), changed: 'r3' });
+        this.steps.push({ line: 7, hll_line: 0, desc: "JMP LOOP: Jump back to the start of the loop.", state: JSON.parse(JSON.stringify(s)), changed: null });
+    }
+    s.regs.r3 = 10;
+    this.steps.push({ line: 3, hll_line: 0, desc: `LOOP: CMP R3, #10: Compare counter i (10) with 10.`, state: JSON.parse(JSON.stringify(s)), changed: null });
+    this.steps.push({ line: 4, hll_line: 0, desc: `BGE END: Condition (10 >= 10) is true. Exit loop.`, state: JSON.parse(JSON.stringify(s)), changed: null });
+    this.steps.push({ line: 8, hll_line: 2, desc: "END: Execution finished.", state: JSON.parse(JSON.stringify(s)), changed: null });
+}
+
+
+window.onload = function() {
+    sim1.init();
+    endian.update();
+    sim4.init();
+    sim5.init();
+    instrCalc.update();
+    sim6.init();
+    sim9.init();
+};
+</script>
+</body>
+</html>
+

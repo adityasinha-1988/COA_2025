@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Visualizer for Indexed Addressing</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
+        }
+        .font-mono {
+            font-family: 'Roboto Mono', monospace;
+        }
+        .highlight-code {
+            background-color: #fef08a !important; /* yellow-200 */
+        }
+        .highlight-change {
+            background-color: #fef08a;
+            transition: background-color 0.3s ease-in-out;
+        }
+        .highlight-read {
+            background-color: #dcfce7 !important; /* green-100 */
+            transition: background-color 0.3s ease-in-out;
+        }
+        .highlight-write {
+            background-color: #fee2e2 !important; /* red-100 */
+            transition: background-color 0.3s ease-in-out;
+        }
+        .table-cell {
+            padding: 0.5rem;
+            border: 1px solid #e5e7eb;
+            text-align: left;
+        }
+        .code-line {
+            padding: 0.25rem 0.5rem;
+            white-space: pre;
+        }
+        .disabled-btn {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 p-4 lg:p-6">
+    <div class="max-w-screen-2xl mx-auto">
+        <header class="text-center mb-6">
+            <h1 class="text-3xl font-bold text-slate-900">Interactive Visualizer for Indexed Addressing</h1>
+            <p class="mt-2 text-md text-slate-600 max-w-4xl mx-auto">
+                This tool visualizes how a simple program uses indexed addressing to sum student test scores.
+            </p>
+            
+            <div class="bg-white p-3 rounded-lg shadow-md mt-4">
+                <div class="flex flex-wrap items-center justify-center gap-3">
+                    <button id="prev-btn" class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors">&lt;&lt; Previous</button>
+                    <button id="next-btn" class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors">Next &gt;&gt;</button>
+                    <button id="autoplay-btn" class="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors">▶️ Autoplay</button>
+                    <button id="reset-btn" class="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors">🔄 Reset</button>
+                    <div class="flex items-center gap-2">
+                         <label for="speed-select">Speed:</label>
+                         <select id="speed-select" class="border rounded-md px-2 py-1">
+                             <option value="1500">Slow</option>
+                             <option value="750" selected>Medium</option>
+                             <option value="300">Fast</option>
+                         </select>
+                    </div>
+                </div>
+                 <p id="execution-description" class="mt-3 text-sm text-slate-600 h-5"></p>
+            </div>
+        </header>
+
+        <main class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Left Column: High-Level View -->
+            <div class="flex flex-col gap-6">
+                <!-- HLL Code -->
+                <div class="bg-white p-4 rounded-lg shadow-md">
+                    <h2 class="text-lg font-semibold mb-2 border-b pb-2">High-Level Language (C-like)</h2>
+                    <div id="hll-code-container" class="font-mono text-sm"></div>
+                </div>
+                 <!-- CPU State -->
+                <div class="bg-white p-4 rounded-lg shadow-md">
+                    <h2 class="text-lg font-semibold mb-2 border-b pb-2">CPU State (Registers)</h2>
+                    <table class="w-full text-sm" id="register-table">
+                         <thead class="bg-slate-100">
+                            <tr>
+                                <th class="table-cell">Register</th>
+                                <th class="table-cell font-mono">Value</th>
+                                <th class="table-cell">Description</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Right Column: Low-Level View -->
+            <div class="flex flex-col gap-6">
+                <!-- Assembly Code -->
+                <div class="bg-white p-4 rounded-lg shadow-md">
+                    <h2 class="text-lg font-semibold mb-2 border-b pb-2">Assembly & Machine Code</h2>
+                    <table class="w-full text-sm font-mono" id="assembly-table">
+                        <thead class="bg-slate-100">
+                            <tr>
+                                <th class="table-cell w-12">Line</th>
+                                <th class="table-cell w-24">Label</th>
+                                <th class="table-cell">Instruction</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+                <!-- Memory State -->
+                <div class="bg-white p-4 rounded-lg shadow-md">
+                    <h2 class="text-lg font-semibold mb-2 border-b pb-2">Memory State</h2>
+                    <table class="w-full text-sm" id="memory-table">
+                         <thead class="bg-slate-100">
+                            <tr>
+                                <th class="table-cell font-mono">Address</th>
+                                <th class="table-cell">Label</th>
+                                <th class="table-cell font-mono">Value</th>
+                                <th class="table-cell">Description</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+        
+        <!-- New Explanation Frame -->
+        <footer class="mt-6">
+            <div class="bg-white p-4 rounded-lg shadow-md">
+                <h2 class="text-lg font-semibold mb-2 border-b pb-2">Step-by-Step Explanation</h2>
+                <div id="explanation-log" class="font-mono text-xs space-y-4 max-h-64 overflow-y-auto p-2">
+                    <p class="initial-msg text-slate-500">Click 'Next' to see the detailed execution log.</p>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    // --- DATA DEFINITIONS ---
+    const HLL_CODE = [
+        "// Initial Values", "int N = 2;", "int LIST[] = {101, 80, 85, 78,  // Student 1",
+        "              102, 92, 88, 95}; // Student 2", "int SUM1 = 0;", "int SUM2 = 0;", "int SUM3 = 0;", "",
+        "// Program Logic", "// pointer = &LIST[0];", "for (int i = 0; i < N; i++) {",
+        "    // Read scores for current student", "    SUM1 += *(pointer + 1); // Test 1 score",
+        "    SUM2 += *(pointer + 2); // Test 2 score", "    SUM3 += *(pointer + 3); // Test 3 score", "",
+        "    // Move to the next student record", "    // pointer += 4; // 4 words per student", "}"
+    ];
+    const ASSEMBLY_CODE = [
+        { line: 1, label: '', instruction: 'Move #LIST,R0', desc: "Initialize R0 with the starting address of LIST (1000)." },
+        { line: 2, label: '', instruction: 'Clear R1', desc: "Clear R1 to begin summing Test 1 scores." },
+        { line: 3, label: '', instruction: 'Clear R2', desc: "Clear R2 to begin summing Test 2 scores." },
+        { line: 4, label: '', instruction: 'Clear R3', desc: "Clear R3 to begin summing Test 3 scores." },
+        { line: 5, label: '', instruction: 'Move N,R4', desc: "Load the number of students (N) into counter register R4." },
+        { line: 6, label: 'LOOP', instruction: 'Add 4(R0),R1', desc: "Add student's Test 1 score to R1. Address: R0+4." },
+        { line: 7, label: '', instruction: 'Add 8(R0),R2', desc: "Add student's Test 2 score to R2. Address: R0+8." },
+        { line: 8, label: '', instruction: 'Add 12(R0),R3', desc: "Add student's Test 3 score to R3. Address: R0+12." },
+        { line: 9, label: '', instruction: 'Add #16,R0', desc: "Increment R0 by 16 to point to the next student record." },
+        { line: 10, label: '', instruction: 'Decrement R4', desc: "Decrement the student counter." },
+        { line: 11, label: '', instruction: 'Branch>0 LOOP', desc: "If R4 > 0, jump back to LOOP." },
+        { line: 12, label: '', instruction: 'Move R1,SUM1', desc: "Store the final sum of Test 1 scores in memory." },
+        { line: 13, label: '', instruction: 'Move R2,SUM2', desc: "Store the final sum of Test 2 scores in memory." },
+        { line: 14, label: '', instruction: 'Move R3,SUM3', desc: "Store the final sum of Test 3 scores in memory." },
+        { line: 15, label: '', instruction: 'HALT', desc: "Program finished." }
+    ];
+    const ASSEMBLY_TO_HLL_MAP = { 0: 9, 1: 4, 2: 5, 3: 6, 4: 1, 5: 12, 6: 13, 7: 14, 8: 17, 9: 10, 10: 10, 11: 4, 12: 5, 13: 6 };
+    const initialMemoryState = {
+        996: { label: 'N', value: 2, description: 'Number of students' }, 1000: { label: 'LIST', value: 101, description: 'Student 1: ID' },
+        1004: { label: '', value: 80, description: 'Student 1: Test 1 Score' }, 1008: { label: '', value: 85, description: 'Student 1: Test 2 Score' },
+        1012: { label: '', value: 78, description: 'Student 1: Test 3 Score' }, 1016: { label: '', value: 102, description: 'Student 2: ID' },
+        1020: { label: '', value: 92, description: 'Student 2: Test 1 Score' }, 1024: { label: '', value: 88, description: 'Student 2: Test 2 Score' },
+        1028: { label: '', value: 95, description: 'Student 2: Test 3 Score' }, 2000: { label: 'SUM1', value: 0, description: 'Sum of Test 1 scores' },
+        2004: { label: 'SUM2', value: 0, description: 'Sum of Test 2 scores' }, 2008: { label: 'SUM3', value: 0, description: 'Sum of Test 3 scores' }
+    };
+    const REGISTER_DESC = { PC: "Program Counter", R0: "Index Register", R1: "Accumulator (Test 1)", R2: "Accumulator (Test 2)", R3: "Accumulator (Test 3)", R4: "Loop Counter (N)" };
+
+    // --- STATE MANAGEMENT ---
+    let history = [];
+    let currentState = null;
+    let autoplayInterval = null;
+
+    // --- DOM ELEMENTS ---
+    const hllContainer = document.getElementById('hll-code-container');
+    const assemblyTbody = document.querySelector('#assembly-table tbody');
+    const registerTbody = document.querySelector('#register-table tbody');
+    const memoryTbody = document.querySelector('#memory-table tbody');
+    const prevBtn = document.getElementById('prev-btn');
+    const nextBtn = document.getElementById('next-btn');
+    const autoplayBtn = document.getElementById('autoplay-btn');
+    const resetBtn = document.getElementById('reset-btn');
+    const speedSelect = document.getElementById('speed-select');
+    const descriptionEl = document.getElementById('execution-description');
+    const explanationLog = document.getElementById('explanation-log');
+
+    // --- INITIALIZATION ---
+    function setupUI() {
+        hllContainer.innerHTML = HLL_CODE.map((line, index) => `<div class="code-line" data-line="${index}">${line}</div>`).join('');
+        assemblyTbody.innerHTML = ASSEMBLY_CODE.map(instr => `<tr data-line="${instr.line}"><td class="table-cell text-center">${instr.line}</td><td class="table-cell text-red-600">${instr.label}</td><td class="table-cell">${instr.instruction}</td></tr>`).join('');
+        registerTbody.innerHTML = Object.keys(REGISTER_DESC).map(reg => `<tr data-reg="${reg}"><td class="table-cell font-semibold">${reg}</td><td class="table-cell font-mono">0</td><td class="table-cell text-slate-500 text-xs">${REGISTER_DESC[reg]}</td></tr>`).join('');
+        memoryTbody.innerHTML = Object.entries(initialMemoryState).map(([addr, data]) => `<tr data-addr="${addr}"><td class="table-cell font-mono">${addr}</td><td class="table-cell">${data.label}</td><td class="table-cell font-mono">${data.value}</td><td class="table-cell text-slate-500 text-xs">${data.description}</td></tr>`).join('');
+    }
+
+    function getInitialState() {
+        return { pc: 0, registers: { PC: 1, R0: 0, R1: 0, R2: 0, R3: 0, R4: 0 }, memory: JSON.parse(JSON.stringify(initialMemoryState)), highlights: {}, description: "Initial state. Click 'Next' to begin execution." };
+    }
+
+    function reset() {
+        stopAutoplay();
+        history = [];
+        currentState = getInitialState();
+        history.push(JSON.parse(JSON.stringify(currentState)));
+        explanationLog.innerHTML = `<p class="initial-msg text-slate-500">Click 'Next' to see the detailed execution log.</p>`;
+        updateUI();
+    }
+
+    function updateUI() {
+        const prevState = history.length > 1 ? history[history.length - 2] : getInitialState();
+        document.querySelectorAll('.highlight-code, .highlight-change, .highlight-read, .highlight-write').forEach(el => el.classList.remove('highlight-code', 'highlight-change', 'highlight-read', 'highlight-write'));
+        if (currentState.pc < ASSEMBLY_CODE.length) {
+            const asmLine = currentState.pc + 1;
+            document.querySelector(`#assembly-table tr[data-line="${asmLine}"]`)?.classList.add('highlight-code');
+            const hllLine = ASSEMBLY_TO_HLL_MAP[currentState.pc];
+            if (hllLine !== undefined) document.querySelector(`#hll-code-container div[data-line="${hllLine}"]`)?.classList.add('highlight-code');
+        }
+        for (const reg in currentState.registers) {
+            const cell = document.querySelector(`#register-table tr[data-reg="${reg}"] td:nth-child(2)`);
+            if (cell) {
+                cell.textContent = currentState.registers[reg];
+                if (currentState.registers[reg] !== prevState.registers[reg]) cell.classList.add('highlight-change');
+            }
+        }
+        for (const addr in currentState.memory) {
+            const cell = document.querySelector(`#memory-table tr[data-addr="${addr}"] td:nth-child(3)`);
+            if (cell) {
+                cell.textContent = currentState.memory[addr].value;
+                if (currentState.memory[addr].value !== prevState.memory[addr].value) cell.parentElement.classList.add('highlight-write');
+            }
+        }
+        if (currentState.highlights.memoryRead) {
+            document.querySelector(`#memory-table tr[data-addr="${currentState.highlights.memoryRead}"]`)?.classList.add('highlight-read');
+        }
+        descriptionEl.textContent = currentState.description;
+        prevBtn.classList.toggle('disabled-btn', history.length <= 1);
+        nextBtn.classList.toggle('disabled-btn', currentState.pc >= ASSEMBLY_CODE.length - 1);
+    }
+    
+    // --- EXECUTION LOGIC ---
+    function generateExplanationHTML(instruction, prevState, nextState) {
+        let html = `<div class="p-2 border-l-4 border-slate-300">`;
+        html += `<p class="font-bold text-slate-800">Step ${prevState.pc + 1}: ${instruction.instruction}</p>`;
+        const op = instruction.instruction.split(/[\s,]+/)[0];
+        let detailsList = '';
+        switch (op) {
+            case 'Move':
+                if (instruction.instruction.includes('#LIST')) detailsList += `<li>Action: Load immediate address of LIST (1000) into R0.</li><li>Result: R0 is now ${nextState.registers.R0}.</li>`;
+                else if (instruction.instruction.includes('N,R4')) detailsList += `<li>Action: Load value from memory location 'N' into R4.</li><li>Details: Read value ${prevState.memory[996].value} from address 996.</li><li>Result: R4 is now ${nextState.registers.R4}.</li>`;
+                else if (instruction.instruction.includes('R1,SUM1')) detailsList += `<li>Action: Store value of R1 into memory location 'SUM1'.</li><li>Details: Write value ${prevState.registers.R1} to address 2000.</li><li>Result: Memory[2000] is now ${nextState.memory[2000].value}.</li>`;
+                else if (instruction.instruction.includes('R2,SUM2')) detailsList += `<li>Action: Store value of R2 into memory location 'SUM2'.</li><li>Details: Write value ${prevState.registers.R2} to address 2004.</li><li>Result: Memory[2004] is now ${nextState.memory[2004].value}.</li>`;
+                else if (instruction.instruction.includes('R3,SUM3')) detailsList += `<li>Action: Store value of R3 into memory location 'SUM3'.</li><li>Details: Write value ${prevState.registers.R3} to address 2008.</li><li>Result: Memory[2008] is now ${nextState.memory[2008].value}.</li>`;
+                break;
+            case 'Clear': detailsList += `<li>Action: Set register ${instruction.instruction.split(' ')[1]} to 0.</li><li>Result: Register is now 0.</li>`; break;
+            case 'Add':
+                if (instruction.instruction.startsWith('Add #')) detailsList += `<li>Action: Add immediate value 16 to R0 to point to the next student record.</li><li>Details: R0 was ${prevState.registers.R0}.</li><li>Result: R0 is now ${nextState.registers.R0}.</li>`;
+                else {
+                    const parts = instruction.instruction.match(/(\d+)\((R\d)\),(R\d)/);
+                    const [offset, baseReg, destReg] = [parseInt(parts[1]), parts[2], parts[3]];
+                    const [baseAddr, prevDestVal] = [prevState.registers[baseReg], prevState.registers[destReg]];
+                    const effectiveAddr = baseAddr + offset;
+                    const memValue = prevState.memory[effectiveAddr].value;
+                    detailsList += `<li>Action: Add value from memory to ${destReg} using indexed addressing.</li>`;
+                    detailsList += `<li>Effective Address = (content of ${baseReg}) + offset &rarr; ${baseAddr} + ${offset} = ${effectiveAddr}.</li>`;
+                    detailsList += `<li>Value at Memory[${effectiveAddr}] is ${memValue}.</li>`;
+                    detailsList += `<li>New ${destReg} = (current ${destReg}) + value &rarr; ${prevDestVal} + ${memValue} = ${nextState.registers[destReg]}.</li>`;
+                }
+                break;
+            case 'Decrement': detailsList += `<li>Action: Decrement the loop counter R4.</li><li>Details: R4 was ${prevState.registers.R4}.</li><li>Result: R4 is now ${nextState.registers.R4}.</li>`; break;
+            case 'Branch>0':
+                const condition = prevState.registers.R4 > 0;
+                detailsList += `<li>Action: If R4 > 0, jump to LOOP.</li>`;
+                detailsList += `<li>Check: Is ${prevState.registers.R4} > 0? &rarr; ${condition ? 'Yes' : 'No'}.</li>`;
+                detailsList += `<li>Result: PC will ${condition ? `jump to line ${nextState.pc + 1}` : 'continue to the next line'}.</li>`;
+                break;
+            case 'HALT': detailsList += `<li>Action: The program has finished execution.</li>`; break;
+        }
+        html += `<ul class="list-disc list-inside text-slate-700 pl-2">${detailsList}</ul></div>`;
+        return html;
+    }
+    
+    function stepForward() {
+        if (currentState.pc >= ASSEMBLY_CODE.length - 1) { stopAutoplay(); return; }
+        const prevState = currentState;
+        const nextState = JSON.parse(JSON.stringify(currentState));
+        const instruction = ASSEMBLY_CODE[nextState.pc];
+        nextState.pc++; nextState.registers.PC = nextState.pc + 1; nextState.description = instruction.desc; nextState.highlights = {};
+        const [op, operand1, operand2] = instruction.instruction.split(/[\s,]+/);
+
+        switch (op) {
+            case 'Move':
+                if (operand1.startsWith('#')) nextState.registers[operand2] = 1000;
+                else if (initialMemoryState[Object.keys(initialMemoryState).find(addr => initialMemoryState[addr].label === operand1)]) {
+                    const memAddr = Object.keys(initialMemoryState).find(addr => initialMemoryState[addr].label === operand1);
+                    nextState.registers[operand2] = nextState.memory[memAddr].value; nextState.highlights.memoryRead = memAddr;
+                } else {
+                    const memAddr = Object.keys(initialMemoryState).find(addr => initialMemoryState[addr].label === operand2);
+                    nextState.memory[memAddr].value = nextState.registers[operand1];
+                }
+                break;
+            case 'Clear': nextState.registers[operand1] = 0; break;
+            case 'Add':
+                if (operand1.startsWith('#')) nextState.registers.R0 += parseInt(operand1.substring(1));
+                else {
+                    const offset = parseInt(operand1.match(/\d+/)[0]), baseAddr = nextState.registers.R0;
+                    const effectiveAddr = baseAddr + offset, value = nextState.memory[effectiveAddr].value;
+                    nextState.registers[operand2] += value; nextState.highlights.memoryRead = effectiveAddr;
+                }
+                break;
+            case 'Decrement': nextState.registers.R4--; break;
+            case 'Branch>0': if (nextState.registers.R4 > 0) { const labelLine = ASSEMBLY_CODE.findIndex(i => i.label === operand1); nextState.pc = labelLine; nextState.registers.PC = nextState.pc + 1; } break;
+            case 'HALT': stopAutoplay(); break;
+        }
+
+        const explanationHTML = generateExplanationHTML(instruction, prevState, nextState);
+        const initialMsg = explanationLog.querySelector('.initial-msg');
+        if (initialMsg) initialMsg.remove();
+        explanationLog.insertAdjacentHTML('beforeend', explanationHTML);
+        explanationLog.scrollTop = explanationLog.scrollHeight;
+        
+        currentState = nextState;
+        history.push(JSON.parse(JSON.stringify(currentState)));
+        updateUI();
+    }
+    
+    function stepBackward() {
+        if (history.length <= 1) return;
+        history.pop();
+        if (explanationLog.lastChild) explanationLog.removeChild(explanationLog.lastChild);
+        currentState = JSON.parse(JSON.stringify(history[history.length - 1]));
+        if (history.length === 1) explanationLog.innerHTML = `<p class="initial-msg text-slate-500">Click 'Next' to see the detailed execution log.</p>`;
+        updateUI();
+    }
+
+    function toggleAutoplay() {
+        if (autoplayInterval) { stopAutoplay(); } 
+        else { autoplayBtn.textContent = '⏸️ Pause'; autoplayInterval = setInterval(stepForward, parseInt(speedSelect.value)); nextBtn.classList.add('disabled-btn'); prevBtn.classList.add('disabled-btn'); }
+    }
+    function stopAutoplay() {
+        if (autoplayInterval) { clearInterval(autoplayInterval); autoplayInterval = null; autoplayBtn.textContent = '▶️ Autoplay'; updateUI(); }
+    }
+
+    // --- EVENT LISTENERS ---
+    nextBtn.addEventListener('click', () => { stopAutoplay(); stepForward(); });
+    prevBtn.addEventListener('click', () => { stopAutoplay(); stepBackward(); });
+    resetBtn.addEventListener('click', reset);
+    autoplayBtn.addEventListener('click', toggleAutoplay);
+    speedSelect.addEventListener('change', () => { if (autoplayInterval) { stopAutoplay(); toggleAutoplay(); } });
+
+    // --- START ---
+    setupUI();
+    reset();
+});
+</script>
+</body>
+</html>
+
