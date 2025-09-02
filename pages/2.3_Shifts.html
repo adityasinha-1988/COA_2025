@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Animated Guide to Machine Instructions</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+        }
+        .bit-container {
+            position: relative;
+        }
+        .bit-box, .carry-box {
+            transition: transform 0.5s ease-in-out, background-color 0.3s ease;
+            will-change: transform;
+        }
+        .bit-ghost {
+            position: absolute;
+            z-index: 10;
+            transition: all 0.5s ease-in-out;
+            pointer-events: none;
+        }
+        .animation-path {
+            position: absolute;
+            border: 1px dashed #9ca3af;
+            border-radius: 50%;
+            pointer-events: none;
+        }
+        /* Disable buttons during animation */
+        .animating {
+            pointer-events: none;
+            opacity: 0.7;
+        }
+    </style>
+</head>
+<body class="text-gray-800">
+
+    <div class="container mx-auto p-4 md:p-8 max-w-4xl">
+
+        <header class="text-center mb-10">
+            <h1 class="text-4xl md:text-5xl font-bold text-gray-900">Machine Instructions: Animated</h1>
+            <p class="mt-4 text-lg text-gray-600">Bit ki movement ko live animations ke saath samjhein.</p>
+        </header>
+
+        <!-- Logic Instructions Section -->
+        <section id="logic" class="bg-white rounded-xl shadow-lg p-6 md:p-8 mb-10">
+            <h2 class="text-2xl font-bold text-blue-700 border-b-2 border-blue-100 pb-2 mb-4">1. Logic Instructions</h2>
+            <p class="mb-4">Logic operations (<code>AND</code>, <code>OR</code>, <code>NOT</code>) bits par kaam karte hain. Inse aap data ke specific hisson ko mask ya set kar sakte hain.</p>
+            <div class="interactive-area bg-gray-50 rounded-lg p-6 mt-6">
+                <h3 class="text-xl font-semibold mb-4">Logic Operation Simulator</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 items-center">
+                    <div>
+                        <label for="logicA" class="font-medium">Operand A (8 bits)</label>
+                        <input type="text" id="logicA" value="01011100" maxlength="8" class="w-full mt-1 p-2 border border-gray-300 rounded-md font-mono tracking-widest text-center">
+                    </div>
+                    <div>
+                        <label for="logicB" class="font-medium">Operand B (8 bits)</label>
+                        <input type="text" id="logicB" value="11110000" maxlength="8" class="w-full mt-1 p-2 border border-gray-300 rounded-md font-mono tracking-widest text-center">
+                    </div>
+                </div>
+                <div class="flex flex-wrap gap-3 justify-center mt-5">
+                    <button onclick="calculateLogic('AND')" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md transition-transform transform hover:scale-105">AND</button>
+                    <button onclick="calculateLogic('OR')" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-md transition-transform transform hover:scale-105">OR</button>
+                    <button onclick="calculateLogic('NOT')" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded-md transition-transform transform hover:scale-105">NOT (Operand A)</button>
+                </div>
+                <div class="mt-6 text-center bg-white p-4 rounded-md shadow-inner">
+                    <h4 class="font-semibold text-gray-700">Result</h4>
+                    <div id="logicResult" class="text-2xl font-mono tracking-widest text-indigo-600 mt-2">01010000</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Shared Section for Shift and Rotate -->
+        <section id="shift-rotate" class="bg-white rounded-xl shadow-lg p-6 md:p-8 mb-10">
+             <h2 class="text-2xl font-bold text-green-700 border-b-2 border-green-100 pb-2 mb-4">2. Animated Shift & Rotate</h2>
+             <p class="mb-4">Neeche diye gaye simulator se dekhein ki bits kaise shift aur rotate hote hain. Animation aapko har step clear karega, jismein Carry Flag ka role bhi shaamil hai.</p>
+             <div id="animation-controls" class="interactive-area bg-gray-50 rounded-lg p-6 mt-6">
+                <h3 class="text-xl font-semibold mb-4">Animation Controller</h3>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
+                     <div>
+                        <label for="initialValue" class="font-medium">Initial Value (8 bits)</label>
+                        <input type="text" id="initialValue" value="10110101" maxlength="8" class="w-full mt-1 p-2 border border-gray-300 rounded-md font-mono tracking-widest text-center">
+                    </div>
+                    <div>
+                        <label for="amount" class="font-medium">Amount (Steps)</label>
+                        <input type="number" id="amount" value="1" min="1" max="8" class="w-full mt-1 p-2 border border-gray-300 rounded-md text-center">
+                    </div>
+                    <div>
+                        <label for="initialCarry" class="font-medium">Initial Carry (C)</label>
+                        <input type="number" id="initialCarry" value="0" min="0" max="1" class="w-full mt-1 p-2 border border-gray-300 rounded-md text-center">
+                    </div>
+                </div>
+                
+                <div class="text-center mt-4">
+                    <button id="resetBtn" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-md">Reset Animation</button>
+                </div>
+
+                <div id="animation-area" class="mt-6 p-4 rounded-md bg-white shadow-inner min-h-[120px]">
+                    <div class="flex items-center justify-center space-x-2 md:space-x-4 bit-container">
+                        <div class="text-center">
+                            <div class="font-mono text-sm">C</div>
+                            <div id="carryBox" class="carry-box w-10 h-10 flex items-center justify-center border-2 border-red-500 rounded-md bg-red-50 font-bold text-red-600 text-lg">0</div>
+                        </div>
+                        <div class="flex" id="bitsContainer">
+                            <!-- Bits will be generated by JS -->
+                        </div>
+                    </div>
+                </div>
+                
+                 <!-- Shift Buttons -->
+                <div class="mt-6">
+                    <h4 class="font-semibold text-center mb-3">Shift Operations</h4>
+                    <div id="shift-buttons" class="flex flex-wrap gap-3 justify-center">
+                        <button onclick="runAnimation('LSL')" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md">Logical Shift Left</button>
+                        <button onclick="runAnimation('LSR')" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md">Logical Shift Right</button>
+                        <button onclick="runAnimation('ASR')" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md">Arithmetic Shift Right</button>
+                    </div>
+                </div>
+                <!-- Rotate Buttons -->
+                <div class="mt-6">
+                    <h4 class="font-semibold text-center mb-3">Rotate Operations</h4>
+                     <div id="rotate-buttons" class="flex flex-wrap gap-3 justify-center">
+                        <button onclick="runAnimation('RL')" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded-md">Rotate Left</button>
+                        <button onclick="runAnimation('RR')" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded-md">Rotate Right</button>
+                        <button onclick="runAnimation('RLC')" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded-md">Rotate Left w/ Carry</button>
+                        <button onclick="runAnimation('RRC')" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded-md">Rotate Right w/ Carry</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </div>
+
+    <script>
+        // --- LOGIC SIMULATOR ---
+        function sanitizeBinary(input, length = 8) {
+            return input.replace(/[^01]/g, '').padEnd(length, '0').slice(0, length);
+        }
+
+        function calculateLogic(operation) {
+            const inputA = document.getElementById('logicA');
+            const inputB = document.getElementById('logicB');
+            let valA = sanitizeBinary(inputA.value);
+            let valB = sanitizeBinary(inputB.value);
+            inputA.value = valA;
+            inputB.value = valB;
+
+            let result = '';
+            if (operation === 'NOT') {
+                for (let i = 0; i < 8; i++) result += (valA[i] === '0' ? '1' : '0');
+            } else {
+                for (let i = 0; i < 8; i++) {
+                    const bitA = parseInt(valA[i]);
+                    const bitB = parseInt(valB[i]);
+                    if (operation === 'AND') result += (bitA & bitB);
+                    else if (operation === 'OR') result += (bitA | bitB);
+                }
+            }
+            document.getElementById('logicResult').innerText = result;
+        }
+        
+        // --- ANIMATION ENGINE ---
+        const bitsContainer = document.getElementById('bitsContainer');
+        const carryBox = document.getElementById('carryBox');
+        const initialValueInput = document.getElementById('initialValue');
+        const initialCarryInput = document.getElementById('initialCarry');
+        const amountInput = document.getElementById('amount');
+        const animationControls = document.getElementById('animation-controls');
+
+        const BIT_WIDTH = 48; // Corresponds to w-10 (40px) + margin (8px)
+        const ANIMATION_SPEED = 500; // in ms
+
+        let state = {
+            bits: [],
+            carry: '0'
+        };
+
+        function renderState() {
+            bitsContainer.innerHTML = '';
+            state.bits.forEach((bit, index) => {
+                const bitDiv = document.createElement('div');
+                bitDiv.className = 'bit-box w-10 h-10 flex items-center justify-center border border-gray-400 bg-gray-100 rounded-md m-1 font-mono text-lg';
+                bitDiv.textContent = bit;
+                bitDiv.id = `bit-${index}`;
+                bitsContainer.appendChild(bitDiv);
+            });
+            carryBox.textContent = state.carry;
+        }
+        
+        function createGhost(element, value) {
+            const rect = element.getBoundingClientRect();
+            const containerRect = bitsContainer.parentElement.getBoundingClientRect();
+            const ghost = element.cloneNode(true);
+            ghost.textContent = value;
+            ghost.classList.add('bit-ghost');
+            ghost.style.left = `${rect.left - containerRect.left}px`;
+            ghost.style.top = `${rect.top - containerRect.top}px`;
+            bitsContainer.parentElement.appendChild(ghost);
+            return ghost;
+        }
+        
+        function delay(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+
+        async function runAnimation(type) {
+            animationControls.classList.add('animating');
+            const amount = parseInt(amountInput.value) || 0;
+            for (let i = 0; i < amount; i++) {
+                await performSingleStep(type);
+            }
+            animationControls.classList.remove('animating');
+        }
+
+        async function performSingleStep(type) {
+            const bits = Array.from(bitsContainer.children);
+            let bitToCarry, bitFromCarry, newBitValue;
+
+            // --- Phase 1: Create ghosts and define movements ---
+            if (type === 'LSL' || type === 'RL' || type === 'RLC') {
+                const firstBit = bits[0];
+                bitToCarry = createGhost(firstBit, state.bits[0]);
+                bits.forEach(b => b.style.transform = `translateX(-${BIT_WIDTH}px)`);
+
+                if (type === 'LSL') newBitValue = '0';
+                if (type === 'RL') newBitValue = state.bits[0];
+                if (type === 'RLC') newBitValue = state.carry;
+                
+                const lastBit = bits[bits.length - 1];
+                bitFromCarry = createGhost(lastBit, newBitValue);
+                bitFromCarry.style.transform = `translateX(${BIT_WIDTH}px)`;
+                bitFromCarry.style.opacity = '0';
+            } else if (type === 'LSR' || type === 'RR' || type === 'RRC' || type === 'ASR') {
+                const lastBit = bits[bits.length - 1];
+                bitToCarry = createGhost(lastBit, state.bits[state.bits.length - 1]);
+                bits.forEach(b => b.style.transform = `translateX(${BIT_WIDTH}px)`);
+                
+                if (type === 'LSR') newBitValue = '0';
+                if (type === 'ASR') newBitValue = state.bits[0]; // Sign bit
+                if (type === 'RR') newBitValue = state.bits[state.bits.length - 1];
+                if (type === 'RRC') newBitValue = state.carry;
+
+                const firstBit = bits[0];
+                bitFromCarry = createGhost(firstBit, newBitValue);
+                bitFromCarry.style.transform = `translateX(-${BIT_WIDTH}px)`;
+                bitFromCarry.style.opacity = '0';
+            }
+            
+            // --- Phase 2: Animate ---
+            await delay(50); // allow DOM to update
+            
+            // Animate bit moving to carry
+            const carryRect = carryBox.getBoundingClientRect();
+            const ghostRect = bitToCarry.getBoundingClientRect();
+            bitToCarry.style.transform = `translate(${carryRect.left - ghostRect.left}px, ${carryRect.top - ghostRect.top}px)`;
+            bitToCarry.style.opacity = '0';
+
+            // Animate new bit moving in
+            bitFromCarry.style.transform = 'translateX(0px)';
+            bitFromCarry.style.opacity = '1';
+
+            await delay(ANIMATION_SPEED);
+
+            // --- Phase 3: Update state and cleanup ---
+            let shiftedOutBit;
+            if (type === 'LSL') {
+                shiftedOutBit = state.bits.shift();
+                state.bits.push('0');
+            } else if (type === 'LSR') {
+                shiftedOutBit = state.bits.pop();
+                state.bits.unshift('0');
+            } else if (type === 'ASR') {
+                const signBit = state.bits[0];
+                shiftedOutBit = state.bits.pop();
+                state.bits.unshift(signBit);
+            } else if (type === 'RL') {
+                shiftedOutBit = state.bits.shift();
+                state.bits.push(shiftedOutBit);
+            } else if (type === 'RR') {
+                shiftedOutBit = state.bits.pop();
+                state.bits.unshift(shiftedOutBit);
+            } else if (type === 'RLC') {
+                shiftedOutBit = state.bits.shift();
+                state.bits.push(state.carry);
+            } else if (type === 'RRC') {
+                shiftedOutBit = state.bits.pop();
+                state.bits.unshift(state.carry);
+            }
+
+            // Update carry for all except Rotate without carry
+            if (type !== 'RL' && type !== 'RR') {
+                state.carry = shiftedOutBit;
+            } else {
+                 carryBox.textContent = shiftedOutBit; // just flash it
+            }
+            
+            bits.forEach(b => b.style.transform = '');
+            bitToCarry.remove();
+            bitFromCarry.remove();
+            renderState(); // Re-render the final state
+            await delay(100);
+        }
+
+        function reset() {
+            animationControls.classList.remove('animating');
+            state.bits = sanitizeBinary(initialValueInput.value).split('');
+            state.carry = sanitizeBinary(initialCarryInput.value, 1);
+            renderState();
+        }
+
+        document.getElementById('resetBtn').addEventListener('click', reset);
+
+        // --- Initial display setup ---
+        window.onload = () => {
+            calculateLogic('AND');
+            reset();
+            ['initialValue', 'initialCarry'].forEach(id => {
+                 document.getElementById(id).addEventListener('input', reset);
+            });
+        }
+    </script>
+
+</body>
+</html>
+

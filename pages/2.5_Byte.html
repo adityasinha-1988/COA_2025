@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Byte-Sorting Program Explained</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        /* Simple scrollbar styling */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #1a202c; }
+        ::-webkit-scrollbar-thumb { background: #4a5568; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #718096; }
+
+        .char-box, .mem-cell, .tut-box {
+            transition: all 0.5s ease-in-out;
+        }
+        .code-line {
+            transition: background-color 0.3s ease;
+            padding: 2px 8px;
+            border-radius: 4px;
+        }
+        .highlight-line { background-color: rgba(59, 130, 246, 0.5); }
+        .highlight-read { transform: scale(1.1); background-color: rgba(34, 197, 94, 0.4); }
+        .highlight-write { transform: scale(1.1); background-color: rgba(239, 68, 68, 0.4); }
+
+        /* Tutorial styles */
+        .tut-box-unsorted { background-color: #4A5568; border-color: #2D3748; }
+        .tut-box-sorted { background-color: #2F855A; border-color: #276749; }
+        .tut-box-max { background-color: #D69E2E; border-color: #B7791F; transform: scale(1.15); }
+        .tut-box-compare { background-color: #4299E1; border-color: #2B6CB0; transform: scale(1.1); }
+        .tut-box-swap { background-color: #E53E3E; border-color: #C53030; transform: scale(1.15); }
+    </style>
+</head>
+<body class="bg-gray-900 text-gray-200 leading-relaxed">
+
+    <div class="max-w-7xl mx-auto p-4 sm:p-8 md:p-12">
+
+        <header class="mb-12">
+            <h1 class="text-4xl md:text-5xl font-bold text-white mb-4">
+                Understanding Selection Sort
+            </h1>
+            <p class="text-lg text-gray-400">
+                First, let's learn the core logic with a simple example. Then, we'll see how it's implemented in assembly language.
+            </p>
+        </header>
+
+        <main>
+            <!-- NEW: Interactive Tutorial Section -->
+            <section class="mb-16">
+                 <h2 class="text-3xl font-semibold text-white border-b border-gray-700 pb-3 mb-6">How Selection Sort Works: A Simple Example</h2>
+                <div class="bg-gray-800 rounded-lg p-6 border border-gray-700">
+                    <div id="tutorial-container" class="flex justify-center items-center flex-wrap gap-3 min-h-[7rem] bg-black p-4 rounded-md border border-gray-700 mb-4">
+                        <!-- Tutorial boxes will be generated here -->
+                    </div>
+                    <div class="flex flex-wrap items-center justify-between gap-4">
+                        <p id="tutorial-explanation" class="flex-grow text-lg text-gray-300">Click 'Next' to start the tutorial.</p>
+                        <div class="flex gap-3">
+                            <button id="tutorial-prev-btn" class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-5 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed">Previous</button>
+                            <button id="tutorial-next-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-5 rounded-md transition-colors">Next</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Assembly Visualization Section -->
+            <section class="mb-10">
+                <h2 class="text-3xl font-semibold text-white border-b border-gray-700 pb-3 mb-6">Assembly Implementation: Byte-Sorting Program</h2>
+                <div class="bg-gray-800 rounded-lg p-6 border border-gray-700">
+                    <!-- Controls -->
+                    <div class="flex flex-wrap items-center gap-4 mb-6">
+                        <input type="text" id="char-input" class="flex-grow bg-gray-900 border border-gray-600 rounded-md px-4 py-2 text-white placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="Enter characters to sort (e.g., EXAMPLE)">
+                        <button id="sort-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-5 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed">Sort</button>
+                        <button id="reset-btn" class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-5 rounded-md transition-colors" disabled>Reset</button>
+                    </div>
+                     <div class="flex items-center gap-4 mb-6">
+                        <label for="speed-slider" class="text-sm font-medium">Animation Speed:</label>
+                        <input id="speed-slider" type="range" min="50" max="1000" value="500" class="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer">
+                    </div>
+
+                    <!-- Visualization Area -->
+                    <div id="visualization-container" class="flex justify-center items-center flex-wrap gap-2 min-h-[6rem] bg-black p-4 rounded-md border border-gray-700"></div>
+                    <div id="status-box" class="mt-4 text-center text-gray-400 font-mono text-sm min-h-[1.5em]">Enter characters and press "Sort" to begin.</div>
+                </div>
+            </section>
+            
+            <!-- Execution Details Section -->
+            <section>
+                <h2 class="text-2xl font-semibold text-white border-b border-gray-700 pb-2 mb-4">Live Execution Details</h2>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <!-- Left Column: Code and Memory -->
+                    <div class="space-y-8">
+                        <div class="bg-black rounded-lg overflow-hidden border border-gray-700">
+                            <div class="bg-gray-800 px-4 py-2 text-sm text-gray-400 font-mono flex justify-between"><span>Conceptual Assembly Code</span><span>Pseudo Machine Code</span></div>
+                            <pre class="p-4 text-sm whitespace-pre-wrap"><code id="code-block" class="language-assembly font-mono">
+<span class="text-gray-500">            ; R1 -> unsorted_end_ptr, R2 -> current_item_ptr</span>
+<span class="text-gray-500">            ; R3 -> max_ptr, R4 -> max_val, R5 -> temp</span>
+<span class="code-line" id="line-outer-loop"><b>OUTER_LOOP:</b></span>
+<span class="code-line" id="line-move-r4">  <span class="text-cyan-400">0x1000</span>  Move      (LIST), R4</span>
+<span class="code-line" id="line-move-r3">  <span class="text-cyan-400">0x1004</span>  Move      #LIST, R3</span>
+<span class="code-line" id="line-move-r2">  <span class="text-cyan-400">0x1008</span>  Move      #LIST+1, R2</span>
+<span class="code-line" id="line-inner-loop"><b>INNER_LOOP:</b></span>
+<span class="code-line" id="line-compare1">  <span class="text-cyan-400">0x100C</span>  Compare   (R2), R4</span>
+<span class="code-line" id="line-branch1">  <span class="text-cyan-400">0x1010</span>  Branch&lt;=0 SKIP</span>
+<span class="code-line" id="line-move-r4-new">  <span class="text-cyan-400">0x1014</span>  Move      (R2), R4</span>
+<span class="code-line" id="line-move-r3-new">  <span class="text-cyan-400">0x1018</span>  Move      R2, R3</span>
+<span class="code-line" id="line-skip"><b>SKIP:</b></span>
+<span class="code-line" id="line-add-r2">  <span class="text-cyan-400">0x101C</span>  Add       #1, R2</span>
+<span class="code-line" id="line-compare2">  <span class="text-cyan-400">0x1020</span>  Compare   R2, R1</span>
+<span class="code-line" id="line-branch2">  <span class="text-cyan-400">0x1024</span>  Branch&lt;=0 INNER_LOOP</span>
+<span class="code-line" id="line-swap"><b>SWAP:</b></span>
+<span class="code-line" id="line-swap1">  <span class="text-cyan-400">0x1028</span>  Move      (R1), R5</span>
+<span class="code-line" id="line-swap2">  <span class="text-cyan-400">0x102C</span>  Move      (R3), (R1)</span>
+<span class="code-line" id="line-swap3">  <span class="text-cyan-400">0x1030</span>  Move      R5, (R3)</span>
+<span class="code-line" id="line-decrement-r1">  <span class="text-cyan-400">0x1034</span>  Decrement R1</span>
+<span class="code-line" id="line-compare3">  <span class="text-cyan-400">0x1038</span>  Compare   R1, #LIST</span>
+<span class="code-line" id="line-branch3">  <span class="text-cyan-400">0x103C</span>  Branch>0  OUTER_LOOP</span>
+<span class="code-line" id="line-done"><b>DONE:</b></span>
+                            </code></pre>
+                        </div>
+                        <div class="bg-gray-800 rounded-lg p-6 border border-gray-700">
+                             <h3 class="text-xl font-semibold text-white mb-4">Memory State: LIST</h3>
+                             <div id="memory-container" class="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-8 gap-2 font-mono text-center"></div>
+                        </div>
+                    </div>
+
+                    <!-- Right Column: Registers and Explanation -->
+                     <div class="bg-gray-800 rounded-lg p-6 border border-gray-700 space-y-6">
+                        <div>
+                            <h3 class="text-xl font-semibold text-white mb-4">Register States</h3>
+                            <div class="grid grid-cols-2 gap-4 font-mono text-lg">
+                                <div>R1: <span id="reg-r1" class="font-bold text-yellow-400">null</span></div><div>R2: <span id="reg-r2" class="font-bold text-yellow-400">null</span></div>
+                                <div>R3: <span id="reg-r3" class="font-bold text-yellow-400">null</span></div><div>R4: <span id="reg-r4" class="font-bold text-yellow-400">null</span></div>
+                                <div>R5: <span id="reg-r5" class="font-bold text-yellow-400">null</span></div>
+                            </div>
+                        </div>
+                        <div>
+                            <h3 class="text-xl font-semibold text-white mb-4">Explanation</h3>
+                            <p id="explanation-box" class="text-gray-300 min-h-[4em]">Enter characters and press "Sort" to begin the assembly visualization.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <footer class="text-center mt-16 text-gray-500 text-sm"><p>Interactive learning tool for computer architecture concepts.</p></footer>
+    </div>
+    
+    <script>
+        // --- TUTORIAL SCRIPT ---
+        const tutorialContainer = document.getElementById('tutorial-container');
+        const tutorialExplanation = document.getElementById('tutorial-explanation');
+        const tutorialNextBtn = document.getElementById('tutorial-next-btn');
+        const tutorialPrevBtn = document.getElementById('tutorial-prev-btn');
+
+        let tutorialState = {
+            initialArray: [5, 2, 8, 4, 1],
+            steps: [],
+            currentStep: -1
+        };
+
+        function generateTutorialSteps() {
+            let arr = [...tutorialState.initialArray];
+            const n = arr.length;
+            let steps = [{ array: [...arr], explanation: "This is our unsorted list of numbers. The goal is to sort it in ascending order (smallest to largest)." }];
+
+            for (let i = n - 1; i > 0; i--) {
+                let maxIndex = 0;
+                // Find max
+                for (let j = 1; j <= i; j++) {
+                    steps.push({
+                        array: [...arr],
+                        explanation: `1. FIND MAX: We compare ${arr[j]} with the current max, ${arr[maxIndex]}.`,
+                        highlights: { compare: j, max: maxIndex, sorted_from: i + 1 }
+                    });
+                    if (arr[j] > arr[maxIndex]) {
+                        maxIndex = j;
+                    }
+                }
+                 steps.push({
+                    array: [...arr],
+                    explanation: `The largest element in the unsorted part is ${arr[maxIndex]}.`,
+                    highlights: { max: maxIndex, sorted_from: i + 1 }
+                });
+
+                // Swap
+                if (maxIndex !== i) {
+                     steps.push({
+                        array: [...arr],
+                        explanation: `2. SWAP: Now, we swap the max (${arr[maxIndex]}) with the last element of the unsorted part (${arr[i]}).`,
+                        highlights: { swap1: i, swap2: maxIndex, sorted_from: i + 1 }
+                    });
+                    [arr[i], arr[maxIndex]] = [arr[maxIndex], arr[i]];
+                }
+                
+                steps.push({
+                    array: [...arr],
+                    explanation: `3. LOCK: The number ${arr[i]} is now in its correct sorted position. We won't touch it again.`,
+                    highlights: { sorted_from: i }
+                });
+            }
+            steps.push({
+                array: [...arr],
+                explanation: "The list is now fully sorted! The process is complete.",
+                highlights: { sorted_from: 0 }
+            });
+            tutorialState.steps = steps;
+        }
+
+        function renderTutorialStep(stepIndex) {
+            const step = tutorialState.steps[stepIndex];
+            if (!step) return;
+
+            tutorialExplanation.textContent = step.explanation;
+            tutorialContainer.innerHTML = '';
+            
+            step.array.forEach((val, index) => {
+                const box = document.createElement('div');
+                box.textContent = val;
+                let classes = 'tut-box w-16 h-16 flex items-center justify-center text-3xl font-bold rounded-lg border-2 ';
+                
+                if (step.highlights) {
+                    if (index >= step.highlights.sorted_from) classes += 'tut-box-sorted';
+                    else if (index === step.highlights.max) classes += 'tut-box-max';
+                    else if (index === step.highlights.compare) classes += 'tut-box-compare';
+                    else if (index === step.highlights.swap1 || index === step.highlights.swap2) classes += 'tut-box-swap';
+                    else classes += 'tut-box-unsorted';
+                } else {
+                    classes += 'tut-box-unsorted';
+                }
+                box.className = classes;
+                tutorialContainer.appendChild(box);
+            });
+
+            tutorialPrevBtn.disabled = stepIndex === 0;
+            tutorialNextBtn.disabled = stepIndex === tutorialState.steps.length - 1;
+        }
+
+        tutorialNextBtn.addEventListener('click', () => {
+            if (tutorialState.currentStep < tutorialState.steps.length - 1) {
+                tutorialState.currentStep++;
+                renderTutorialStep(tutorialState.currentStep);
+            }
+        });
+        tutorialPrevBtn.addEventListener('click', () => {
+             if (tutorialState.currentStep > 0) {
+                tutorialState.currentStep--;
+                renderTutorialStep(tutorialState.currentStep);
+            }
+        });
+        
+        // --- ASSEMBLY VISUALIZER SCRIPT ---
+        const charInput = document.getElementById('char-input');
+        const sortBtn = document.getElementById('sort-btn');
+        const resetBtn = document.getElementById('reset-btn');
+        const speedSlider = document.getElementById('speed-slider');
+        const visualizationContainer = document.getElementById('visualization-container');
+        const memoryContainer = document.getElementById('memory-container');
+        const statusBox = document.getElementById('status-box');
+        const explanationBox = document.getElementById('explanation-box');
+        const registers = {
+            r1: document.getElementById('reg-r1'), r2: document.getElementById('reg-r2'),
+            r3: document.getElementById('reg-r3'), r4: document.getElementById('reg-r4'),
+            r5: document.getElementById('reg-r5'),
+        };
+
+        let animationSpeed = 500;
+        let isSorting = false;
+        const MEMORY_START_ADDRESS = 0x4000;
+        const defaultColor = 'bg-gray-700 border-gray-600';
+        const comparingColor = 'bg-blue-600 border-blue-500 scale-110';
+        const maxColor = 'bg-yellow-500 border-yellow-400 scale-110';
+        const swapColor = 'bg-red-600 border-red-500 scale-110';
+        const sortedColor = 'bg-green-600 border-green-500';
+
+        function sleep(ms) { return new Promise(resolve => setTimeout(resolve, ms)); }
+        function updateRegister(reg, value) { if (registers[reg]) registers[reg].textContent = value; }
+        function updateAsmExplanation(text) { explanationBox.textContent = text; }
+
+        let lastHighlightedLine = null;
+        function highlightLine(lineId) {
+            if (lastHighlightedLine) lastHighlightedLine.classList.remove('highlight-line');
+            const line = document.getElementById(lineId);
+            if (line) {
+                line.classList.add('highlight-line');
+                lastHighlightedLine = line;
+            }
+        }
+        function setupVisualization(inputString) {
+            visualizationContainer.innerHTML = '';
+            inputString.split('').forEach(char => {
+                const box = document.createElement('div');
+                box.textContent = char;
+                box.className = `char-box w-12 h-12 flex items-center justify-center text-2xl font-bold rounded-md border-2 ${defaultColor}`;
+                visualizationContainer.appendChild(box);
+            });
+        }
+        function setupMemoryView(inputString) {
+            memoryContainer.innerHTML = '';
+            inputString.split('').forEach((char, index) => {
+                const address = `0x${(MEMORY_START_ADDRESS + index).toString(16).toUpperCase()}`;
+                const cell = document.createElement('div');
+                cell.className = 'mem-cell bg-gray-900 p-2 rounded';
+                cell.innerHTML = `<div class="text-xs text-gray-500">${address}</div><div class="text-lg font-bold text-white">${char}</div>`;
+                cell.id = `mem-${index}`;
+                memoryContainer.appendChild(cell);
+            });
+        }
+        async function animateMemory(index, type, newValue = null) {
+            const memCell = document.getElementById(`mem-${index}`);
+            if(!memCell) return;
+            const className = type === 'read' ? 'highlight-read' : 'highlight-write';
+            memCell.classList.add(className);
+            await sleep(animationSpeed * 0.8);
+            if (type === 'write' && newValue !== null) memCell.children[1].textContent = newValue;
+            memCell.classList.remove(className);
+        }
+        function setButtonsState(disabled) {
+            sortBtn.disabled = disabled;
+            charInput.disabled = disabled;
+            resetBtn.disabled = !disabled;
+        }
+        function resetAsmState() {
+            isSorting = false;
+            charInput.value = 'EXAMPLE';
+            setupVisualization(charInput.value);
+            setupMemoryView(charInput.value);
+            statusBox.textContent = 'Enter characters and press "Sort" to begin.';
+            updateAsmExplanation('Enter characters and press "Sort" to begin the assembly visualization.');
+            if (lastHighlightedLine) lastHighlightedLine.classList.remove('highlight-line');
+            Object.keys(registers).forEach(key => updateRegister(key, 'null'));
+            setButtonsState(false);
+        }
+
+        async function selectionSort() {
+            if (isSorting) return;
+            isSorting = true; setButtonsState(true);
+            const elements = Array.from(visualizationContainer.children);
+            const n = elements.length;
+            for (let i = n - 1; i > 0; i--) {
+                if (!isSorting) return;
+                let maxIndex = 0;
+                highlightLine('line-outer-loop');
+                statusBox.textContent = `Pass ${n - i}: Finding max in unsorted part (index 0 to ${i}).`;
+                updateAsmExplanation(`Starting a new pass. We will find the largest character in the unsorted section.`);
+                updateRegister('r1', `0x${(MEMORY_START_ADDRESS + i).toString(16).toUpperCase()}`);
+                await sleep(animationSpeed);
+                await animateMemory(maxIndex, 'read');
+                highlightLine('line-move-r4');
+                updateAsmExplanation(`Assume the first element ('${elements[maxIndex].textContent}') is the largest. Store its value in R4.`);
+                updateRegister('r4', `'${elements[maxIndex].textContent}'`);
+                elements[maxIndex].className = elements[maxIndex].className.replace(defaultColor, maxColor);
+                await sleep(animationSpeed);
+                highlightLine('line-move-r3');
+                updateAsmExplanation(`Store the memory address of the current max element in R3.`);
+                updateRegister('r3', `0x${(MEMORY_START_ADDRESS + maxIndex).toString(16).toUpperCase()}`);
+                await sleep(animationSpeed);
+                for (let j = 1; j <= i; j++) {
+                    if (!isSorting) return;
+                    highlightLine('line-inner-loop');
+                    updateRegister('r2', `0x${(MEMORY_START_ADDRESS + j).toString(16).toUpperCase()}`);
+                    await sleep(animationSpeed / 2);
+                    await animateMemory(j, 'read');
+                    highlightLine('line-compare1');
+                    updateAsmExplanation(`Comparing the next element ('${elements[j].textContent}') with the current max ('${elements[maxIndex].textContent}').`);
+                    elements[j].className = elements[j].className.replace(defaultColor, comparingColor);
+                    await sleep(animationSpeed);
+                    highlightLine('line-branch1'); await sleep(animationSpeed / 2);
+                    if (elements[j].textContent.charCodeAt(0) > elements[maxIndex].textContent.charCodeAt(0)) {
+                        updateAsmExplanation(`Found a new largest element: '${elements[j].textContent}'!`);
+                        highlightLine('line-move-r4-new');
+                        updateAsmExplanation(`Updating R4 with the new max value.`);
+                        updateRegister('r4', `'${elements[j].textContent}'`);
+                        elements[maxIndex].className = elements[maxIndex].className.replace(maxColor, defaultColor);
+                        maxIndex = j;
+                        await sleep(animationSpeed);
+                        highlightLine('line-move-r3-new');
+                        updateAsmExplanation(`Updating R3 with the address of the new max element.`);
+                        updateRegister('r3', `0x${(MEMORY_START_ADDRESS + maxIndex).toString(16).toUpperCase()}`);
+                        elements[maxIndex].className = elements[maxIndex].className.replace(comparingColor, maxColor);
+                        await sleep(animationSpeed);
+                    } else {
+                        elements[j].className = elements[j].className.replace(comparingColor, defaultColor);
+                    }
+                }
+                highlightLine('line-swap');
+                statusBox.textContent = `Swapping max '${elements[maxIndex].textContent}' with last unsorted '${elements[i].textContent}'`;
+                updateAsmExplanation(`Swapping the largest element ('${elements[maxIndex].textContent}') with the last element of the unsorted section ('${elements[i].textContent}').`);
+                await sleep(animationSpeed);
+                if (maxIndex !== i) {
+                    elements[maxIndex].className = elements[maxIndex].className.replace(maxColor, swapColor);
+                    elements[i].className = elements[i].className.replace(defaultColor, swapColor);
+                    await animateMemory(i, 'read');
+                    highlightLine('line-swap1');
+                    updateAsmExplanation(`Temporarily storing '${elements[i].textContent}' in register R5 for the swap.`);
+                    updateRegister('r5', `'${elements[i].textContent}'`);
+                    await sleep(animationSpeed);
+                    await animateMemory(maxIndex, 'read');
+                    await animateMemory(i, 'write', elements[maxIndex].textContent);
+                    highlightLine('line-swap2');
+                    updateAsmExplanation(`Moving the max value to its correct, sorted position.`);
+                    await sleep(animationSpeed);
+                    await animateMemory(maxIndex, 'write', elements[i].textContent);
+                    highlightLine('line-swap3');
+                    updateAsmExplanation(`Moving the value from R5 to the now-empty spot. Swap complete.`);
+                    updateRegister('r5', `null`);
+                    await sleep(animationSpeed);
+                    [elements[maxIndex].textContent, elements[i].textContent] = [elements[i].textContent, elements[maxIndex].textContent];
+                    elements[maxIndex].className = elements[maxIndex].className.replace(swapColor, defaultColor);
+                } else {
+                     updateAsmExplanation(`The largest element is already in its correct place. No swap needed.`);
+                     elements[i].className = elements[i].className.replace(maxColor, defaultColor);
+                }
+                highlightLine('line-decrement-r1');
+                updateAsmExplanation(`Marking one more element as sorted and shrinking the unsorted section.`);
+                await sleep(animationSpeed);
+                elements[i].className = `char-box w-12 h-12 flex items-center justify-center text-2xl font-bold rounded-md border-2 ${sortedColor}`;
+            }
+             if (elements.length > 0 && isSorting) {
+                elements[0].className = `char-box w-12 h-12 flex items-center justify-center text-2xl font-bold rounded-md border-2 ${sortedColor}`;
+            }
+            if (isSorting) {
+                highlightLine('line-done');
+                statusBox.textContent = "Sorting complete!";
+                updateAsmExplanation("The list is now fully sorted!");
+                isSorting = false;
+                setButtonsState(false);
+            }
+        }
+        sortBtn.addEventListener('click', () => {
+            const text = charInput.value.trim().toUpperCase();
+            if (text.length > 0 && text.length <= 16) {
+                setupVisualization(text);
+                setupMemoryView(text);
+                selectionSort();
+            } else if (text.length > 16) {
+                statusBox.textContent = "Please enter 16 or fewer characters.";
+                updateAsmExplanation("Too many characters. Please use 16 or less for a better view.");
+            } else {
+                statusBox.textContent = "Please enter some characters first.";
+                updateAsmExplanation("Please enter some characters to sort.");
+            }
+        });
+        resetBtn.addEventListener('click', () => { isSorting = false; setTimeout(resetAsmState, 50); });
+        speedSlider.addEventListener('input', (e) => { animationSpeed = 1050 - e.target.value; });
+        
+        // --- INITIAL SETUP ---
+        window.onload = () => {
+            // Setup tutorial
+            generateTutorialSteps();
+            tutorialState.currentStep = 0;
+            renderTutorialStep(tutorialState.currentStep);
+            
+            // Setup ASM visualizer
+            resetAsmState();
+        };
+
+    </script>
+</body>
+</html>
+

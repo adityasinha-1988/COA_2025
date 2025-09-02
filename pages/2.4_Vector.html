@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Dot Product Program Simulator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .font-code {
+            font-family: 'Fira Code', monospace;
+        }
+        #codeTableBody tr {
+            transition: background-color 0.4s ease-in-out;
+        }
+        .highlight {
+            background-color: #fef08a; /* yellow-200 */
+        }
+        .changed {
+            animation: pulse-yellow 0.7s ease-out;
+        }
+        @keyframes pulse-yellow {
+            0% { background-color: #fef08a; transform: scale(1); }
+            50% { background-color: #facc15; transform: scale(1.05); }
+            100% { background-color: transparent; transform: scale(1); }
+        }
+        .pointer-highlight {
+            outline: 2px solid #2563eb; /* blue-600 */
+            box-shadow: 0 0 10px #60a5fa; /* blue-400 */
+            transition: all 0.3s ease-in-out;
+        }
+        /* --- Data Flow Animation --- */
+        #data-flyer {
+            position: absolute;
+            padding: 4px 8px;
+            background-color: #3b82f6;
+            color: white;
+            border-radius: 6px;
+            font-size: 1rem;
+            font-weight: bold;
+            z-index: 100;
+            opacity: 0;
+            transition: all 0.7s cubic-bezier(0.25, 1, 0.5, 1);
+            pointer-events: none; /* So it doesn't block clicks */
+        }
+
+        /* Vector Animation Styles */
+        #vectorAnimation {
+            opacity: 0;
+            transform: translateY(-10px);
+            transition: opacity 0.4s ease-in-out, transform 0.4s ease-in-out, margin-top 0.4s ease-in-out;
+            height: 0;
+            overflow: hidden;
+        }
+        #vectorAnimation.active {
+            opacity: 1;
+            transform: translateY(0);
+            height: auto;
+            margin-top: 1.5rem;
+        }
+        .vector-box, .result-box {
+            opacity: 0;
+        }
+        .vector-box {
+            animation: fadeInScale 0.5s ease-out forwards;
+        }
+        @keyframes fadeInScale {
+            from { opacity: 0; transform: scale(0.8); }
+            to { opacity: 1; transform: scale(1); }
+        }
+        .result-box {
+            animation: fadeInResult 0.5s 0.5s ease-out forwards;
+        }
+        @keyframes fadeInResult {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body class="bg-slate-100 text-slate-800 p-4 sm:p-6 lg:p-8">
+
+    <div id="data-flyer" class="font-code"></div>
+
+    <div class="max-w-7xl mx-auto bg-white rounded-2xl shadow-lg p-6 sm:p-8">
+        <header class="border-b border-slate-200 pb-4 mb-6">
+            <h1 class="text-3xl sm:text-4xl font-bold text-slate-900">Interactive Dot Product Simulator</h1>
+            <p class="mt-2 text-slate-600">A visual guide to understanding how a dot product is computed at the machine level.</p>
+        </header>
+
+        <main class="grid grid-cols-1 lg:grid-cols-5 gap-8">
+            <div class="lg:col-span-3 bg-slate-50 p-6 rounded-xl border border-slate-200">
+                <h2 class="text-2xl font-semibold text-slate-800 mb-4">Program Execution</h2>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm text-left font-code">
+                        <thead class="bg-slate-200 text-slate-700 uppercase tracking-wider">
+                            <tr>
+                                <th class="p-3 rounded-tl-lg">Label</th>
+                                <th class="p-3">High-Level (C-like)</th>
+                                <th class="p-3">Assembly</th>
+                                <th class="p-3 rounded-tr-lg">Description</th>
+                            </tr>
+                        </thead>
+                        <tbody id="codeTableBody" class="divide-y divide-slate-200">
+                        </tbody>
+                    </table>
+                </div>
+                <div id="explanationPanel" class="mt-6 bg-sky-50 border-l-4 border-sky-500 text-sky-900 p-4 rounded-md">
+                    <h4 class="font-bold">Current Step Explanation</h4>
+                    <p id="stepExplanationText" class="mt-1 text-sm">Press "Step Forward" or "Run" to begin.</p>
+                </div>
+                 <div class="mt-6 flex items-center gap-3 flex-wrap">
+                    <button id="resetBtn" class="bg-slate-600 hover:bg-slate-700 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-300 flex items-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-counterclockwise" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M8 3a5 5 0 1 1-4.546 2.914.5.5 0 0 0-.908-.417A6 6 0 1 0 8 2z"/><path d="M8 4.466V.534a.25.25 0 0 0-.41-.192L5.23 2.308a.25.25 0 0 0 0 .384l2.36 1.966A.25.25 0 0 0 8 4.466"/></svg>
+                        Reset
+                    </button>
+                    <button id="stepBtn" class="bg-teal-600 hover:bg-teal-700 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-300 flex items-center gap-2">
+                        Step Forward
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-right" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8"/></svg>
+                    </button>
+                    <button id="runBtn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-300 flex items-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-play-fill" viewBox="0 0 16 16"><path d="m11.596 8.697-6.363 3.692c-.54.313-1.233-.066-1.233-.697V4.308c0-.63.692-1.01 1.233-.696l6.363 3.692a.802.802 0 0 1 0 1.393"/></svg>
+                        Run
+                    </button>
+                    <button id="pauseBtn" class="bg-amber-500 hover:bg-amber-600 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-300 flex items-center gap-2" disabled>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-pause-fill" viewBox="0 0 16 16"><path d="M5.5 3.5A1.5 1.5 0 0 1 7 5v6a1.5 1.5 0 0 1-3 0V5A1.5 1.5 0 0 1 5.5 3.5m4 0A1.5 1.5 0 0 1 11 5v6a1.5 1.5 0 0 1-3 0V5A1.5 1.5 0 0 1 9.5 3.5"/></svg>
+                        Pause
+                    </button>
+                </div>
+            </div>
+            <div class="lg:col-span-2 space-y-8">
+                <div id="vectorAnimation" class="bg-slate-50 p-6 rounded-xl border border-slate-200">
+                    <h3 class="text-xl font-semibold text-slate-800 mb-4">Vector Multiplication</h3>
+                    <div id="animationContent" class="flex items-center justify-center gap-4 text-center font-code"></div>
+                </div>
+                <div class="bg-slate-50 p-6 rounded-xl border border-slate-200">
+                    <h3 class="text-xl font-semibold text-slate-800 mb-4">CPU Registers</h3>
+                    <div id="registerView" class="grid grid-cols-2 sm:grid-cols-3 gap-4"></div>
+                </div>
+                <div class="bg-slate-50 p-6 rounded-xl border border-slate-200">
+                    <h3 class="text-xl font-semibold text-slate-800 mb-4">Memory State</h3>
+                    <div id="memoryView" class="space-y-4"></div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // --- CONFIGURATION & INITIAL STATE ---
+        const VECTOR_N = 3;
+        const AVEC_START_ADDR = 4096, BVEC_START_ADDR = 8192, DOTPROD_ADDR = 12288;
+        const initialMemory = {
+            [AVEC_START_ADDR]: 2, [AVEC_START_ADDR + 4]: 3, [AVEC_START_ADDR + 8]: 4,
+            [BVEC_START_ADDR]: 5, [BVEC_START_ADDR + 4]: 6, [BVEC_START_ADDR + 8]: 7,
+            [DOTPROD_ADDR]: 0
+        };
+        const initialRegisters = { R0: 0, R1: 0, R2: 0, R3: 0, R4: 0 };
+        const program = [
+            { hll: 'R1 = &AVEC;', assembly: 'Move #AVEC,R1', description: 'R1 points to vector A.', explanation: 'The memory address of Vector A (<span class="font-code">0x1000</span>) is loaded into register <span class="font-code">R1</span>. R1 will now act as a pointer.' },
+            { hll: 'R2 = &BVEC;', assembly: 'Move #BVEC,R2', description: 'R2 points to vector B.', explanation: 'The memory address of Vector B (<span class="font-code">0x2000</span>) is loaded into register <span class="font-code">R2</span>. R2 now acts as a pointer for Vector B.' },
+            { hll: `R3 = ${VECTOR_N};`, assembly: `Move #${VECTOR_N},R3`, description: 'R3 serves as a counter.', explanation: `The size of the vectors, <span class="font-code">${VECTOR_N}</span>, is loaded into register <span class="font-code">R3</span>. This will serve as the loop counter.` },
+            { hll: 'R0 = 0;', assembly: 'Clear R0', description: 'R0 accumulates the dot product.', explanation: 'Register <span class="font-code">R0</span> is being cleared to <span class="font-code">0</span>. This register will accumulate the sum of the products.' },
+            { label: 'LOOP', hll: 'while (R3 > 0) {', assembly: 'LOOP:', description: 'Start of the loop.', explanation: 'The loop begins here. It will continue to execute until the counter in <span class="font-code">R3</span> becomes zero.' },
+            { hll: '  R4 = *R1++;', assembly: 'Move (R1)+,R4', description: 'Get A[i] into R4; advance R1.', explanation: 'The value from memory (pointed to by <span class="font-code">R1</span>) is being moved into register <span class="font-code">R4</span>. Afterwards, the <span class="font-code">R1</span> pointer is incremented to the next element.' },
+            { hll: '  R4 *= *R2++;', assembly: 'Multiply (R2)+,R4', description: 'R4 = R4 * B[i]; advance R2.', explanation: 'The value in <span class="font-code">R4</span> is multiplied by the value from memory (pointed to by <span class="font-code">R2</span>). Then, the <span class="font-code">R2</span> pointer is advanced.' },
+            { hll: '  R0 += R4;', assembly: 'Add R4,R0', description: 'Add partial product to total.', explanation: 'The result of the multiplication (in <span class="font-code">R4</span>) is added to the total sum in <span class="font-code">R0</span>.' },
+            { hll: '  R3--;', assembly: 'Decrement R3', description: 'Decrement the counter.', explanation: 'The loop counter in register <span class="font-code">R3</span> is decremented by one.' },
+            { hll: '}', assembly: 'Branch>0 LOOP', description: 'Loop again if R3 > 0.', explanation: 'A check is performed to see if the value in <span class="font-code">R3</span> is greater than zero. If it is, the program jumps back to the <span class="font-code">LOOP</span> label.' },
+            { hll: 'DOTPROD = R0;', assembly: 'Move R0,DOTPROD', description: 'Store final dot product.', explanation: 'The final calculated dot product in <span class="font-code">R0</span> is stored into the <span class="font-code">DOTPROD</span> memory location (<span class="font-code">0x3000</span>). The program is complete.' }
+        ];
+
+        let registers, memory, pc, runInterval, isAnimating = false;
+        const allElements = {};
+
+        function animateDataFlow(sourceId, destId, value) {
+            return new Promise(resolve => {
+                isAnimating = true;
+                const sourceEl = allElements[sourceId];
+                const destEl = allElements[destId];
+                const flyer = allElements['data-flyer'];
+                if (!sourceEl || !destEl) {
+                    isAnimating = false;
+                    resolve();
+                    return;
+                }
+                const sourceRect = sourceEl.getBoundingClientRect();
+                const destRect = destEl.getBoundingClientRect();
+                
+                flyer.innerText = value;
+                flyer.style.transition = 'none';
+                flyer.style.opacity = '1';
+                const startX = sourceRect.left + (sourceRect.width / 2) - (flyer.offsetWidth / 2);
+                const startY = sourceRect.top + (sourceRect.height / 2) - (flyer.offsetHeight / 2);
+                flyer.style.transform = `translate(${startX}px, ${startY}px)`;
+
+                setTimeout(() => {
+                    flyer.style.transition = 'all 0.7s cubic-bezier(0.4, 0, 0.2, 1)';
+                    const endX = destRect.left + (destRect.width / 2) - (flyer.offsetWidth / 2);
+                    const endY = destRect.top + (destRect.height / 2) - (flyer.offsetHeight / 2);
+                    flyer.style.transform = `translate(${endX}px, ${endY}px) scale(0.8)`;
+                }, 50);
+
+                setTimeout(() => {
+                    flyer.style.opacity = '0';
+                    isAnimating = false;
+                    resolve();
+                }, 750);
+            });
+        }
+
+        function initialize() {
+            pc = 0;
+            if (runInterval) clearInterval(runInterval);
+            runInterval = null;
+            isAnimating = false;
+            registers = { ...initialRegisters };
+            memory = { ...initialMemory };
+            
+            buildUI();
+            
+            document.querySelectorAll('[id]').forEach(el => allElements[el.id] = el);
+            
+            updateUI();
+            
+            allElements.stepExplanationText.innerHTML = 'Press "Step Forward" or "Run" to begin the simulation.';
+            allElements.vectorAnimation.classList.remove('active');
+            setButtonsState(true);
+        }
+
+        function buildUI() {
+            const codeTableBody = document.getElementById('codeTableBody');
+            const registerView = document.getElementById('registerView');
+            const memoryView = document.getElementById('memoryView');
+
+            codeTableBody.innerHTML = program.map((line, index) => `
+                <tr id="line-${index}" class="bg-white">
+                    <td class="p-3 font-semibold text-teal-600">${line.label || ''}</td>
+                    <td class="p-3">${line.hll}</td>
+                    <td class="p-3">${line.assembly}</td>
+                    <td class="p-3 text-slate-500">${line.description || ''}</td>
+                </tr>`).join('');
+
+            registerView.innerHTML = Object.keys(initialRegisters).map(reg => `
+                <div id="box-reg-${reg}" class="bg-white p-3 rounded-lg shadow text-center">
+                    <div class="text-sm text-slate-500 font-semibold">${reg}</div>
+                    <div class="text-2xl font-bold font-code text-slate-800" id="val-reg-${reg}">0</div>
+                </div>`).join('');
+            
+            // --- NEW: Build Vector Arrays UI ---
+            let vectorA_html = '<div><h4 class="text-md font-semibold mb-2 text-slate-700">Vector A</h4><div class="flex gap-2">';
+            for (let i = 0; i < VECTOR_N; i++) {
+                const addr = AVEC_START_ADDR + (i * 4);
+                vectorA_html += `
+                    <div id="box-mem-${addr}" class="flex-1 bg-white p-3 rounded-lg shadow text-center">
+                        <div class="text-xs text-slate-500">A[${i}] <span class="font-code text-xs">(0x${addr.toString(16)})</span></div>
+                        <div class="text-xl font-bold font-code text-slate-800" id="val-mem-${addr}">0</div>
+                    </div>`;
+            }
+            vectorA_html += '</div></div>';
+
+            let vectorB_html = '<div><h4 class="text-md font-semibold mb-2 text-slate-700">Vector B</h4><div class="flex gap-2">';
+            for (let i = 0; i < VECTOR_N; i++) {
+                const addr = BVEC_START_ADDR + (i * 4);
+                vectorB_html += `
+                    <div id="box-mem-${addr}" class="flex-1 bg-white p-3 rounded-lg shadow text-center">
+                        <div class="text-xs text-slate-500">B[${i}] <span class="font-code text-xs">(0x${addr.toString(16)})</span></div>
+                        <div class="text-xl font-bold font-code text-slate-800" id="val-mem-${addr}">0</div>
+                    </div>`;
+            }
+            vectorB_html += '</div></div>';
+
+            const dotprod_html = `
+                <div>
+                     <h4 class="text-md font-semibold mb-2 text-slate-700">Result</h4>
+                     <div id="box-mem-${DOTPROD_ADDR}" class="bg-white p-3 rounded-lg shadow">
+                        <div class="text-sm text-slate-500">DOTPROD <span class="font-code text-xs">(0x${DOTPROD_ADDR.toString(16)})</span></div>
+                        <div class="text-xl font-bold font-code text-slate-800" id="val-mem-${DOTPROD_ADDR}">0</div>
+                    </div>
+                </div>`;
+
+            memoryView.innerHTML = vectorA_html + vectorB_html + dotprod_html;
+        }
+
+        function updateUI() {
+            document.querySelectorAll('#codeTableBody tr').forEach(row => row.classList.remove('highlight'));
+            if (pc < program.length) allElements[`line-${pc}`]?.classList.add('highlight');
+
+            Object.keys(registers).forEach(reg => updateValue(`val-reg-${reg}`, registers[reg]));
+            Object.keys(memory).forEach(addr => {
+                if(document.getElementById(`val-mem-${addr}`)){
+                    updateValue(`val-mem-${addr}`, memory[addr])
+                }
+            });
+            
+            document.querySelectorAll('.pointer-highlight').forEach(el => el.classList.remove('pointer-highlight'));
+            if(pc >= 5 && pc <= 9) {
+                // Check if the element exists before adding class
+                if (allElements[`box-mem-${registers.R1}`]) {
+                    allElements[`box-mem-${registers.R1}`].classList.add('pointer-highlight');
+                }
+                if (allElements[`box-mem-${registers.R2}`]) {
+                    allElements[`box-mem-${registers.R2}`].classList.add('pointer-highlight');
+                }
+            }
+            if (pc !== 6) allElements.vectorAnimation.classList.remove('active');
+        }
+
+        function updateValue(elementId, value) {
+            const el = allElements[elementId];
+            if (el && el.textContent != value) {
+                el.textContent = value;
+                el.parentElement.classList.add('changed');
+                setTimeout(() => el.parentElement.classList.remove('changed'), 700);
+            }
+        }
+
+        async function step() {
+            if (pc >= program.length || isAnimating) return;
+            allElements.stepExplanationText.innerHTML = program[pc].explanation;
+            let valA, valB, result;
+
+            switch (pc) {
+                case 5: // Move (R1)+,R4
+                    await animateDataFlow(`box-mem-${registers.R1}`, `box-reg-R4`, memory[registers.R1]);
+                    registers.R4 = memory[registers.R1];
+                    registers.R1 += 4;
+                    break;
+                case 6: // Multiply (R2)+,R4
+                    valA = registers.R4;
+                    valB = memory[registers.R2];
+                    result = valA * valB;
+                    showVectorAnimation(valA, valB, result);
+                    registers.R4 = result;
+                    registers.R2 += 4;
+                    break;
+                case 7: // Add R4, R0
+                    await animateDataFlow(`box-reg-R4`, `box-reg-R0`, registers.R4);
+                    registers.R0 += registers.R4;
+                    break;
+                case 9: // Branch
+                    if (registers.R3 > 0) pc = 4;
+                    break;
+                case 10: // Move R0,DOTPROD
+                    await animateDataFlow(`box-reg-R0`, `box-mem-${DOTPROD_ADDR}`, registers.R0);
+                    memory[DOTPROD_ADDR] = registers.R0;
+                    break;
+                default:
+                    const line = program[pc].assembly.toLowerCase();
+                    if(line.includes('#avec')) registers.R1 = AVEC_START_ADDR;
+                    else if(line.includes('#bvec')) registers.R2 = BVEC_START_ADDR;
+                    else if(line.includes(`#${VECTOR_N}`)) registers.R3 = VECTOR_N;
+                    else if(line.includes('clear r0')) registers.R0 = 0;
+                    else if(line.includes('decrement r3')) registers.R3 -= 1;
+                    break;
+            }
+
+            pc++;
+            updateUI();
+
+            if (pc >= program.length) {
+                allElements.stepExplanationText.innerHTML = '<strong>Program finished!</strong> Final result stored in memory.';
+                setButtonsState(false, true);
+            }
+        }
+        
+        function showVectorAnimation(valA, valB, result) {
+            allElements.animationContent.innerHTML = `
+                <div class="vector-box">
+                    <div class="text-sm text-slate-500">A[i]</div>
+                    <div class="bg-blue-200 text-blue-800 text-2xl font-bold w-16 h-16 flex items-center justify-center rounded-lg">${valA}</div>
+                </div>
+                <div class="text-4xl font-light text-slate-400 vector-box" style="animation-delay: 0.2s;">&times;</div>
+                <div class="vector-box" style="animation-delay: 0.2s;">
+                    <div class="text-sm text-slate-500">B[i]</div>
+                    <div class="bg-green-200 text-green-800 text-2xl font-bold w-16 h-16 flex items-center justify-center rounded-lg">${valB}</div>
+                </div>
+                <div class="text-4xl font-light text-slate-400 result-box" style="animation-delay: 0.4s;">=</div>
+                <div class="result-box" style="animation-delay: 0.4s;">
+                    <div class="text-sm text-slate-500">Result</div>
+                    <div class="bg-yellow-200 text-yellow-800 text-2xl font-bold w-16 h-16 flex items-center justify-center rounded-lg">${result}</div>
+                </div>`;
+            allElements.vectorAnimation.classList.add('active');
+        }
+        
+        function setButtonsState(canRun, isFinished = false) {
+             const { stepBtn, runBtn, pauseBtn } = allElements;
+             stepBtn.disabled = !canRun || isFinished;
+             runBtn.disabled = !canRun || isFinished;
+             pauseBtn.disabled = canRun || isFinished;
+        }
+
+        function run() {
+            setButtonsState(false);
+            runInterval = setInterval(() => {
+                if (pc >= program.length || isAnimating) {
+                    clearInterval(runInterval);
+                    if(pc >= program.length) setButtonsState(false, true);
+                    else setButtonsState(true);
+                } else {
+                    step();
+                }
+            }, 1400);
+        }
+        
+        function pause() {
+            if(runInterval) clearInterval(runInterval);
+            runInterval = null;
+            setButtonsState(true);
+        }
+
+        document.getElementById('resetBtn').addEventListener('click', initialize);
+        document.getElementById('stepBtn').addEventListener('click', step);
+        document.getElementById('runBtn').addEventListener('click', run);
+        document.getElementById('pauseBtn').addEventListener('click', pause);
+
+        initialize();
+    });
+    </script>
+</body>
+</html>
+
