@@ -39,14 +39,3 @@ Contributions are welcome\! If you would like to contribute to this project, ple
 ## 📄 License
 
 This project is licensed under the [MIT License](https://www.google.com/search?q=LICENSE).
-
------
-
-**How to use this:**
-
-1.  Copy the text above.
-2.  Go to your GitHub repository (`adityasinha-1988/COA_2025`).
-3.  Click on the "Add a README" button or edit the existing `README.md` file.
-4.  Paste the copied text and commit the changes.
-
-Your repository will now have a professional and informative README file\!
