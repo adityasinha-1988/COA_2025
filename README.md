@@ -1,4 +1,4 @@
-# COA\_2025: COA + VAK Integrated Learning Portal
+# COA\_2025: COA Integrated Learning Portal
 
 Welcome to the official repository for the COA\_2025 project. This repository hosts the source code for a dedicated learning portal designed to provide educational resources for Computer Organization and Architecture (COA), integrated with VAK (Visual, Auditory, Kinesthetic) learning principles.
 
