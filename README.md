@@ -1,7 +1,3 @@
-Zaroor, aapki website aur repository ko dekhte hue, yahan ek README file ka draft hai jo aap apne GitHub repository mein istemal kar sakte hain. Aap ise copy karke apni `README.md` file mein paste kar sakte hain.
-
------
-
 # COA\_2025: COA + VAK Integrated Learning Portal
 
 Welcome to the official repository for the COA\_2025 project. This repository hosts the source code for a dedicated learning portal designed to provide educational resources for Computer Organization and Architecture (COA) integrated with VAK (Visual, Auditory, Kinesthetic) learning styles.
