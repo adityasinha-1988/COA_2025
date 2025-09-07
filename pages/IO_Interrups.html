@@ -1,0 +1,736 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The I/O Journey</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0a0a0a;
+            color: #e5e5e5;
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border-radius: 1rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .nav-link {
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        .nav-link:after {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 2px;
+            display: block;
+            margin-top: 5px;
+            right: 0;
+            background: #3b82f6;
+            transition: width 0.3s ease;
+        }
+        .nav-link:hover:after, .nav-link.active:after {
+            width: 100%;
+            left: 0;
+        }
+        .content-section {
+            display: none;
+            animation: fadeIn 0.5s ease-in-out;
+        }
+        .content-section.active {
+            display: block;
+        }
+        .steps-panel {
+            background: #111827;
+            border-radius: 0.75rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            min-height: 24rem; /* 384px */
+        }
+        .step {
+            opacity: 0;
+            transform: translateY(10px);
+            transition: opacity 0.5s ease, transform 0.5s ease;
+            padding: 0.5rem 0.75rem;
+            border-left: 3px solid transparent;
+        }
+        .step.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .step.current {
+            border-left-color: #3b82f6;
+            background-color: rgba(59, 130, 246, 0.1);
+        }
+        .memory-block, .device-btn {
+            transition: all 0.3s ease;
+        }
+        .device-btn.selected {
+            border-color: #3b82f6;
+            box-shadow: 0 0 15px rgba(59, 130, 246, 0.5);
+            transform: scale(1.05);
+        }
+        .daisy-checkbox {
+            appearance: none;
+            width: 1.5rem;
+            height: 1.5rem;
+            border: 2px solid #4b5563;
+            border-radius: 0.375rem;
+            cursor: pointer;
+            position: relative;
+            transition: all 0.2s ease;
+        }
+        .daisy-checkbox:checked {
+            background-color: #3b82f6;
+            border-color: #3b82f6;
+        }
+        .daisy-checkbox:checked::after {
+            content: '✓';
+            color: white;
+            font-weight: bold;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+        
+        /* Animations */
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes pulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7); } 50% { box-shadow: 0 0 15px 5px rgba(59, 130, 246, 0); } }
+        .cpu-active { animation: pulse 2s infinite; }
+        @keyframes data-flow { from { stroke-dashoffset: 1000; } to { stroke-dashoffset: 0; } }
+        .data-path { stroke-dasharray: 10; animation: data-flow 2s linear infinite; }
+        .interrupt-line-anim { stroke-dasharray: 10; animation: data-flow 1.5s ease-in-out; }
+        .progress-bar-fill { transition: width 0.2s linear; }
+    </style>
+</head>
+<body class="min-h-screen">
+
+    <header class="sticky top-0 z-50 glass-card mx-4 my-4">
+        <nav class="container mx-auto px-6 py-3 flex justify-between items-center">
+            <h1 class="text-2xl font-bold text-white">The I/O Journey</h1>
+            <div class="flex items-center">
+                <div class="hidden md:flex space-x-8 text-lg">
+                    <a href="#" class="nav-link active" data-target="home">Home</a>
+                    <a href="#" class="nav-link" data-target="programmed-io">Programmed I/O</a>
+                    <a href="#" class="nav-link" data-target="interrupt-io">Interrupts</a>
+                    <a href="#" class="nav-link" data-target="dma">DMA</a>
+                    <a href="#" class="nav-link" data-target="simultaneous-interrupts">Priority</a>
+                    <a href="#" class="nav-link" data-target="daisy-chain">Daisy Chain</a>
+                </div>
+                <button id="global-reset-btn" class="ml-6 bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg text-sm transition-transform transform hover:scale-105">Reset</button>
+            </div>
+        </nav>
+    </header>
+
+    <main class="container mx-auto p-4 md:p-8">
+        <!-- Home Section -->
+        <section id="home" class="content-section active text-center">
+            <h2 class="text-5xl font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-500">How Computers Talk to the World</h2>
+            <p class="text-xl text-gray-300 max-w-3xl mx-auto mb-8">
+                Ever wondered how your CPU communicates with your keyboard, printer, or hard drive? Dive into the fundamental modes of I/O data transfer and see them in action.
+            </p>
+             <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8 mt-12">
+                <div class="glass-card p-6 cursor-pointer transform hover:-translate-y-2 transition-transform" onclick="navigateTo('programmed-io')">
+                    <h3 class="text-2xl font-bold mb-2 text-blue-400">Programmed I/O</h3>
+                    <p>The CPU is in charge, constantly checking if devices are ready. Simple, but inefficient.</p>
+                </div>
+                <div class="glass-card p-6 cursor-pointer transform hover:-translate-y-2 transition-transform" onclick="navigateTo('interrupt-io')">
+                    <h3 class="text-2xl font-bold mb-2 text-green-400">Interrupt-Driven I/O</h3>
+                    <p>Devices notify the CPU when they're ready. Efficient and allows multitasking.</p>
+                </div>
+                <div class="glass-card p-6 cursor-pointer transform hover:-translate-y-2 transition-transform" onclick="navigateTo('dma')">
+                    <h3 class="text-2xl font-bold mb-2 text-purple-400">Direct Memory Access</h3>
+                    <p>The ultimate hands-off approach. Devices talk directly to memory, freeing the CPU entirely.</p>
+                </div>
+                 <div class="glass-card p-6 cursor-pointer transform hover:-translate-y-2 transition-transform md:col-span-2 lg:col-span-3" onclick="navigateTo('simultaneous-interrupts')">
+                    <h3 class="text-2xl font-bold mb-2 text-yellow-400">Handling Simultaneous Interrupts</h3>
+                    <p>What happens when multiple devices interrupt at once? See how the system prioritizes them using software and hardware methods.</p>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Other sections are unchanged... -->
+        
+        <!-- Programmed I/O Section (Unchanged) -->
+        <section id="programmed-io" class="content-section">
+            <h2 class="text-4xl font-bold mb-4 text-blue-400">Programmed I/O (Polling)</h2>
+            <p class="text-lg mb-8 max-w-4xl">In this mode, the CPU continuously checks the status of an I/O device. This is known as "Polling". The CPU remains busy until the device is ready.</p>
+            <div class="glass-card p-6">
+                <div class="grid lg:grid-cols-3 gap-8 items-center">
+                    <div class="lg:col-span-2 relative h-80">
+                        <svg width="100%" height="100%" viewBox="0 0 400 150">
+                            <rect x="10" y="50" width="80" height="50" rx="10" fill="#1e40af" id="pio-cpu"></rect>
+                            <text x="32" y="80" fill="white" font-size="16">CPU</text>
+                            <rect x="310" y="50" width="80" height="50" rx="10" fill="#4b5563" id="pio-device"></rect>
+                            <text x="320" y="80" fill="white" font-size="16">Device</text>
+                            <text x="315" y="40" fill="#e5e5e5" font-size="14">Flag</text>
+                            <rect x="350" y="25" width="20" height="20" rx="4" fill="#111827" stroke="#9ca3af"></rect>
+                            <text x="356" y="40" fill="#ef4444" font-size="16" id="pio-flag-text">0</text>
+                            <line x1="90" y1="75" x2="310" y2="75" stroke="#4b5563" stroke-width="4"></line>
+                            <circle id="pio-poll-signal" cx="100" cy="75" r="5" fill="#3b82f6" class="hidden transition-all duration-500"></circle>
+                        </svg>
+                    </div>
+                    <div class="steps-panel p-4">
+                        <h3 class="text-lg font-bold mb-2 text-gray-300">Live Steps:</h3>
+                        <div id="pio-steps" class="space-y-2 text-gray-400"></div>
+                    </div>
+                </div>
+                 <div class="mt-6 flex justify-center space-x-4">
+                    <button id="pio-start-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg">Start Simulation</button>
+                    <button id="pio-keystroke-btn" class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-6 rounded-lg" disabled>Simulate Keystroke</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Interrupt-driven I/O Section (Unchanged) -->
+        <section id="interrupt-io" class="content-section">
+            <h2 class="text-4xl font-bold mb-4 text-green-400">Interrupt-Driven I/O</h2>
+            <p class="text-lg mb-8 max-w-4xl">Here, the CPU continues its tasks. When a device needs attention, it sends an "Interrupt" signal to the CPU. This improves CPU efficiency.</p>
+             <div class="glass-card p-6">
+                <div class="grid lg:grid-cols-3 gap-8 items-center">
+                    <div class="lg:col-span-2 relative h-[28rem]">
+                         <svg width="100%" height="100%" viewBox="0 0 500 280">
+                             <rect x="10" y="10" width="100" height="50" rx="10" fill="#052e16" id="int-cpu"></rect>
+                             <text x="45" y="40" fill="white" font-size="16">CPU</text>
+                             <text x="15" y="75" fill="#6ee7b7" font-size="12">Task Progress:</text>
+                             <rect x="15" y="85" width="90" height="15" fill="#166534" rx="5"></rect>
+                             <rect id="int-progress-bar" x="15" y="85" width="0" height="15" fill="#34d399" rx="5" class="progress-bar-fill"></rect>
+                             <rect x="300" y="10" width="190" height="260" rx="10" fill="#111827" stroke="#4b5563"></rect>
+                             <text x="370" y="35" fill="white" font-size="16">MEMORY</text>
+                             <g id="memory-map">
+                                 <rect id="ivt-area" class="memory-block" x="310" y="50" width="170" height="50" rx="5" fill="#1f2937"></rect>
+                                 <text x="320" y="75" fill-opacity="0.7" fill="#e5e5e5">Interrupt Vector Table</text>
+                                 <rect id="isr-area-1" class="memory-block" x="310" y="110" width="170" height="30" rx="5" fill="#1f2937"></rect>
+                                 <text x="320" y="130" fill-opacity="0.7" fill="#e5e5e5">ISR (Keyboard)</text>
+                                 <rect id="isr-area-2" class="memory-block" x="310" y="145" width="170" height="30" rx="5" fill="#1f2937"></rect>
+                                 <text x="320" y="165" fill-opacity="0.7" fill="#e5e5e5">ISR (Mouse)</text>
+                                 <rect id="isr-area-3" class="memory-block" x="310" y="180" width="170" height="30" rx="5" fill="#1f2937"></rect>
+                                 <text x="320" y="200" fill-opacity="0.7" fill="#e5e5e5">ISR (Printer)</text>
+                                 <rect id="stack-area" class="memory-block" x="310" y="220" width="170" height="40" rx="5" fill="#1f2937"></rect>
+                                 <text x="320" y="245" fill-opacity="0.7" fill="#e5e5e5">Stack</text>
+                                 <g id="int-stack-content"></g>
+                             </g>
+                             <g id="int-devices">
+                                 <rect x="10" y="220" width="80" height="50" rx="10" fill="#4b5563" id="int-device-keyboard"></rect>
+                                 <text x="20" y="250" fill="white">Keyboard</text>
+                                 <rect x="100" y="220" width="80" height="50" rx="10" fill="#4b5563" id="int-device-mouse"></rect>
+                                 <text x="120" y="250" fill="white">Mouse</text>
+                                 <rect x="190" y="220" width="80" height="50" rx="10" fill="#4b5563" id="int-device-printer"></rect>
+                                 <text x="205" y="250" fill="white">Printer</text>
+                             </g>
+                             <path id="int-line" class="hidden" d="M 140 220 Q 100 150 60 70" stroke="#ef4444" stroke-width="2" fill="none"/>
+                             <text id="int-address-packet" x="120" y="190" font-size="14" fill="#facc15" class="hidden">[Addr]</text>
+                             <path id="int-poll-path" class="hidden" d="M 60 40 L 50 220" stroke="#fbbf24" stroke-width="2" fill="none" stroke-dasharray="10"/>
+                         </svg>
+                    </div>
+                    <div class="steps-panel p-4">
+                         <h3 class="text-lg font-bold mb-2 text-gray-300">Live Steps:</h3>
+                         <div id="int-steps" class="space-y-2 text-gray-400"></div>
+                    </div>
+                </div>
+                 <div class="mt-6 text-center">
+                    <button id="int-start-btn" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-6 rounded-lg mb-4">1. Start CPU Task</button>
+                    <div class="border-t border-gray-600 my-4 max-w-lg mx-auto"></div>
+                    <p class="text-gray-400 mb-2">2. Select a device to send an interrupt:</p>
+                    <div id="device-selector" class="flex justify-center space-x-2 mb-4">
+                        <button class="device-btn border-2 border-gray-600 bg-gray-700 hover:bg-gray-800 text-white font-bold py-2 px-4 rounded-lg" data-device="keyboard">Keyboard</button>
+                        <button class="device-btn border-2 border-gray-600 bg-gray-700 hover:bg-gray-800 text-white font-bold py-2 px-4 rounded-lg" data-device="mouse">Mouse</button>
+                        <button class="device-btn border-2 border-gray-600 bg-gray-700 hover:bg-gray-800 text-white font-bold py-2 px-4 rounded-lg" data-device="printer">Printer</button>
+                    </div>
+                    <p class="text-gray-400 mb-2">3. Choose Interrupt Type:</p>
+                    <div class="flex justify-center space-x-4">
+                        <button id="int-vectored-btn" class="bg-sky-600 hover:bg-sky-700 text-white font-bold py-2 px-6 rounded-lg" disabled>Trigger Vectored</button>
+                        <button id="int-non-vectored-btn" class="bg-amber-600 hover:bg-amber-700 text-white font-bold py-2 px-6 rounded-lg" disabled>Trigger Non-Vectored</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- DMA Section (Unchanged) -->
+        <section id="dma" class="content-section">
+            <h2 class="text-4xl font-bold mb-4 text-purple-400">Direct Memory Access (DMA)</h2>
+            <p class="text-lg mb-8 max-w-4xl">For large data transfers, the CPU delegates the task to a special hardware, the DMA Controller. The DMAC transfers data directly between the I/O device and memory, freeing the CPU.</p>
+             <div class="glass-card p-6">
+                 <div class="grid lg:grid-cols-3 gap-8 items-center">
+                    <div class="lg:col-span-2 relative h-96">
+                        <svg width="100%" height="100%" viewBox="0 0 400 200">
+                            <rect x="10" y="10" width="80" height="50" rx="10" fill="#3b0764" id="dma-cpu"></rect>
+                            <text x="32" y="40" fill="white" font-size="16">CPU</text>
+                            <rect x="160" y="10" width="80" height="50" rx="10" fill="#581c87" id="dma-dmac"></rect>
+                            <text x="175" y="40" fill="white" font-size="12">DMA-C</text>
+                            <rect x="310" y="10" width="80" height="180" rx="10" fill="#111827" stroke="#9ca3af" id="dma-memory"></rect>
+                            <text x="325" y="30" fill="white">Memory</text>
+                            <g id="dma-memory-blocks"></g>
+                            <rect x="160" y="140" width="80" height="50" rx="10" fill="#4b5563" id="dma-disk"></rect>
+                            <text x="170" y="170" fill="white">I/O Disk</text>
+                            <path id="dma-path-1" class="hidden" d="M 90 35 L 160 35" stroke="#a78bfa" stroke-width="2" fill="none"/>
+                            <path id="dma-path-2" class="hidden" d="M 240 165 L 310 165" stroke="#a78bfa" stroke-width="2" fill="none"/>
+                            <path id="dma-path-4" class="hidden" d="M 160 35 Q 120 0 90 35" stroke="#ef4444" stroke-width="2" fill="none"/>
+                        </svg>
+                    </div>
+                    <div class="steps-panel p-4">
+                        <h3 class="text-lg font-bold mb-2 text-gray-300">Live Steps:</h3>
+                        <div id="dma-steps" class="space-y-2 text-gray-400"></div>
+                    </div>
+                 </div>
+                  <div class="mt-6 flex justify-center space-x-4">
+                    <button id="dma-start-btn" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-6 rounded-lg">Initiate DMA Transfer</button>
+                  </div>
+            </div>
+        </section>
+        
+        <!-- NEW Simultaneous Interrupts Section -->
+        <section id="simultaneous-interrupts" class="content-section">
+            <h2 class="text-4xl font-bold mb-4 text-orange-400">Simultaneous Interrupts</h2>
+            <p class="text-lg mb-8 max-w-4xl">When multiple devices send an interrupt at the same time, the system must decide which one to service first. This is done using a priority system. There are two main solutions: Software Polling and Hardware Daisy-Chaining.</p>
+            
+            <div class="glass-card p-6">
+                <h3 class="text-2xl font-bold mb-4 text-sky-400">Solution 1: Software Polling Priority</h3>
+                <p class="mb-4">The CPU checks each device in a pre-defined order. The first device found with a pending interrupt is serviced.</p>
+                <div class="grid lg:grid-cols-3 gap-8 items-center">
+                    <div class="lg:col-span-2 relative h-[20rem]">
+                         <svg width="100%" height="100%" viewBox="0 0 500 200">
+                             <rect x="200" y="10" width="100" height="50" rx="10" fill="#052e16" id="poll-cpu"></rect>
+                             <text x="235" y="40" fill="white" font-size="16">CPU</text>
+                             <g>
+                                 <rect x="10" y="130" width="100" height="50" rx="10" fill="#4b5563" id="poll-dev1"></rect>
+                                 <text x="20" y="160" fill="white">Device 1 (P1)</text>
+                                 <rect x="200" y="130" width="100" height="50" rx="10" fill="#4b5563" id="poll-dev2"></rect>
+                                 <text x="210" y="160" fill="white">Device 2 (P2)</text>
+                                 <rect x="390" y="130" width="100" height="50" rx="10" fill="#4b5563" id="poll-dev3"></rect>
+                                 <text x="400" y="160" fill="white">Device 3 (P3)</text>
+                             </g>
+                             <path id="poll-check-path" class="hidden" d="M 250 60 V 130 H 60" stroke="#fbbf24" stroke-width="2" fill="none" stroke-dasharray="10"/>
+                         </svg>
+                    </div>
+                    <div class="steps-panel p-4">
+                         <h3 class="text-lg font-bold mb-2 text-gray-300">Live Steps:</h3>
+                         <div id="poll-steps" class="space-y-2 text-gray-400"></div>
+                    </div>
+                </div>
+                 <div class="mt-6 text-center">
+                    <p class="text-gray-400 mb-2">1. Select which devices have pending interrupts:</p>
+                    <div id="poll-selector" class="flex justify-center items-center space-x-6 mb-4">
+                        <label class="flex items-center space-x-2"><input type="checkbox" data-device="1" class="daisy-checkbox"><span>Device 1</span></label>
+                        <label class="flex items-center space-x-2"><input type="checkbox" data-device="2" class="daisy-checkbox"><span>Device 2</span></label>
+                        <label class="flex items-center space-x-2"><input type="checkbox" data-device="3" class="daisy-checkbox"><span>Device 3</span></label>
+                    </div>
+                    <button id="poll-start-btn" class="bg-sky-600 hover:bg-sky-700 text-white font-bold py-2 px-6 rounded-lg">2. Start Priority Poll</button>
+                </div>
+            </div>
+
+            <div class="glass-card p-6 mt-8">
+                <h3 class="text-2xl font-bold mb-4 text-yellow-400">Solution 2: Hardware Daisy-Chaining</h3>
+                <p class="mb-4">A hardware-based approach where devices are connected in series. The physical connection determines the priority, which is faster than software polling.</p>
+                <div class="text-center">
+                     <button onclick="navigateTo('daisy-chain')" class="bg-yellow-600 hover:bg-yellow-700 text-black font-bold py-3 px-8 rounded-lg text-lg">Explore Daisy Chain Simulation</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Daisy Chain Section (Redesigned) -->
+        <section id="daisy-chain" class="content-section">
+            <h2 class="text-4xl font-bold mb-4 text-yellow-400">Hardware Priority: Daisy Chaining</h2>
+            <p class="text-lg mb-8 max-w-4xl">This diagram shows the exact hardware layout for Daisy Chaining. The Interrupt Acknowledge (INTACK) signal propagates sequentially from the highest priority device to the lowest.</p>
+             <div class="glass-card p-6">
+                <div class="grid lg:grid-cols-3 gap-8 items-center">
+                    <div class="lg:col-span-2 relative h-[28rem]">
+                         <svg width="100%" height="100%" viewBox="0 0 500 280">
+                             <rect x="380" y="115" width="110" height="50" rx="10" fill="#4a044e" id="daisy-cpu"></rect>
+                             <text x="415" y="145" fill="white" font-size="16">CPU</text>
+                             <text x="360" y="110" fill="#e5e5e5" font-size="12">INTACK</text>
+                             <text x="360" y="170" fill="#e5e5e5" font-size="12">INT</text>
+                             
+                             <g id="daisy-devices">
+                                 <rect x="240" y="115" width="100" height="50" rx="10" fill="#4b5563" id="daisy-dev1"></rect>
+                                 <text x="250" y="145" fill="white">Device 1</text>
+                                 <rect x="120" y="115" width="100" height="50" rx="10" fill="#4b5563" id="daisy-dev2"></rect>
+                                 <text x="130" y="145" fill="white">Device 2</text>
+                                 <rect x="0" y="115" width="100" height="50" rx="10" fill="#4b5563" id="daisy-dev3"></rect>
+                                 <text x="10" y="145" fill="white">Device 3</text>
+                             </g>
+                             
+                             <!-- Busses -->
+                             <path id="daisy-intr-bus" d="M 290 165 V 240 H 10 M 170 165 V 240 M 50 165 V 240 M 10 240 H 380 V 155" stroke="#4b5563" stroke-width="3" fill="none" />
+                             <text x="150" y="255" fill="#e5e5e5">Interrupt Request Bus (INTR)</text>
+                             <path id="daisy-data-bus" d="M 290 115 V 50 H 10 M 170 115 V 50 M 50 115 V 50 M 10 50 H 435 V 115" stroke="#4b5563" stroke-width="3" fill="none" />
+                             <text x="150" y="35" fill="#e5e5e5">Processor Data Bus (VAD)</text>
+
+                             <!-- Dynamic Signal Lines -->
+                             <path id="daisy-intr-1" class="hidden" d="M 290 165 V 240" stroke="#ef4444" stroke-width="3" fill="none" />
+                             <path id="daisy-intr-2" class="hidden" d="M 170 165 V 240" stroke="#ef4444" stroke-width="3" fill="none" />
+                             <path id="daisy-intr-3" class="hidden" d="M 50 165 V 240" stroke="#ef4444" stroke-width="3" fill="none" />
+                             <path id="daisy-vad-line" class="hidden" stroke="#22c55e" stroke-width="3" fill="none" />
+                             
+                             <!-- INTACK Chain -->
+                             <path id="daisy-ack-chain-line" d="M 380 125 H 340 M 240 125 H 220 M 120 125 H 100" stroke="#4b5563" stroke-width="3" fill="none" />
+                              <text x="350" y="105" fill="#e5e5e5" font-size="12">PI</text>
+                              <text x="225" y="105" fill="#e5e5e5" font-size="12">PO</text>
+                              <text x="200" y="105" fill="#e5e5e5" font-size="12">PI</text>
+                              <text x="105" y="105" fill="#e5e5e5" font-size="12">PO</text>
+                              <text x="80" y="105" fill="#e5e5e5" font-size="12">PI</text>
+
+                             <circle id="daisy-ack-signal" cx="380" cy="125" r="6" fill="#facc15" class="hidden transition-all duration-700 ease-in-out"></circle>
+                         </svg>
+                    </div>
+                    <div class="steps-panel p-4">
+                         <h3 class="text-lg font-bold mb-2 text-gray-300">Live Steps:</h3>
+                         <div id="daisy-steps" class="space-y-2 text-gray-400"></div>
+                    </div>
+                </div>
+                 <div class="mt-6 text-center">
+                    <p class="text-gray-400 mb-2">1. Select which devices want to send an interrupt:</p>
+                    <div id="daisy-selector" class="flex justify-center items-center space-x-6 mb-4">
+                        <label class="flex items-center space-x-2"><input type="checkbox" data-device="1" class="daisy-checkbox"><span>Device 1</span></label>
+                        <label class="flex items-center space-x-2"><input type="checkbox" data-device="2" class="daisy-checkbox"><span>Device 2</span></label>
+                        <label class="flex items-center space-x-2"><input type="checkbox" data-device="3" class="daisy-checkbox"><span>Device 3</span></label>
+                    </div>
+                    <button id="daisy-start-btn" class="bg-yellow-600 hover:bg-yellow-700 text-black font-bold py-2 px-6 rounded-lg">2. Trigger Simultaneous Interrupts</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Quiz Section (Unchanged) -->
+        <section id="quiz" class="content-section">
+            <h2 class="text-4xl font-bold mb-8 text-center">Test Your Knowledge</h2>
+            <div id="quiz-container" class="glass-card max-w-2xl mx-auto p-8"></div>
+        </section>
+    </main>
+<script>
+// All JS logic is in a single block for simplicity
+document.addEventListener('DOMContentLoaded', () => {
+    // --- ELEMENT SELECTORS ---
+    const navLinks = document.querySelectorAll('.nav-link');
+    const contentSections = document.querySelectorAll('.content-section');
+    const globalResetBtn = document.getElementById('global-reset-btn');
+    let activeTimers = [];
+
+    const pio = { startBtn: document.getElementById('pio-start-btn'), keystrokeBtn: document.getElementById('pio-keystroke-btn'), steps: document.getElementById('pio-steps'), pollSignal: document.getElementById('pio-poll-signal'), flagText: document.getElementById('pio-flag-text'), cpu: document.getElementById('pio-cpu'), device: document.getElementById('pio-device')};
+    const interrupt = { startBtn: document.getElementById('int-start-btn'), vectoredBtn: document.getElementById('int-vectored-btn'), nonVectoredBtn: document.getElementById('int-non-vectored-btn'), steps: document.getElementById('int-steps'), progressBar: document.getElementById('int-progress-bar'), line: document.getElementById('int-line'), stackContent: document.getElementById('int-stack-content'), cpu: document.getElementById('int-cpu'), addrPacket: document.getElementById('int-address-packet'), pollPath: document.getElementById('int-poll-path'), ivtArea: document.getElementById('ivt-area'), isrArea1: document.getElementById('isr-area-1'), isrArea2: document.getElementById('isr-area-2'), isrArea3: document.getElementById('isr-area-3'), deviceSelector: document.getElementById('device-selector') };
+    const dma = { startBtn: document.getElementById('dma-start-btn'), cpu: document.getElementById('dma-cpu'), steps: document.getElementById('dma-steps'), memoryBlocks: document.getElementById('dma-memory-blocks'), path1: document.getElementById('dma-path-1'), path2: document.getElementById('dma-path-2'), path4: document.getElementById('dma-path-4'), dmac: document.getElementById('dma-dmac'), disk: document.getElementById('dma-disk')};
+    const daisy = { startBtn: document.getElementById('daisy-start-btn'), steps: document.getElementById('daisy-steps'), selector: document.getElementById('daisy-selector'), cpu: document.getElementById('daisy-cpu'), dev1: document.getElementById('daisy-dev1'), dev2: document.getElementById('daisy-dev2'), dev3: document.getElementById('daisy-dev3'), intr1: document.getElementById('daisy-intr-1'), intr2: document.getElementById('daisy-intr-2'), intr3: document.getElementById('daisy-intr-3'), ackSignal: document.getElementById('daisy-ack-signal'), vadLine: document.getElementById('daisy-vad-line') };
+    const poll = { startBtn: document.getElementById('poll-start-btn'), steps: document.getElementById('poll-steps'), selector: document.getElementById('poll-selector'), cpu: document.getElementById('poll-cpu'), dev1: document.getElementById('poll-dev1'), dev2: document.getElementById('poll-dev2'), dev3: document.getElementById('poll-dev3'), checkPath: document.getElementById('poll-check-path') };
+    
+    // --- GLOBAL CONTROLS & UTILITIES ---
+    globalResetBtn.addEventListener('click', resetAllSimulations);
+    const delay = ms => new Promise(res => { const timerId = setTimeout(res, ms); activeTimers.push(timerId); });
+
+    function addStep(panel, text) {
+        panel.querySelectorAll('.step').forEach(el => el.classList.remove('current'));
+        const newStep = document.createElement('div');
+        newStep.className = 'step'; newStep.textContent = text;
+        panel.appendChild(newStep);
+        setTimeout(() => { newStep.classList.add('visible', 'current'); panel.scrollTop = panel.scrollHeight; }, 50);
+    }
+    
+    // --- NAVIGATION ---
+    function showSection(targetId) {
+        resetAllSimulations();
+        contentSections.forEach(section => section.classList.toggle('active', section.id === targetId));
+        navLinks.forEach(link => link.classList.toggle('active', link.dataset.target === targetId));
+        if (targetId === 'quiz') loadQuiz();
+    }
+    window.navigateTo = targetId => { showSection(targetId); window.scrollTo({ top: 0, behavior: 'smooth' }); };
+    navLinks.forEach(link => link.addEventListener('click', e => { e.preventDefault(); showSection(e.target.dataset.target); }));
+
+    // --- MASTER RESET ---
+    function resetAllSimulations() {
+        activeTimers.forEach(timer => { clearInterval(timer); clearTimeout(timer); }); activeTimers = [];
+        // PIO Reset
+        pio.cpu.classList.remove('cpu-active'); pio.pollSignal.classList.add('hidden'); pio.steps.innerHTML = ''; pio.startBtn.disabled = false; pio.keystrokeBtn.disabled = true; pio.flagText.textContent = '0'; pio.flagText.setAttribute('fill', '#ef4444');
+        // Interrupt Reset
+        interrupt.cpu.classList.remove('cpu-active'); interrupt.progressBar.style.width = '0%'; interrupt.steps.innerHTML = ''; interrupt.line.classList.add('hidden'); interrupt.stackContent.innerHTML = ''; interrupt.startBtn.disabled = false; interrupt.vectoredBtn.disabled = true; interrupt.nonVectoredBtn.disabled = true; interrupt.addrPacket.classList.add('hidden'); interrupt.pollPath.classList.add('hidden'); [interrupt.ivtArea, interrupt.isrArea1, interrupt.isrArea2, interrupt.isrArea3].forEach(el => el.setAttribute('fill', '#1f2937'));
+        interrupt.deviceSelector.querySelectorAll('.device-btn').forEach(btn => btn.classList.remove('selected')); selectedDevice = null;
+        // DMA Reset
+        dma.cpu.classList.remove('cpu-active'); dma.steps.innerHTML = ''; [dma.path1, dma.path2, dma.path4].forEach(p => p.classList.add('hidden')); dma.memoryBlocks.innerHTML = ''; dma.startBtn.disabled = false;
+        // Daisy Chain Reset
+        daisy.steps.innerHTML = ''; daisy.startBtn.disabled = false; [daisy.intr1, daisy.intr2, daisy.intr3, daisy.vadLine].forEach(p=>p.classList.add('hidden')); daisy.ackSignal.classList.add('hidden'); [daisy.dev1, daisy.dev2, daisy.dev3, daisy.cpu].forEach(el=>el.classList.remove('cpu-active'));
+        daisy.selector.querySelectorAll('input').forEach(c => {c.checked = false; c.disabled = false;});
+         // Poll Reset
+        poll.steps.innerHTML = ''; poll.startBtn.disabled = false; poll.checkPath.classList.add('hidden'); [poll.dev1, poll.dev2, poll.dev3, poll.cpu].forEach(el=>el.classList.remove('cpu-active'));
+        poll.selector.querySelectorAll('input').forEach(c => {c.checked = false; c.disabled = false;});
+        
+        if(pioPollingInterval) clearInterval(pioPollingInterval); pioPollingInterval = null;
+        if(intCpuTaskInterval) clearInterval(intCpuTaskInterval); intCpuTaskInterval = null; intCpuProgress = 0;
+    }
+
+    // --- PIO LOGIC (UNCHANGED) ---
+    let pioPollingInterval = null;
+    pio.startBtn.addEventListener('click', async () => {
+        pio.startBtn.disabled = true; pio.keystrokeBtn.disabled = false;
+        addStep(pio.steps, "1. CPU initiates polling.");
+        await delay(500);
+        let isPolling = true;
+        const poll = async () => {
+            if (!isPolling) return;
+            addStep(pio.steps, "2. CPU is checking device status...");
+            pio.cpu.classList.add('cpu-active');
+            pio.pollSignal.classList.remove('hidden'); pio.pollSignal.setAttribute('cx', '100'); await delay(100); pio.pollSignal.setAttribute('cx', '300');
+            await delay(1000);
+            if (pio.flagText.textContent === '1') {
+                isPolling = false; clearInterval(pioPollingInterval);
+                pio.pollSignal.setAttribute('fill', '#22c55e'); addStep(pio.steps, "4. Device is ready (Flag=1)! CPU detects signal.");
+                await delay(1500); addStep(pio.steps, "5. CPU is initiating data transfer."); pio.device.setAttribute('fill', '#1e40af');
+                await delay(2000); addStep(pio.steps, "6. Data transfer complete."); pio.cpu.classList.remove('cpu-active');
+            } else {
+                addStep(pio.steps, "3. Device not ready (Flag=0). Polling continues.");
+                pio.pollSignal.setAttribute('cx', '100'); await delay(1000);
+            }
+        };
+        poll(); pioPollingInterval = setInterval(poll, 3000); activeTimers.push(pioPollingInterval);
+    });
+    pio.keystrokeBtn.addEventListener('click', () => {
+        addStep(pio.steps, "USER ACTION: Keystroke simulated. Device is now ready.");
+        pio.flagText.textContent = '1'; pio.flagText.setAttribute('fill', '#22c55e'); pio.keystrokeBtn.disabled = true;
+    });
+    
+    // --- INTERRUPT LOGIC (UNCHANGED) ---
+    let intCpuTaskInterval = null; let intCpuProgress = 0; let selectedDevice = null;
+    const deviceData = {
+        keyboard: { name: 'Keyboard', linePath: 'M 50 220 Q 50 150 60 70', pollOrder: 1, isrArea: interrupt.isrArea1 },
+        mouse:    { name: 'Mouse',    linePath: 'M 140 220 Q 100 150 60 70', pollOrder: 2, isrArea: interrupt.isrArea2 },
+        printer:  { name: 'Printer',  linePath: 'M 230 220 Q 150 150 60 70', pollOrder: 3, isrArea: interrupt.isrArea3 }
+    };
+    interrupt.deviceSelector.addEventListener('click', (e) => {
+        if (!e.target.classList.contains('device-btn')) return;
+        const deviceKey = e.target.dataset.device;
+        selectedDevice = deviceData[deviceKey];
+        interrupt.deviceSelector.querySelectorAll('.device-btn').forEach(btn => btn.classList.remove('selected'));
+        e.target.classList.add('selected');
+        if (intCpuTaskInterval) { interrupt.vectoredBtn.disabled = false; interrupt.nonVectoredBtn.disabled = false; }
+    });
+    function runCpuTask() {
+        if(intCpuTaskInterval) clearInterval(intCpuTaskInterval);
+        interrupt.cpu.classList.add('cpu-active');
+        intCpuTaskInterval = setInterval(() => {
+            if (intCpuProgress >= 100) {
+                clearInterval(intCpuTaskInterval); addStep(interrupt.steps, "CPU Task is complete!");
+                interrupt.cpu.classList.remove('cpu-active'); interrupt.vectoredBtn.disabled = true; interrupt.nonVectoredBtn.disabled = true;
+            } else { intCpuProgress += 2; interrupt.progressBar.style.width = `${intCpuProgress}%`; }
+        }, 100);
+        activeTimers.push(intCpuTaskInterval);
+    }
+    interrupt.startBtn.addEventListener('click', () => {
+        interrupt.startBtn.disabled = true; 
+        if(selectedDevice) { interrupt.vectoredBtn.disabled = false; interrupt.nonVectoredBtn.disabled = false; }
+        intCpuProgress = 0; addStep(interrupt.steps, "1. CPU is performing its primary task."); runCpuTask();
+    });
+    async function handleInterrupt() {
+        if (!intCpuTaskInterval || !selectedDevice) return false;
+        clearInterval(intCpuTaskInterval);
+        interrupt.vectoredBtn.disabled = true; interrupt.nonVectoredBtn.disabled = true;
+        interrupt.cpu.classList.remove('cpu-active');
+        return true;
+    }
+    interrupt.vectoredBtn.addEventListener('click', async () => {
+        if (!await handleInterrupt()) return;
+        addStep(interrupt.steps, `2. ${selectedDevice.name} sent a 'Vectored Interrupt'.`);
+        interrupt.line.setAttribute('d', selectedDevice.linePath); interrupt.line.classList.remove('hidden'); interrupt.line.classList.add('interrupt-line-anim');
+        await delay(1500); addStep(interrupt.steps, "3. It also sent its ISR address directly to the CPU.");
+        interrupt.addrPacket.classList.remove('hidden'); await delay(2000);
+        addStep(interrupt.steps, "4. CPU paused its task to handle the interrupt.");
+        interrupt.line.classList.add('hidden'); interrupt.addrPacket.classList.add('hidden');
+        await finishInterruptSequence(selectedDevice.isrArea, selectedDevice.name);
+    });
+    interrupt.nonVectoredBtn.addEventListener('click', async () => {
+        if (!await handleInterrupt()) return;
+        addStep(interrupt.steps, `2. ${selectedDevice.name} sent a 'Non-Vectored Interrupt'.`);
+        interrupt.line.setAttribute('d', selectedDevice.linePath); interrupt.line.classList.remove('hidden'); interrupt.line.classList.add('interrupt-line-anim');
+        await delay(1500);
+        addStep(interrupt.steps, "3. CPU has no address. It will now poll devices to find the source.");
+        interrupt.line.classList.add('hidden'); interrupt.pollPath.classList.remove('hidden');
+        const devicesToPoll = Object.values(deviceData).sort((a,b) => a.pollOrder - b.pollOrder);
+        for(const device of devicesToPoll) {
+            addStep(interrupt.steps, `3a. Checking ${device.name}...`);
+            interrupt.pollPath.setAttribute('d', device.linePath); await animatePath(interrupt.pollPath);
+            await delay(1000);
+            if(device.name === selectedDevice.name) break;
+            addStep(interrupt.steps, `3b. No interrupt from ${device.name}.`);
+        }
+        addStep(interrupt.steps, `4. Source found: the ${selectedDevice.name}! Now handling interrupt.`);
+        interrupt.pollPath.classList.add('hidden');
+        await finishInterruptSequence(selectedDevice.isrArea, selectedDevice.name);
+    });
+    async function animatePath(path){
+        path.style.transition = 'none'; path.style.strokeDashoffset = '1000'; await delay(50);
+        path.style.transition = 'stroke-dashoffset 1s ease-in-out'; path.style.strokeDashoffset = '0';
+        await delay(1000);
+    }
+    async function finishInterruptSequence(isrArea, deviceName) {
+        await delay(1500);
+        addStep(interrupt.steps, "5. Saving CPU's current state (PC, PSW) to the Stack in Memory.");
+        interrupt.stackContent.innerHTML = `<rect x="315" y="225" width="160" height="20" rx="4" fill="#4b5563" class="transition-all duration-500 transform" opacity="0" transform="translate(0, -20)"></rect>`;
+        await delay(100);
+        const stackItem = interrupt.stackContent.querySelector('rect');
+        stackItem.style.opacity = '1'; stackItem.style.transform = 'translate(0, 0)';
+        await delay(2000);
+        addStep(interrupt.steps, `6. CPU gets ${deviceName} ISR address from the IVT.`);
+        interrupt.ivtArea.setAttribute('fill', '#059669'); await delay(2000);
+        addStep(interrupt.steps, `7. Executing the Interrupt Service Routine (ISR) for the ${deviceName}.`);
+        isrArea.setAttribute('fill', '#059669'); await delay(2500);
+        addStep(interrupt.steps, "8. ISR complete. Restoring CPU state from the Stack.");
+        stackItem.style.opacity = '0'; stackItem.style.transform = 'translate(0, -20)'; await delay(1500);
+        addStep(interrupt.steps, "9. CPU is resuming its previous task.");
+        interrupt.ivtArea.setAttribute('fill', '#1f2937'); isrArea.setAttribute('fill', '#1f2937');
+        runCpuTask();
+    }
+
+    // --- DMA LOGIC (UNCHANGED) ---
+    dma.startBtn.addEventListener('click', async () => {
+        dma.startBtn.disabled = true;
+        addStep(dma.steps, "1. CPU programs the DMA Controller (DMAC) for the transfer.");
+        dma.cpu.classList.add('cpu-active'); dma.path1.classList.remove('hidden'); dma.path1.classList.add('data-path');
+        await delay(2500); dma.path1.classList.remove('data-path'); dma.path1.classList.add('hidden'); dma.cpu.classList.remove('cpu-active');
+        addStep(dma.steps, "2. The CPU is now free to perform other tasks.");
+        dma.cpu.classList.add('cpu-active'); await delay(1500);
+        addStep(dma.steps, "3. DMAC is transferring data from I/O Disk directly to Memory.");
+        dma.dmac.classList.add('cpu-active'); dma.path2.classList.remove('hidden'); dma.path2.classList.add('data-path');
+        for (let i = 0; i < 5; i++) {
+            await delay(800);
+            dma.memoryBlocks.innerHTML += `<rect x="320" y="${40 + i * 25}" width="60" height="20" rx="4" fill="#581c87" class="transition-opacity duration-500" opacity="0"></rect>`;
+            await delay(50); dma.memoryBlocks.lastChild.style.opacity = 1;
+        }
+        await delay(1000); dma.path2.classList.add('hidden'); dma.dmac.classList.remove('cpu-active');
+        addStep(dma.steps, "4. Transfer complete! DMAC sends an interrupt to the CPU.");
+        dma.path4.classList.remove('hidden'); dma.path4.classList.add('interrupt-line-anim'); await delay(2000); dma.path4.classList.add('hidden');
+        addStep(dma.steps, "5. CPU acknowledges completion. DMA cycle is finished.");
+        dma.cpu.classList.remove('cpu-active');
+    });
+
+    // --- SOFTWARE POLLING PRIORITY LOGIC ---
+    poll.startBtn.addEventListener('click', async () => {
+        const checkedDevices = Array.from(poll.selector.querySelectorAll('input:checked')).map(c => parseInt(c.dataset.device));
+        if (checkedDevices.length === 0) {
+            addStep(poll.steps, "Please select at least one device to interrupt.");
+            return;
+        }
+        poll.startBtn.disabled = true;
+        poll.selector.querySelectorAll('input').forEach(c => c.disabled = true);
+
+        addStep(poll.steps, `1. Devices ${checkedDevices.join(', ')} have pending interrupts.`);
+        await delay(1500);
+        addStep(poll.steps, "2. CPU starts polling devices based on software priority (1 > 2 > 3).");
+        poll.cpu.classList.add('cpu-active');
+        poll.checkPath.classList.remove('hidden');
+
+        const pollPaths = ["M 250 60 V 130 H 60", "M 250 60 V 130 H 250", "M 250 60 V 130 H 440"];
+        const deviceElements = [poll.dev1, poll.dev2, poll.dev3];
+
+        for (let i = 1; i <= 3; i++) {
+            addStep(poll.steps, `3. Checking Device ${i}...`);
+            poll.checkPath.setAttribute('d', pollPaths[i-1]);
+            await animatePath(poll.checkPath);
+            await delay(1000);
+            if (checkedDevices.includes(i)) {
+                addStep(poll.steps, `4. Interrupt found at Device ${i}. It will be serviced first.`);
+                deviceElements[i-1].classList.add('cpu-active');
+                addStep(poll.steps, `5. Lower priority devices (${i < 3 ? 'like ' + (i+1) : ''} etc.) must wait.`);
+                break;
+            } else {
+                 addStep(poll.steps, `Device ${i} has no pending interrupt.`);
+            }
+        }
+        poll.cpu.classList.remove('cpu-active');
+    });
+
+    // --- DAISY CHAIN LOGIC (REDESIGNED) ---
+    daisy.startBtn.addEventListener('click', async () => {
+        let checkedDevices = Array.from(daisy.selector.querySelectorAll('input:checked')).map(c => parseInt(c.dataset.device));
+        if (checkedDevices.length === 0) {
+            addStep(daisy.steps, "Please select at least one device to interrupt.");
+            return;
+        }
+        daisy.startBtn.disabled = true;
+        daisy.selector.querySelectorAll('input').forEach(c => c.disabled = true);
+        
+        addStep(daisy.steps, `1. Devices ${checkedDevices.join(', ')} assert a signal on the INTR line.`);
+        checkedDevices.forEach(num => daisy[`intr${num}`].classList.remove('hidden'));
+        await delay(1500);
+        
+        while(checkedDevices.length > 0) {
+            const highestPriorityDevice = Math.min(...checkedDevices);
+            
+            addStep(daisy.steps, `2. CPU sees INTR is active and sends Acknowledge (INTACK).`);
+            daisy.cpu.classList.add('cpu-active');
+            daisy.ackSignal.classList.remove('hidden');
+            daisy.ackSignal.setAttribute('cx', 380);
+            await delay(1000);
+
+            const deviceElements = [daisy.dev1, daisy.dev2, daisy.dev3];
+            const ackPositions = [ { x: 340 }, { x: 220 }, { x: 100 } ];
+            const vadPaths = [ "M 290 115 V 50", "M 170 115 V 50", "M 50 115 V 50" ];
+
+            for (let i = 1; i <= 3; i++) {
+                addStep(daisy.steps, `3. INTACK propagates to Device ${i}.`);
+                daisy.ackSignal.setAttribute('cx', ackPositions[i-1].x);
+                await delay(1500);
+                
+                if (i === highestPriorityDevice) {
+                    addStep(daisy.steps, `4. Device ${i} has the highest priority. It accepts the acknowledge.`);
+                    deviceElements[i-1].classList.add('cpu-active');
+                    
+                    await delay(1500);
+                    addStep(daisy.steps, `5. Device ${i} places its Vector Address (VAD) on the data bus.`);
+                    daisy.vadLine.setAttribute('d', vadPaths[i-1]);
+                    daisy.vadLine.classList.remove('hidden');
+                    await animatePath(daisy.vadLine);
+                    
+                    await delay(1000);
+                    addStep(daisy.steps, `6. CPU reads the VAD and services Device ${i}.`);
+                    daisy.vadLine.classList.add('hidden');
+
+                    if (i < 3) {
+                        addStep(daisy.steps, `7. Device ${i} BLOCKS the INTACK signal from passing further.`);
+                    }
+                    await delay(1500);
+                    addStep(daisy.steps, `8. Device ${i} is serviced and removes its request from the INTR line.`);
+                    daisy[`intr${i}`].classList.add('hidden');
+                    deviceElements[i-1].classList.remove('cpu-active');
+
+                    // Remove this device from the list of waiting devices
+                    checkedDevices = checkedDevices.filter(d => d !== i);
+                    break; 
+                } else {
+                    addStep(daisy.steps, `Device ${i} has no interrupt. It passes the INTACK signal on.`);
+                }
+            }
+             daisy.ackSignal.classList.add('hidden');
+             daisy.cpu.classList.remove('cpu-active');
+             if (checkedDevices.length > 0) {
+                 await delay(1500);
+                 addStep(daisy.steps, "--- Next Cycle ---");
+                 addStep(daisy.steps, `INTR is still active. CPU will start a new acknowledge cycle.`);
+             }
+        }
+        
+        addStep(daisy.steps, "All interrupts have been serviced. INTR line is now inactive.");
+    });
+
+
+    // --- QUIZ LOGIC (UNCHANGED) ---
+    const quizData = [ { q: "Which I/O method involves the CPU continuously checking a device's status?", a: ["Interrupt-driven I/O", "Programmed I/O", "DMA", "Cache"], c: 1 }, { q: "A device sends its ISR address along with the interrupt signal. This is a _____ interrupt.", a: ["Maskable", "Non-Vectored", "Vectored", "Scalar"], c: 2 }, { q: "Which component takes over the data bus during a DMA transfer?", a: ["CPU", "RAM", "I/O Device", "DMA Controller"], c: 3 }, { q: "The hardware mechanism for interrupt priority shown is called:", a: ["Polling", "Daisy Chaining", "Vectored Interrupt", "DMA"], c: 1 } ];
+    const quizContainer = document.getElementById('quiz-container'); let currentQ = 0, score = 0;
+    function loadQuiz() { currentQ = 0; score = 0; showQuestion(); }
+    function showQuestion() {
+        if (currentQ < quizData.length) { const item = quizData[currentQ]; quizContainer.innerHTML = `<p class="text-xl mb-6">${currentQ + 1}. ${item.q}</p><div class="grid grid-cols-1 md:grid-cols-2 gap-4">${item.a.map((opt, i) => `<button class="quiz-option text-left p-4 rounded-lg border border-gray-600 hover:bg-gray-700 transition-colors" data-index="${i}">${opt}</button>`).join('')}</div>`; } else { quizContainer.innerHTML = `<h3 class="text-3xl font-bold text-center">Quiz Complete!</h3><p class="text-center text-xl my-4">Your score: ${score} / ${quizData.length}</p><button onclick="document.querySelector('.nav-link[data-target=quiz]').click()" class="block mx-auto bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg">Restart Quiz</button>`; }
+    }
+    quizContainer.addEventListener('click', e => {
+        if (e.target.classList.contains('quiz-option')) {
+            const selected = parseInt(e.target.dataset.index); const correct = quizData[currentQ].c;
+            const options = quizContainer.querySelectorAll('.quiz-option');
+            options.forEach(opt => opt.disabled = true);
+            if (selected === correct) { e.target.classList.add('bg-green-700', 'border-green-500'); score++; } else { e.target.classList.add('bg-red-700', 'border-red-500'); options[correct].classList.add('bg-green-700', 'border-green-500'); }
+            currentQ++; setTimeout(showQuestion, 1500);
+        }
+    });
+});
+</script>
+</body>
+</html>
+
