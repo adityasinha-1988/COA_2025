@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Combined DMA Calculators</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #111827;
+            color: #d1d5db;
+        }
+        .container {
+            max-width: 900px;
+            margin: auto;
+            padding: 2rem 1rem;
+        }
+        .glass-card {
+            background: rgba(31, 41, 55, 0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(75, 85, 99, 0.5);
+            border-radius: 1.5rem;
+            padding: 2.5rem;
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.4);
+            margin-bottom: 2rem;
+        }
+        .input-group {
+            margin-bottom: 1.5rem;
+        }
+        .input-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: #d1d5db;
+        }
+        .input-group input[type="range"] {
+            -webkit-appearance: none;
+            width: 100%;
+            height: 8px;
+            background: #4b5563;
+            border-radius: 5px;
+            outline: none;
+        }
+        .input-group input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            background: #22d3ee;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 2px solid #111827;
+        }
+        .result-box {
+            background-color: #1f2937;
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            border: 1px solid #4b5563;
+        }
+        .result-box h4 {
+            font-weight: 600;
+            color: #9ca3af;
+        }
+        .result-box p {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #22d3ee;
+        }
+        .tab-buttons {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 2rem;
+            gap: 1rem;
+        }
+        .tab-button {
+            padding: 0.75rem 1.5rem;
+            background: rgba(75, 85, 99, 0.3);
+            border-radius: 0.75rem;
+            color: #d1d5db;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+        .tab-button.active {
+            background: #22d3ee;
+            color: #111827;
+        }
+        .question-box {
+            background-color: #1f2937;
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            border: 1px solid #4b5563;
+            margin-bottom: 2rem;
+        }
+        .question-box p, .question-box li {
+            font-size: 1rem;
+            line-height: 1.6;
+            margin-bottom: 0.5rem;
+        }
+        .code-snippet {
+            background-color: #2c3541;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            white-space: pre-wrap;
+            font-family: monospace;
+            overflow-x: auto;
+            margin-bottom: 1rem;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        
+        <div class="glass-card text-center">
+            <h1 class="text-5xl font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-cyan-500">
+                DMA Calculators
+            </h1>
+            <p class="text-xl text-gray-400">
+                Switch between different calculators below.
+            </p>
+        </div>
+
+        <!-- Tab Buttons -->
+        <div class="tab-buttons">
+            <button class="tab-button active" onclick="showTab('blocked')">CPU Blocked</button>
+            <button class="tab-button" onclick="showTab('speedup')">Speedup</button>
+            <button class="tab-button" onclick="showTab('pio')">Programmed I/O</button>
+            <button class="tab-button" onclick="showTab('disk')">Disk I/O</button>
+        </div>
+
+        <!-- DMA Blocked Calculator Tab Content -->
+        <div id="blocked-calculator" class="tab-content">
+            <div class="question-box">
+                <h3 class="text-2xl font-bold mb-4 text-white">Question</h3>
+                <p>
+                    Consider a device operating on a <strong>2 MBps</strong> speed and transferring the data to memory using cycle stealing mode of DMA. If it takes <strong>2</strong> microseconds to transfer <strong>16</strong> bytes of data to memory when it is ready/prepared. Then percentage of time CPU is blocked due to DMA is?
+                </p>
+            </div>
+            
+            <div class="glass-card">
+                <h2 class="text-3xl font-bold mb-6 text-blue-400">Set Values</h2>
+                
+                <div class="input-group">
+                    <label for="deviceSpeed">Device Speed: <span id="speedValue" class="font-bold text-white">2</span> MBps</label>
+                    <input type="range" id="deviceSpeed" value="2" min="0.5" max="10" step="0.1">
+                </div>
+
+                <div class="input-group">
+                    <label for="transferTime">Transfer Time: <span id="timeValue" class="font-bold text-white">2</span> µs</label>
+                    <input type="range" id="transferTime" value="2" min="0.1" max="10" step="0.1">
+                </div>
+
+                <div class="input-group">
+                    <label for="dataSize">Data Transfer Size: <span id="sizeValue" class="font-bold text-white">16</span> bytes</label>
+                    <input type="range" id="dataSize" value="16" min="1" max="100" step="1">
+                </div>
+            </div>
+
+            <!-- Result Section -->
+            <div class="glass-card">
+                <h2 class="text-3xl font-bold mb-6 text-blue-400">Result</h2>
+                
+                <div class="flex flex-col gap-6">
+                    <!-- Result boxes for Preparation Time and Blocked Percentage -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="result-box text-center">
+                            <h4 class="mb-2">Time to Prepare Data</h4>
+                            <p id="preparationTimeResult" class="font-mono"></p>
+                        </div>
+                        <div class="result-box text-center">
+                            <h4 class="mb-2">Percentage of CPU Blocked</h4>
+                            <p id="percentageBlockedResult" class="font-mono"></p>
+                        </div>
+                    </div>
+
+                    <!-- Calculation Steps in a separate box below results -->
+                    <div class="result-box w-full mt-6">
+                        <h4 class="mb-2">Calculation Steps</h4>
+                        <div id="blockedCalculationDetails" class="text-sm font-mono text-gray-400 leading-relaxed"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- DMA Speedup Calculator Tab Content -->
+        <div id="speedup-calculator" class="tab-content hidden">
+            <div class="question-box">
+                <h3 class="text-2xl font-bold mb-4 text-white">Question (GATE-2011)</h3>
+                <p class="mb-4">
+                    On a non-pipelined sequential processor, a program segment, which is the part of the interrupt service routine, is given to transfer 500 bytes from an I/O device to memory.
+                </p>
+                <div class="text-gray-400 text-sm mb-4">
+                    <ul class="list-disc list-inside">
+                        <li>Initialize the address register: 1 clock cycle</li>
+                        <li>Initialize the count to 500: 1 clock cycle</li>
+                        <li><strong>LOOP:</strong> (500 times)</li>
+                        <ul class="list-disc list-inside ml-4">
+                            <li>Load a byte from device: 2 clock cycles</li>
+                            <li>Store in memory at address given by address register: 2 clock cycles</li>
+                            <li>Increment the address register: 1 clock cycle</li>
+                            <li>Decrement the count: 1 clock cycle</li>
+                            <li>If count != 0 go to LOOP: 1 clock cycle</li>
+                        </ul>
+                    </ul>
+                </div>
+                <p class="mb-4">
+                    Assume that each statement in this program is equivalent to a machine instruction which takes one clock cycle to execute if it is a non-load/store instruction. The load-store instructions take two clock cycles to execute.
+                </p>
+                <p class="mb-4">
+                    The designer of the system also has an alternate approach of using the DMA controller to implement the same transfer. The DMA controller requires <strong>20 clock cycles</strong> for initialization and other overheads. Each DMA transfer cycle takes <strong>two clock cycles</strong> to transfer one byte of data from the device to the memory.
+                </p>
+                <p>
+                    What is the approximate speed up when the DMA controller based design is used in a place of the interrupt driven program based input-output?
+                </p>
+            </div>
+            <div class="glass-card">
+                <h2 class="text-3xl font-bold mb-6 text-blue-400">Set Values</h2>
+                
+                <div class="input-group">
+                    <label for="bytesToTransfer">Bytes to Transfer: <span id="bytesValue" class="font-bold text-white">500</span></label>
+                    <input type="range" id="bytesToTransfer" value="500" min="10" max="1000" step="10">
+                </div>
+
+                <div class="input-group">
+                    <label for="interruptCycles">Interrupt-driven Cycles per Byte: <span id="interruptCyclesValue" class="font-bold text-white">7</span></label>
+                    <input type="range" id="interruptCycles" value="7" min="5" max="20" step="1">
+                </div>
+
+                <div class="input-group">
+                    <label for="dmaOverhead">DMA Overhead Cycles: <span id="dmaOverheadValue" class="font-bold text-white">20</span></label>
+                    <input type="range" id="dmaOverhead" value="20" min="10" max="100" step="1">
+                </div>
+
+                <div class="input-group">
+                    <label for="dmaTransferCycles">DMA Transfer Cycles per Byte: <span id="dmaTransferCyclesValue" class="font-bold text-white">2</span></label>
+                    <input type="range" id="dmaTransferCycles" value="2" min="1" max="10" step="1">
+                </div>
+            </div>
+
+            <!-- Result Section -->
+            <div class="glass-card">
+                <h2 class="text-3xl font-bold mb-6 text-blue-400">Result</h2>
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <!-- Results boxes -->
+                    <div class="result-box text-center">
+                        <h4 class="mb-2">Interrupt I/O Time</h4>
+                        <p id="interruptTimeResult" class="font-mono"></p>
+                    </div>
+                    <div class="result-box text-center">
+                        <h4 class="mb-2">DMA I/O Time</h4>
+                        <p id="dmaTimeResult" class="font-mono"></p>
+                    </div>
+                    <div class="result-box text-center">
+                        <h4 class="mb-2">Speedup</h4>
+                        <p id="speedupResult" class="font-mono"></p>
+                    </div>
+                </div>
+
+                <!-- Calculation Steps -->
+                <div class="result-box mt-6">
+                    <h4 class="mb-2">Calculation Steps</h4>
+                    <div id="speedupCalculationDetails" class="text-sm font-mono text-gray-400 leading-relaxed"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Programmed I/O Tab Content -->
+        <div id="pio-calculator" class="tab-content hidden">
+            <div class="question-box">
+                <h3 class="text-2xl font-bold mb-4 text-white">Question</h3>
+                <p>
+                    Why is programmed I/O not suitable for high-speed data transfer?
+                </p>
+                <div class="mt-4">
+                    <p class="font-bold mb-2">a)</p>
+                    <p class="mb-2">
+                        Several program instructions have to be executed for each data word transferred between the I/O device and memory.
+                    </p>
+                    <ul class="list-disc list-inside ml-4">
+                        <li>Suppose <strong>20</strong> instructions are required for each word transfer.</li>
+                        <li>The CPI of the machine running at <strong>1 GHz</strong> clock is <strong>1</strong>.</li>
+                        <li>So, <strong>20</strong> nsec is required for each word transfer -> maximum <strong>50 M</strong> words/sec</li>
+                        <li>Data transfer rates of fast disks are higher than this figure.</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="glass-card">
+                <h2 class="text-3xl font-bold mb-6 text-blue-400">Set Values</h2>
+                
+                <div class="input-group">
+                    <label for="instructionsPerWord">Instructions per Word: <span id="instructionsPerWordValue" class="font-bold text-white">20</span></label>
+                    <input type="range" id="instructionsPerWord" value="20" min="5" max="50" step="1">
+                </div>
+
+                <div class="input-group">
+                    <label for="cpi">CPI: <span id="cpiValue" class="font-bold text-white">1</span></label>
+                    <input type="range" id="cpi" value="1" min="1" max="5" step="0.1">
+                </div>
+
+                <div class="input-group">
+                    <label for="clockFreq">Clock Frequency: <span id="clockFreqValue" class="font-bold text-white">1</span> GHz</label>
+                    <input type="range" id="clockFreq" value="1" min="0.5" max="5" step="0.1">
+                </div>
+            </div>
+
+            <div class="glass-card">
+                <h2 class="text-3xl font-bold mb-6 text-blue-400">Solution</h2>
+                <div class="flex flex-col gap-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="result-box text-center">
+                            <h4 class="mb-2">Time per Word Transfer</h4>
+                            <p id="pioTimeResult" class="font-mono"></p>
+                        </div>
+                        <div class="result-box text-center">
+                            <h4 class="mb-2">Max Transfer Rate</h4>
+                            <p id="pioRateResult" class="font-mono"></p>
+                        </div>
+                    </div>
+                    <div class="result-box w-full mt-6">
+                        <h4 class="mb-2">Calculation Steps</h4>
+                        <div id="pioCalculationDetails" class="text-sm font-mono text-gray-400 leading-relaxed"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Disk I/O Tab Content -->
+        <div id="disk-calculator" class="tab-content hidden">
+            <div class="question-box">
+                <h3 class="text-2xl font-bold mb-4 text-white">Question</h3>
+                <p>
+                    Why is programmed I/O not suitable for high-speed data transfer?
+                </p>
+                <div class="mt-4">
+                    <p class="font-bold mb-2">b)</p>
+                    <p class="mb-2">
+                        Many high speed peripheral devices like disk have a synchronous mode of operation, where data are transferred at a fixed rate.
+                    </p>
+                    <ul class="list-disc list-inside ml-4">
+                        <li>Consider a disk rotating at <strong>7200 rpm</strong>, with average rotational delay of <strong>4.15 msec</strong>.</li>
+                        <li>Suppose there are <strong>64 Kbytes</strong> of data recorded in every track.</li>
+                        <li>Once the disk head reaches the desired track, there will be a sustained data transfer at rate <strong>64 Kbytes / 4.15 msec = 15.4 MBps</strong>.</li>
+                        <li>This sustained data transfer rate is comparable to the memory bandwidth, and cannot be handled by programmed I/O.</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="glass-card">
+                <h2 class="text-3xl font-bold mb-6 text-blue-400">Set Values</h2>
+
+                <div class="input-group">
+                    <label for="dataPerTrack">Data per Track: <span id="dataPerTrackValue" class="font-bold text-white">64</span> KBytes</label>
+                    <input type="range" id="dataPerTrack" value="64" min="16" max="128" step="1">
+                </div>
+
+                <div class="input-group">
+                    <label for="rotationalDelay">Rotational Delay: <span id="rotationalDelayValue" class="font-bold text-white">4.15</span> msec</label>
+                    <input type="range" id="rotationalDelay" value="4.15" min="1" max="10" step="0.05">
+                </div>
+            </div>
+
+            <div class="glass-card">
+                <h2 class="text-3xl font-bold mb-6 text-blue-400">Solution</h2>
+                <div class="flex flex-col gap-6">
+                    <div class="result-box w-full">
+                        <h4 class="mb-2">Sustained Data Transfer Rate</h4>
+                        <p id="diskRateResult" class="font-mono"></p>
+                    </div>
+                    <div class="result-box w-full mt-6">
+                        <h4 class="mb-2">Calculation Steps</h4>
+                        <div id="diskCalculationDetails" class="text-sm font-mono text-gray-400 leading-relaxed"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // Tab switching logic
+        function showTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.add('hidden');
+            });
+            document.querySelectorAll('.tab-button').forEach(button => {
+                button.classList.remove('active');
+            });
+            document.getElementById(`${tabId}-calculator`).classList.remove('hidden');
+            document.querySelector(`.tab-button[onclick="showTab('${tabId}')"]`).classList.add('active');
+        }
+
+        // --- DMA Blocked Calculator Logic ---
+        const deviceSpeedInput = document.getElementById('deviceSpeed');
+        const speedValueSpan = document.getElementById('speedValue');
+        const transferTimeInput = document.getElementById('transferTime');
+        const timeValueSpan = document.getElementById('timeValue');
+        const dataSizeInput = document.getElementById('dataSize');
+        const sizeValueSpan = document.getElementById('sizeValue');
+        const preparationTimeResult = document.getElementById('preparationTimeResult');
+        const percentageBlockedResult = document.getElementById('percentageBlockedResult');
+        const blockedCalculationDetails = document.getElementById('blockedCalculationDetails');
+
+        function calculateDMA() {
+            const deviceSpeed = parseFloat(deviceSpeedInput.value);
+            const transferTime = parseFloat(transferTimeInput.value);
+            const dataSize = parseFloat(dataSizeInput.value);
+            
+            if (deviceSpeed <= 0 || transferTime < 0 || dataSize <= 0) {
+                preparationTimeResult.innerText = 'Invalid Input';
+                percentageBlockedResult.innerText = 'Invalid Input';
+                blockedCalculationDetails.innerHTML = '';
+                return;
+            }
+
+            const preparationTime = dataSize / deviceSpeed;
+            const percentageBlocked = (transferTime / preparationTime) * 100;
+
+            preparationTimeResult.innerText = `${preparationTime.toFixed(2)} µs`;
+            percentageBlockedResult.innerText = `${percentageBlocked.toFixed(2)} %`;
+
+            blockedCalculationDetails.innerHTML = `
+                <p><strong>Step 1: Time to prepare data</strong></p>
+                <p class="mb-2">
+                    = Data Size / Device Speed <br>
+                    = ${dataSize} bytes / ${deviceSpeed} MBps <br>
+                    = ${preparationTime.toFixed(2)} µs
+                </p>
+                <p><strong>Step 2: Percentage of CPU blocked</strong></p>
+                <p class="mb-2">
+                    = (Transfer Time / Preparation Time) * 100<br>
+                    = (${transferTime} µs / ${preparationTime.toFixed(2)} µs) * 100<br>
+                    = ${percentageBlocked.toFixed(2)} %
+                </p>
+            `;
+        }
+        
+        function updateBlockedSpanValues() {
+            speedValueSpan.innerText = deviceSpeedInput.value;
+            timeValueSpan.innerText = transferTimeInput.value;
+            sizeValueSpan.innerText = dataSizeInput.value;
+        }
+
+        deviceSpeedInput.addEventListener('input', () => {
+            updateBlockedSpanValues();
+            calculateDMA();
+        });
+        transferTimeInput.addEventListener('input', () => {
+            updateBlockedSpanValues();
+            calculateDMA();
+        });
+        dataSizeInput.addEventListener('input', () => {
+            updateBlockedSpanValues();
+            calculateDMA();
+        });
+
+        // --- DMA Speedup Calculator Logic ---
+        const bytesToTransferInput = document.getElementById('bytesToTransfer');
+        const bytesValueSpan = document.getElementById('bytesValue');
+        const interruptCyclesInput = document.getElementById('interruptCycles');
+        const interruptCyclesValueSpan = document.getElementById('interruptCyclesValue');
+        const dmaOverheadInput = document.getElementById('dmaOverhead');
+        const dmaOverheadValueSpan = document.getElementById('dmaOverheadValue');
+        const dmaTransferCyclesInput = document.getElementById('dmaTransferCycles');
+        const dmaTransferCyclesValueSpan = document.getElementById('dmaTransferCyclesValue');
+        const interruptTimeResult = document.getElementById('interruptTimeResult');
+        const dmaTimeResult = document.getElementById('dmaTimeResult');
+        const speedupResult = document.getElementById('speedupResult');
+        const speedupCalculationDetails = document.getElementById('speedupCalculationDetails');
+
+        function calculateSpeedup() {
+            const bytes = parseFloat(bytesToTransferInput.value);
+            const interruptCyclesPerByte = parseFloat(interruptCyclesInput.value);
+            const dmaOverhead = parseFloat(dmaOverheadInput.value);
+            const dmaTransferCyclesPerByte = parseFloat(dmaTransferCyclesInput.value);
+            
+            const interruptTime = (2) + (bytes * interruptCyclesPerByte);
+            const dmaTime = dmaOverhead + (bytes * dmaTransferCyclesPerByte);
+            const speedup = interruptTime / dmaTime;
+
+            interruptTimeResult.innerText = `${interruptTime.toFixed(0)} clock cycles`;
+            dmaTimeResult.innerText = `${dmaTime.toFixed(0)} clock cycles`;
+            speedupResult.innerText = `${speedup.toFixed(2)}`;
+
+            speedupCalculationDetails.innerHTML = `
+                <p><strong>Step 1: Interrupt-driven I/O Time</strong></p>
+                <p class="mb-2">
+                    = Initialization Cycles + (Bytes * Cycles per Byte)<br>
+                    = 2 + (${bytes} * ${interruptCyclesPerByte})<br>
+                    = ${interruptTime.toFixed(0)} clock cycles
+                </p>
+                <p><strong>Step 2: DMA-driven I/O Time</strong></p>
+                <p class="mb-2">
+                    = DMA Overhead + (Bytes * Cycles per Byte)<br>
+                    = ${dmaOverhead} + (${bytes} * ${dmaTransferCyclesPerByte})<br>
+                    = ${dmaTime.toFixed(0)} clock cycles
+                </p>
+                <p><strong>Step 3: Speedup</strong></p>
+                <p class="mb-2">
+                    = Interrupt I/O Time / DMA I/O Time<br>
+                    = ${interruptTime.toFixed(0)} / ${dmaTime.toFixed(0)}<br>
+                    = ${speedup.toFixed(2)}
+                </p>
+            `;
+        }
+        
+        function updateSpeedupSpanValues() {
+            bytesValueSpan.innerText = bytesToTransferInput.value;
+            interruptCyclesValueSpan.innerText = interruptCyclesInput.value;
+            dmaOverheadValueSpan.innerText = dmaOverheadInput.value;
+            dmaTransferCyclesValueSpan.innerText = dmaTransferCyclesInput.value;
+        }
+
+        bytesToTransferInput.addEventListener('input', () => {
+            updateSpeedupSpanValues();
+            calculateSpeedup();
+        });
+        interruptCyclesInput.addEventListener('input', () => {
+            updateSpeedupSpanValues();
+            calculateSpeedup();
+        });
+        dmaOverheadInput.addEventListener('input', () => {
+            updateSpeedupSpanValues();
+            calculateSpeedup();
+        });
+        dmaTransferCyclesInput.addEventListener('input', () => {
+            updateSpeedupSpanValues();
+            calculateSpeedup();
+        });
+
+        // --- Programmed I/O Logic ---
+        const instructionsPerWordInput = document.getElementById('instructionsPerWord');
+        const instructionsPerWordValueSpan = document.getElementById('instructionsPerWordValue');
+        const cpiInput = document.getElementById('cpi');
+        const cpiValueSpan = document.getElementById('cpiValue');
+        const clockFreqInput = document.getElementById('clockFreq');
+        const clockFreqValueSpan = document.getElementById('clockFreqValue');
+        const pioTimeResult = document.getElementById('pioTimeResult');
+        const pioRateResult = document.getElementById('pioRateResult');
+        const pioCalculationDetails = document.getElementById('pioCalculationDetails');
+
+        function calculatePIO() {
+            const instructions = parseFloat(instructionsPerWordInput.value);
+            const cpi = parseFloat(cpiInput.value);
+            const clockFreq = parseFloat(clockFreqInput.value);
+            
+            const clockCycleTime = 1 / (clockFreq * Math.pow(10, 9));
+            const timePerWord = instructions * cpi * clockCycleTime;
+            const maxTransferRate = 1 / timePerWord;
+
+            pioTimeResult.innerText = `${(timePerWord * Math.pow(10, 9)).toFixed(2)} nsec`;
+            pioRateResult.innerText = `${(maxTransferRate / Math.pow(10, 6)).toFixed(2)} M words/sec`;
+
+            pioCalculationDetails.innerHTML = `
+                <p><strong>Step 1: Calculate time per word transfer</strong></p>
+                <p class="mb-2">
+                    = (Instructions per word * CPI) / Clock Frequency <br>
+                    = (${instructions} instructions * ${cpi}) / ${clockFreq} GHz <br>
+                    = ${(timePerWord * Math.pow(10, 9)).toFixed(2)} nsec
+                </p>
+                <p><strong>Step 2: Calculate maximum word transfer rate</strong></p>
+                <p class="mb-2">
+                    = 1 / Time per word transfer <br>
+                    = 1 / ${(timePerWord).toExponential(2)} sec <br>
+                    = ${(maxTransferRate / Math.pow(10, 6)).toFixed(2)} M words/sec
+                </p>
+            `;
+        }
+
+        function updatePIOSpanValues() {
+            instructionsPerWordValueSpan.innerText = instructionsPerWordInput.value;
+            cpiValueSpan.innerText = cpiInput.value;
+            clockFreqValueSpan.innerText = clockFreqInput.value;
+        }
+
+        instructionsPerWordInput.addEventListener('input', () => {
+            updatePIOSpanValues();
+            calculatePIO();
+        });
+        cpiInput.addEventListener('input', () => {
+            updatePIOSpanValues();
+            calculatePIO();
+        });
+        clockFreqInput.addEventListener('input', () => {
+            updatePIOSpanValues();
+            calculatePIO();
+        });
+
+        // --- Disk I/O Logic ---
+        const dataPerTrackInput = document.getElementById('dataPerTrack');
+        const dataPerTrackValueSpan = document.getElementById('dataPerTrackValue');
+        const rotationalDelayInput = document.getElementById('rotationalDelay');
+        const rotationalDelayValueSpan = document.getElementById('rotationalDelayValue');
+        const diskRateResult = document.getElementById('diskRateResult');
+        const diskCalculationDetails = document.getElementById('diskCalculationDetails');
+
+        function calculateDiskIO() {
+            const dataPerTrackKB = parseFloat(dataPerTrackInput.value);
+            const rotationalDelayMS = parseFloat(rotationalDelayInput.value);
+
+            const dataPerTrackBytes = dataPerTrackKB * 1024;
+            const rotationalDelaySec = rotationalDelayMS / 1000;
+
+            const transferRateBps = dataPerTrackBytes / rotationalDelaySec;
+            const transferRateMBps = transferRateBps / (1024 * 1024);
+
+            diskRateResult.innerText = `${transferRateMBps.toFixed(2)} MBps`;
+            
+            diskCalculationDetails.innerHTML = `
+                <p><strong>Step 1: Calculate sustained data transfer rate</strong></p>
+                <p class="mb-2">
+                    = Data per track / Rotational delay <br>
+                    = ${dataPerTrackKB} KBytes / ${rotationalDelayMS} msec <br>
+                    = (${dataPerTrackKB} * 1024 bytes) / (${rotationalDelayMS} * 10^-3 sec) <br>
+                    = ${transferRateBps.toFixed(2)} bytes/sec <br>
+                    = ${transferRateMBps.toFixed(2)} MBps
+                </p>
+            `;
+        }
+        
+        function updateDiskSpanValues() {
+            dataPerTrackValueSpan.innerText = dataPerTrackInput.value;
+            rotationalDelayValueSpan.innerText = rotationalDelayInput.value;
+        }
+
+        dataPerTrackInput.addEventListener('input', () => {
+            updateDiskSpanValues();
+            calculateDiskIO();
+        });
+        rotationalDelayInput.addEventListener('input', () => {
+            updateDiskSpanValues();
+            calculateDiskIO();
+        });
+
+        // Run initial calculations on page load
+        window.onload = () => {
+            updateBlockedSpanValues();
+            calculateDMA();
+            updateSpeedupSpanValues();
+            calculateSpeedup();
+            updatePIOSpanValues();
+            calculatePIO();
+            updateDiskSpanValues();
+            calculateDiskIO();
+        };
+    </script>
+</body>
+</html>
