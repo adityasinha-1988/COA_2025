@@ -8,6 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
   <style>
     :root {
       --primary-color: #0d0d2b; /* Deep Space Blue */
@@ -63,7 +64,6 @@
         transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
         box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
     }
-    /* This .open class will show the menu */
     .group.open .dropdown-menu {
       opacity: 1;
       visibility: visible;
@@ -80,6 +80,14 @@
       box-shadow: 0 0 35px var(--glow-color),
                   0 0 50px rgba(0,0,0,0.5) inset;
     }
+    .footer-icon {
+        transition: all 0.3s ease;
+    }
+    .footer-icon:hover {
+        color: var(--accent-color);
+        transform: scale(1.2) translateY(-2px);
+        text-shadow: 0 0 10px var(--glow-color);
+    }
   </style>
 </head>
 <body class="min-h-screen flex flex-col">
@@ -89,7 +97,6 @@
       <h1 class="text-4xl font-orbitron font-bold tracking-widest header-glow">COA_NEXUS</h1>
       <nav class="mt-4 md:mt-0 space-x-2 md:space-x-8 flex flex-wrap justify-center items-center">
         <a href="pages/Unit1.html" target="content" class="nav-link px-3 py-2 text-md font-semibold">Unit 1</a>
-
         <div class="relative group">
           <button class="dropdown-toggle nav-link px-3 py-2 text-md font-semibold flex items-center">
             Unit 2 <span class="arrow ml-2 transition-transform duration-300">&#9660;</span>
@@ -104,7 +111,6 @@
             <a href="pages/Unit2_Tutorials.html" target="content" class="block py-2 px-4 hover:bg-accent-color/20 rounded-md">Unit 2 - Tutorials</a>
           </div>
         </div>
-
         <div class="relative group">
           <button class="dropdown-toggle nav-link px-3 py-2 text-md font-semibold flex items-center">
             Unit 3 (I/O) <span class="arrow ml-2 transition-transform duration-300">&#9660;</span>
@@ -115,7 +121,6 @@
             <a href="pages/DMA.html" target="content" class="block py-2 px-4 hover:bg-accent-color/20 rounded-md">Unit 3 - DMA</a>
           </div>
         </div>
-
         <div class="relative group">
           <button class="dropdown-toggle nav-link px-3 py-2 text-md font-semibold flex items-center">
             Unit 4 (CACHE) <span class="arrow ml-2 transition-transform duration-300">&#9660;</span>
@@ -124,9 +129,8 @@
             <a href="pages/4_Cache.html" target="content" class="block py-2 px-4 hover:bg-accent-color/20 rounded-md">Cache</a>
           </div>
         </div>
-        
         <a href="https://mujcampus-my.sharepoint.com/:f:/g/personal/aditya_sinha_jaipur_manipal_edu/EjgzVyQwYfBOr3cZ37tkrMMBke13hQN1C9HGVpsC7dzcqQ?e=EKhDhR" target="_blank" class="nav-link px-3 py-2 text-md font-semibold">Notes</a>
-        <a href="https://www.youtube.com/watch?v=zF4VMombo7U" target="_blank" class="nav-link px-3 py-2 text-md font-semibold">Sources</a>
+        <a href="https://www.youtube.com/embed/zF4VMombo7U?si=TckrybOnGkhAi6MF" target="_blank" class="nav-link px-3 py-2 text-md font-semibold">Sources</a>
       </nav>
     </div>
   </header>
@@ -135,37 +139,41 @@
     <iframe name="content" src="pages/Unit1.html" class="w-full h-[80vh] md:h-[90vh] transition-all duration-300 iframe-container bg-secondary-color/50"></iframe>
   </main>
 
-  <footer class="bg-transparent text-gray-500 text-center p-4 mt-8">
+  <footer class="bg-secondary-color/30 text-gray-400 text-center p-6 mt-8 border-t border-accent-color/20">
     <div class="container mx-auto">
-      <p class="font-light text-sm">&copy; 2025 COA + VAK Learning Nexus. All rights reserved. Dr Aditya Sinha</p>
+      <div class="mb-4">
+        <h3 class="text-xl font-orbitron text-white">Dr. Aditya Sinha</h3>
+        <p class="text-sm text-gray-500">Assistant Professor, CSE | SCSE, Manipal University Jaipur</p>
+      </div>
+      <div class="flex justify-center items-center space-x-6 my-4">
+        <a href="https://sites.google.com/view/dradityasinha/" target="_blank" class="footer-icon text-2xl" title="Personal Website"><i class="fas fa-globe"></i></a>
+        <a href="https://scholar.google.com/citations?user=EXsHpqgAAAAJ&hl=en" target="_blank" class="footer-icon text-2xl" title="Google Scholar"><i class="fas fa-graduation-cap"></i></a>
+        <a href="https://www.linkedin.com/in/dr-aditya-sinha-13261416/" target="_blank" class="footer-icon text-2xl" title="LinkedIn"><i class="fab fa-linkedin"></i></a>
+        <a href="https://github.com/adityasinha-1988" target="_blank" class="footer-icon text-2xl" title="GitHub"><i class="fab fa-github"></i></a>
+        <a href="https://www.researchgate.net/profile/Aditya-Sinha-4" target="_blank" class="footer-icon text-2xl" title="ResearchGate"><i class="fab fa-researchgate"></i></a>
+        <a href="https://www.scopus.com/authid/detail.uri?authorId=57217754738" target="_blank" class="footer-icon text-2xl" title="Scopus"><i class="fas fa-file-alt"></i></a>
+      </div>
+      <p class="font-light text-xs text-gray-600 mt-4">&copy; 2025 COA + VAK Learning Nexus. All rights reserved.</p>
     </div>
   </footer>
 
   <script>
     document.addEventListener('DOMContentLoaded', function () {
       const dropdownToggles = document.querySelectorAll('.dropdown-toggle');
-
       dropdownToggles.forEach(toggle => {
         toggle.addEventListener('click', function (event) {
-          event.stopPropagation(); // Prevent click from bubbling up to the window
-          
+          event.stopPropagation();
           const currentGroup = toggle.parentElement;
-
-          // Close all other open dropdowns
           document.querySelectorAll('.group.open').forEach(openGroup => {
             if (openGroup !== currentGroup) {
               openGroup.classList.remove('open');
               openGroup.querySelector('.arrow').classList.remove('rotate-180');
             }
           });
-
-          // Toggle the current dropdown
           currentGroup.classList.toggle('open');
           toggle.querySelector('.arrow').classList.toggle('rotate-180');
         });
       });
-
-      // Close dropdowns if user clicks outside of them
       window.addEventListener('click', function () {
         document.querySelectorAll('.group.open').forEach(openGroup => {
           openGroup.classList.remove('open');
