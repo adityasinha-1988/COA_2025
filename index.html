@@ -3,33 +3,177 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>COA + VAK Integrated Website</title>
+  <title>COA + VAK Learning Nexus</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary-color: #0d0d2b; /* Deep Space Blue */
+      --secondary-color: #1a1a3a; /* Darker Space Blue */
+      --accent-color: #00f5ff;  /* Neon Cyan */
+      --glow-color: rgba(0, 245, 255, 0.7);
+    }
+    body {
+      font-family: 'Roboto', sans-serif;
+      background-color: var(--primary-color);
+      color: #e0e0e0;
+      overflow-x: hidden;
+    }
+    .font-orbitron {
+      font-family: 'Orbitron', sans-serif;
+    }
+    .header-glow {
+      text-shadow: 0 0 5px var(--glow-color),
+                   0 0 10px var(--glow-color),
+                   0 0 15px var(--glow-color);
+    }
+    .nav-link {
+      transition: all 0.3s ease-in-out;
+      position: relative;
+      overflow: hidden;
+    }
+    .nav-link::before {
+      content: '';
+      position: absolute;
+      width: 0;
+      height: 2px;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      background-color: var(--accent-color);
+      transition: width 0.4s ease-in-out;
+    }
+    .nav-link:hover::before, .nav-link.active::before {
+      width: 100%;
+    }
+    .nav-link:hover {
+        color: var(--accent-color);
+        text-shadow: 0 0 5px var(--glow-color);
+    }
+    .dropdown-menu {
+        background: rgba(26, 26, 58, 0.9);
+        backdrop-filter: blur(10px);
+        border: 1px solid var(--accent-color);
+        border-radius: 10px;
+        opacity: 0;
+        visibility: hidden;
+        transform: translateY(20px);
+        transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    }
+    /* This .open class will show the menu */
+    .group.open .dropdown-menu {
+      opacity: 1;
+      visibility: visible;
+      transform: translateY(0);
+    }
+    .iframe-container {
+      border: 2px solid var(--accent-color);
+      border-radius: 15px;
+      box-shadow: 0 0 25px var(--glow-color),
+                  0 0 40px rgba(0,0,0,0.5) inset;
+      transition: box-shadow 0.4s ease-in-out;
+    }
+    .iframe-container:hover {
+      box-shadow: 0 0 35px var(--glow-color),
+                  0 0 50px rgba(0,0,0,0.5) inset;
+    }
+  </style>
 </head>
-<body class="bg-gray-50">
+<body class="min-h-screen flex flex-col">
 
-  <!-- Navbar -->
-  <header class="bg-indigo-600 text-white p-4 flex justify-between items-center">
-    <h1 class="text-xl font-bold">Learning Portal</h1>
-    <nav class="space-x-4">
-      <a href="pages/Unit1.html" target="content" class="hover:underline">Unit 1</a>
-      <a href="pages/Unit2.html" target="content" class="hover:underline">Unit 2.0</a>
-      <a href="pages/Unit2.1.html" target="content" class="hover:underline">Unit 2.1</a>
-      <a href="pages/2.2_TestScores.html" target="content" class="hover:underline">Unit 2_Test Score</a>
-      <a href="pages/2.3_Shifts.html" target="content" class="hover:underline">Unit 2_Shifts</a>
-      <a href="pages/2.4_Vector.html" target="content" class="hover:underline">Unit 2_Vector</a>
-      <a href="pages/2.5_Byte.html" target="content" class="hover:underline">Unit 2_Byte</a>
-      <a href="pages/Unit2_Tutorials.html" target="content" class="hover:underline">Unit 2_Tutorials</a>
-      <a href="pages/3_IO.html" target="content" class="hover:underline">Unit3_IO</a>
-      <a href="pages/IO_Interrups.html" target="content" class="hover:underline">Unit3_IO_Interrups</a>
-      <a href="pages/DMA.html" target="content" class="hover:underline">DMA</a>
-    </nav>
+  <header class="bg-primary-color/80 backdrop-blur-sm text-white shadow-lg p-4 sticky top-0 z-50 border-b border-accent-color/30">
+    <div class="container mx-auto flex flex-col md:flex-row justify-between items-center">
+      <h1 class="text-4xl font-orbitron font-bold tracking-widest header-glow">COA_NEXUS</h1>
+      <nav class="mt-4 md:mt-0 space-x-2 md:space-x-8 flex flex-wrap justify-center items-center">
+        <a href="pages/Unit1.html" target="content" class="nav-link px-3 py-2 text-md font-semibold">Unit 1</a>
+
+        <div class="relative group">
+          <button class="dropdown-toggle nav-link px-3 py-2 text-md font-semibold flex items-center">
+            Unit 2 <span class="arrow ml-2 transition-transform duration-300">&#9660;</span>
+          </button>
+          <div class="dropdown-menu absolute p-2 w-52 mt-2 right-0 md:left-0">
+            <a href="pages/Unit2.html" target="content" class="block py-2 px-4 hover:bg-accent-color/20 rounded-md">Unit 2.0</a>
+            <a href="pages/Unit2.1.html" target="content" class="block py-2 px-4 hover:bg-accent-color/20 rounded-md">Unit 2.1</a>
+            <a href="pages/2.2_TestScores.html" target="content" class="block py-2 px-4 hover:bg-accent-color/20 rounded-md">Unit 2 - Test Score</a>
+            <a href="pages/2.3_Shifts.html" target="content" class="block py-2 px-4 hover:bg-accent-color/20 rounded-md">Unit 2 - Shifts</a>
+            <a href="pages/2.4_Vector.html" target="content" class="block py-2 px-4 hover:bg-accent-color/20 rounded-md">Unit 2 - Vector</a>
+            <a href="pages/2.5_Byte.html" target="content" class="block py-2 px-4 hover:bg-accent-color/20 rounded-md">Unit 2 - Byte</a>
+            <a href="pages/Unit2_Tutorials.html" target="content" class="block py-2 px-4 hover:bg-accent-color/20 rounded-md">Unit 2 - Tutorials</a>
+          </div>
+        </div>
+
+        <div class="relative group">
+          <button class="dropdown-toggle nav-link px-3 py-2 text-md font-semibold flex items-center">
+            Unit 3 (I/O) <span class="arrow ml-2 transition-transform duration-300">&#9660;</span>
+          </button>
+          <div class="dropdown-menu absolute p-2 w-52 mt-2 right-0 md:left-0">
+            <a href="pages/3_IO.html" target="content" class="block py-2 px-4 hover:bg-accent-color/20 rounded-md">Unit 3 - IO</a>
+            <a href="pages/IO_Interrups.html" target="content" class="block py-2 px-4 hover:bg-accent-color/20 rounded-md">Unit 3 - Interrupts</a>
+            <a href="pages/DMA.html" target="content" class="block py-2 px-4 hover:bg-accent-color/20 rounded-md">Unit 3 - DMA</a>
+          </div>
+        </div>
+
+        <div class="relative group">
+          <button class="dropdown-toggle nav-link px-3 py-2 text-md font-semibold flex items-center">
+            Unit 4 (CACHE) <span class="arrow ml-2 transition-transform duration-300">&#9660;</span>
+          </button>
+          <div class="dropdown-menu absolute p-2 w-52 mt-2 right-0 md:left-0">
+            <a href="pages/4_Cache.html" target="content" class="block py-2 px-4 hover:bg-accent-color/20 rounded-md">Cache</a>
+          </div>
+        </div>
+        
+        <a href="https://mujcampus-my.sharepoint.com/:f:/g/personal/aditya_sinha_jaipur_manipal_edu/EjgzVyQwYfBOr3cZ37tkrMMBke13hQN1C9HGVpsC7dzcqQ?e=EKhDhR" target="_blank" class="nav-link px-3 py-2 text-md font-semibold">Notes</a>
+        <a href="https://www.youtube.com/watch?v=zF4VMombo7U" target="_blank" class="nav-link px-3 py-2 text-md font-semibold">Sources</a>
+      </nav>
+    </div>
   </header>
 
-  <!-- Main Content -->
-  <main class="p-6">
-    <iframe name="content" src="pages/Unit1.html" class="w-full h-[90vh] border rounded-lg shadow-lg"></iframe>
+  <main class="flex-grow container mx-auto p-4 flex flex-col items-center">
+    <iframe name="content" src="pages/Unit1.html" class="w-full h-[80vh] md:h-[90vh] transition-all duration-300 iframe-container bg-secondary-color/50"></iframe>
   </main>
+
+  <footer class="bg-transparent text-gray-500 text-center p-4 mt-8">
+    <div class="container mx-auto">
+      <p class="font-light text-sm">&copy; 2025 COA + VAK Learning Nexus. All rights reserved. Dr Aditya Sinha</p>
+    </div>
+  </footer>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      const dropdownToggles = document.querySelectorAll('.dropdown-toggle');
+
+      dropdownToggles.forEach(toggle => {
+        toggle.addEventListener('click', function (event) {
+          event.stopPropagation(); // Prevent click from bubbling up to the window
+          
+          const currentGroup = toggle.parentElement;
+
+          // Close all other open dropdowns
+          document.querySelectorAll('.group.open').forEach(openGroup => {
+            if (openGroup !== currentGroup) {
+              openGroup.classList.remove('open');
+              openGroup.querySelector('.arrow').classList.remove('rotate-180');
+            }
+          });
+
+          // Toggle the current dropdown
+          currentGroup.classList.toggle('open');
+          toggle.querySelector('.arrow').classList.toggle('rotate-180');
+        });
+      });
+
+      // Close dropdowns if user clicks outside of them
+      window.addEventListener('click', function () {
+        document.querySelectorAll('.group.open').forEach(openGroup => {
+          openGroup.classList.remove('open');
+          openGroup.querySelector('.arrow').classList.remove('rotate-180');
+        });
+      });
+    });
+  </script>
 
 </body>
 </html>
