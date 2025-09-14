@@ -1,0 +1,836 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Cache Memory Guide</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0a0a0a;
+            color: #e0e0e0;
+        }
+        .glassmorphism {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 1rem;
+        }
+        .neon-text {
+            text-shadow: 0 0 5px #00e5ff, 0 0 10px #00e5ff, 0 0 15px #00e5ff;
+        }
+        .neon-border {
+            border: 2px solid #00e5ff;
+            box-shadow: 0 0 10px #00e5ff, 0 0 20px #00e5ff inset;
+        }
+        .memory-block, .cache-line {
+            transition: all 0.5s ease-in-out;
+            cursor: pointer;
+        }
+        .highlight-mm {
+            background-color: #00e5ff;
+            color: #0a0a0a;
+            transform: scale(1.1);
+        }
+        .highlight-cache {
+            background-color: #ff00c1;
+            color: #ffffff;
+            border-color: #ff00c1;
+            box-shadow: 0 0 10px #ff00c1;
+        }
+        .moving-block {
+            position: absolute;
+            z-index: 100;
+            background-color: #22d3ee;
+            color: black;
+            padding: 0.5rem;
+            border-radius: 0.25rem;
+            font-weight: bold;
+            transition: all 1s ease-in-out;
+        }
+        /* Scrollbar styles */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #1a1a1a;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #00e5ff;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #00b8d4;
+        }
+        
+        /* AMAT Animation Styles */
+        .amat-diagram {
+            position: relative;
+            height: 200px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 1rem;
+        }
+        .mem-component {
+            border: 2px solid #00e5ff;
+            padding: 1rem 1.5rem;
+            border-radius: 0.5rem;
+            text-align: center;
+            z-index: 10;
+            background: #0a0a0a;
+        }
+        .data-packet {
+            position: absolute;
+            width: 15px;
+            height: 15px;
+            background: #ff00c1;
+            border-radius: 50%;
+            box-shadow: 0 0 10px #ff00c1, 0 0 20px #ff00c1;
+            opacity: 0;
+            z-index: 20;
+            transition: all 1s ease-in-out;
+        }
+        .formula-highlight {
+            background-color: #ff00c1;
+            color: white;
+            padding: 2px 6px;
+            border-radius: 4px;
+            transition: all 0.3s ease-in-out;
+        }
+        .bus {
+            position: absolute;
+            height: 3px;
+            background: #00e5ff80;
+            z-index: 5;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+        /* Practice Problem Styles */
+        .address-bar {
+            display: flex;
+            height: 50px;
+            border-radius: 0.5rem;
+            overflow: hidden;
+            border: 2px solid #00e5ff;
+            margin-top: 1rem;
+        }
+        .address-segment {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            font-weight: bold;
+            transition: width 1s ease-in-out;
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fadeIn 0.5s forwards;
+        }
+        @keyframes fadeIn {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        .calculation-step {
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fadeIn 0.5s forwards;
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+
+    <!-- Header -->
+    <header class="text-center py-8">
+        <h1 class="text-4xl md:text-6xl font-black uppercase neon-text tracking-widest">Cache Memory</h1>
+        <p class="text-lg md:text-xl text-gray-400 mt-2">Your Futuristic Interactive Guide</p>
+    </header>
+
+    <!-- Navigation -->
+    <nav class="sticky top-0 z-50 glassmorphism p-2 my-4 mx-auto max-w-6xl">
+        <div class="flex flex-wrap justify-center gap-2 md:gap-4">
+            <a href="#intro" class="px-3 py-2 text-sm md:text-base rounded-lg hover:bg-cyan-500 hover:text-black transition-all duration-300">Introduction</a>
+            <a href="#mapping" class="px-3 py-2 text-sm md:text-base rounded-lg hover:bg-cyan-500 hover:text-black transition-all duration-300">Cache Mapping</a>
+            <a href="#amat" class="px-3 py-2 text-sm md:text-base rounded-lg hover:bg-cyan-500 hover:text-black transition-all duration-300">AMAT Calculator</a>
+            <a href="#problems" class="px-3 py-2 text-sm md:text-base rounded-lg hover:bg-cyan-500 hover:text-black transition-all duration-300">Practice Problems</a>
+            <a href="#policies" class="px-3 py-2 text-sm md:text-base rounded-lg hover:bg-cyan-500 hover:text-black transition-all duration-300">Read/Write Policies</a>
+            <a href="#access" class="px-3 py-2 text-sm md:text-base rounded-lg hover:bg-cyan-500 hover:text-black transition-all duration-300">Access Methods</a>
+            <a href="#resources" class="px-3 py-2 text-sm md:text-base rounded-lg hover:bg-cyan-500 hover:text-black transition-all duration-300">Resources</a>
+        </div>
+    </nav>
+
+    <main class="container mx-auto px-4 py-8 max-w-6xl">
+
+        <!-- Introduction Section -->
+        <section id="intro" class="mb-16">
+            <h2 class="text-3xl font-bold mb-4 border-l-4 border-cyan-400 pl-4">What is Cache Memory?</h2>
+            <div class="glassmorphism p-6 space-y-4">
+                <p>Cache memory is a small, very fast memory that works between the CPU and the Main Memory (RAM). Its main job is to store data and instructions that the CPU needs frequently.</p>
+                <p>Think of it like your study table. The books you need often are kept on the table, not in the cupboard (Main Memory). This makes your work much faster. Cache does the same for the CPU, which increases the overall speed of the computer.</p>
+            </div>
+        </section>
+
+        <!-- Cache Mapping Section -->
+        <section id="mapping" class="mb-16">
+            <h2 class="text-3xl font-bold mb-4 border-l-4 border-cyan-400 pl-4">Interactive Cache Mapping</h2>
+            <div class="glassmorphism p-6">
+                <div class="flex justify-center mb-4 gap-2 md:gap-4">
+                    <button id="directMapBtn" class="px-4 py-2 bg-cyan-600 rounded-lg hover:bg-cyan-500 transition-all">Direct Mapping</button>
+                    <button id="assocMapBtn" class="px-4 py-2 bg-gray-700 rounded-lg hover:bg-cyan-500 transition-all">Associative Mapping</button>
+                    <button id="setAssocMapBtn" class="px-4 py-2 bg-gray-700 rounded-lg hover:bg-cyan-500 transition-all">Set-Associative</button>
+                </div>
+                
+                <div id="animation-log" class="text-center my-4 p-3 bg-gray-900 rounded-lg h-12 text-cyan-300 font-mono">Click a Main Memory block to start.</div>
+
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-8">
+                    <!-- Main Memory -->
+                    <div class="w-full md:w-1/3">
+                        <h3 class="text-xl font-semibold text-center mb-2">Main Memory</h3>
+                        <div id="main-memory" class="grid grid-cols-4 gap-2 p-2 bg-gray-900 rounded-lg">
+                            <!-- JS will generate blocks -->
+                        </div>
+                    </div>
+                    
+                    <!-- Arrow -->
+                    <div class="hidden md:block text-4xl text-cyan-400">&#10230;</div>
+
+                    <!-- Cache Memory -->
+                    <div class="w-full md:w-1/3">
+                        <h3 class="text-xl font-semibold text-center mb-2">Cache Memory</h3>
+                        <div id="cache-memory" class="grid grid-cols-2 gap-2 p-2 bg-gray-900 rounded-lg">
+                            <!-- JS will generate lines -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- AMAT Calculator Section -->
+        <section id="amat" class="mb-16">
+            <h2 class="text-3xl font-bold mb-4 border-l-4 border-cyan-400 pl-4">Animated AMAT Calculator</h2>
+            <div class="glassmorphism p-6">
+                <div class="flex justify-center mb-4 gap-2 md:gap-4">
+                    <button id="hierarchicalBtn" class="px-4 py-2 bg-cyan-600 rounded-lg hover:bg-cyan-500 transition-all">Hierarchical Access</button>
+                    <button id="simultaneousBtn" class="px-4 py-2 bg-gray-700 rounded-lg hover:bg-cyan-500 transition-all">Simultaneous Access</button>
+                </div>
+
+                <!-- Animation Diagram -->
+                <div id="amat-animation-container" class="my-8">
+                     <div class="amat-diagram" id="amat-diagram">
+                        <div class="bus" id="bus-cpu-cache"></div>
+                        <div class="bus" id="bus-cache-mem"></div>
+                        <div id="cpu-block" class="mem-component">CPU</div>
+                        <div id="cache-block" class="mem-component">Cache</div>
+                        <div id="memory-block" class="mem-component">Main Memory</div>
+                        <div id="data-packet-1" class="data-packet"></div>
+                        <div id="data-packet-2" class="data-packet"></div>
+                     </div>
+                </div>
+                
+                <!-- Formula Display -->
+                <div id="formula-display" class="text-center my-4 p-3 bg-gray-900 rounded-lg text-lg font-mono text-cyan-300">
+                    <!-- JS will insert formula -->
+                </div>
+
+                <div class="grid md:grid-cols-2 gap-8 items-start">
+                    <div>
+                        <div class="mb-4">
+                            <label for="hitTime" class="block mb-2">Cache Hit Time (T<sub>c</sub>) (ns)</label>
+                            <input type="number" id="hitTime" value="2" class="w-full p-2 rounded-lg bg-gray-900 border border-gray-700 focus:outline-none focus:ring-2 focus:ring-cyan-500">
+                        </div>
+                        <div class="mb-4">
+                            <label for="missRate" class="block mb-2">Cache Miss Rate (MR)</label>
+                            <input type="number" id="missRate" value="0.05" step="0.01" class="w-full p-2 rounded-lg bg-gray-900 border border-gray-700 focus:outline-none focus:ring-2 focus:ring-cyan-500">
+                        </div>
+                        <div class="mb-4">
+                            <label for="missPenalty" class="block mb-2">Main Memory Time (T<sub>m</sub>) (ns)</label>
+                            <input type="number" id="missPenalty" value="100" class="w-full p-2 rounded-lg bg-gray-900 border border-gray-700 focus:outline-none focus:ring-2 focus:ring-cyan-500">
+                        </div>
+                    </div>
+                    <div class="text-center mt-4 md:mt-0">
+                         <button id="calculateAmat" class="w-full px-4 py-3 bg-cyan-600 rounded-lg font-bold text-lg hover:bg-cyan-500 transition-all mb-6">Run Animation & Calculate</button>
+                        <p class="text-gray-400 text-lg">Average Memory Access Time</p>
+                        <div id="amatResult" class="text-6xl font-black neon-text my-4">... ns</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Interactive Practice Problems Section -->
+        <section id="problems" class="mb-16">
+            <h2 class="text-3xl font-bold mb-4 border-l-4 border-cyan-400 pl-4">Interactive Practice Problems</h2>
+            <div class="glassmorphism p-6">
+                 <div class="flex justify-center mb-4 gap-2 md:gap-4">
+                    <button id="probDirectBtn" class="px-4 py-2 bg-cyan-600 rounded-lg hover:bg-cyan-500 transition-all">Direct Mapping Problem</button>
+                    <button id="probSetAssocBtn" class="px-4 py-2 bg-gray-700 rounded-lg hover:bg-cyan-500 transition-all">Set-Associative Problem</button>
+                    <button id="probFullAssocBtn" class="px-4 py-2 bg-gray-700 rounded-lg hover:bg-cyan-500 transition-all">Fully Associative Problem</button>
+                </div>
+                <div class="bg-gray-900 p-4 rounded-lg my-4">
+                    <h3 class="text-xl font-bold text-cyan-300 mb-2">Problem Statement:</h3>
+                    <p id="problem-statement" class="text-gray-300"></p>
+                </div>
+                
+                <div class="text-center mb-6">
+                    <a href="https://www.gatevidyalay.com/cache-mapping-practice-problems/" target="_blank" rel="noopener noreferrer" class="text-cyan-400 hover:text-cyan-300 underline transition-all">
+                        Aur practice problems ke liye yahan click karein (Source: GateVidyalay)
+                    </a>
+                </div>
+
+                <div class="grid md:grid-cols-2 gap-8 items-center">
+                    <div class="flex flex-col items-center">
+                        <button id="solveProblemBtn" class="w-full max-w-xs px-4 py-3 bg-cyan-600 rounded-lg font-bold text-lg hover:bg-cyan-500 transition-all mb-6">Solve with Animation</button>
+                        <div id="address-bar-container" class="w-full h-20">
+                            <div class="address-bar" id="address-bar"></div>
+                        </div>
+                    </div>
+                    <div id="solution-steps" class="font-mono text-cyan-200 space-y-2">
+                        <!-- JS will populate this -->
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Read/Write Policies Section -->
+        <section id="policies" class="mb-16">
+            <h2 class="text-3xl font-bold mb-4 border-l-4 border-cyan-400 pl-4">Cache Read & Write Policies</h2>
+            <div class="grid md:grid-cols-2 gap-8">
+                <div class="glassmorphism p-6">
+                    <h3 class="text-2xl font-bold mb-3 text-cyan-400">Read Policies</h3>
+                    <p>When the CPU needs data, it first checks the Cache. If the data is found (Cache Hit), it proceeds. If it's not found (Cache Miss), the data is brought from Main Memory and also placed in the Cache for faster access next time.</p>
+                </div>
+                <div class="glassmorphism p-6">
+                    <h3 class="text-2xl font-bold mb-3 text-cyan-400">Write Policies</h3>
+                    <p class="mb-2"><strong class="text-pink-400">Write-Through:</strong> When the CPU writes data, it is updated in both the Cache and Main Memory simultaneously. This is simple but can be a bit slow.</p>
+                    <p><strong class="text-pink-400">Write-Back:</strong> The CPU only updates the data in the Cache. The Main Memory is updated only when that cache block is about to be replaced. This is faster but slightly more complex.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Access Methods -->
+        <section id="access" class="mb-16">
+            <h2 class="text-3xl font-bold mb-4 border-l-4 border-cyan-400 pl-4">Access Methods</h2>
+            <div class="grid md:grid-cols-2 gap-8">
+                <div class="glassmorphism p-6">
+                    <h3 class="text-2xl font-bold mb-3 text-cyan-400">Hierarchical Access</h3>
+                    <p>Here, the CPU first accesses only the L1 Cache. If the data is not found, it then accesses L2, then L3, and finally the Main Memory. It's a step-by-step process.</p>
+                </div>
+                <div class="glassmorphism p-6">
+                    <h3 class="text-2xl font-bold mb-3 text-cyan-400">Simultaneous Access</h3>
+                    <p>In this method, the CPU sends an access request to all levels of memory (Cache and Main Memory) at the same time. Whichever level returns the data first, the other requests are cancelled. This is complex but can reduce access time.</p>
+                </div>
+            </div>
+        </section>
+
+
+        <!-- Resources Section -->
+        <section id="resources" class="mb-16">
+            <h2 class="text-3xl font-bold mb-4 border-l-4 border-cyan-400 pl-4">Video, Notes & More</h2>
+            <div class="grid md:grid-cols-2 gap-8">
+                <!-- YouTube Video -->
+                <div class="glassmorphism p-4">
+                    <h3 class="text-2xl font-bold mb-3 text-center">Video Lecture</h3>
+                     <a href="https://www.youtube.com/watch?v=zF4VMombo7U" target="_blank" rel="noopener noreferrer" class="block aspect-w-16 aspect-h-9 bg-black rounded-lg group relative overflow-hidden">
+                        <img src="https://img.youtube.com/vi/zF4VMombo7U/hqdefault.jpg" alt="Cache Memory Video Lecture Thumbnail" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
+                        <div class="absolute inset-0 bg-black bg-opacity-50 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                            <svg class="w-16 h-16 text-white" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd"></path></svg>
+                            <p class="text-white font-bold mt-2">Watch on YouTube</p>
+                        </div>
+                    </a>
+                    <p class="text-center mt-3 text-sm text-gray-400">
+                        Click the video thumbnail above to open the lecture on YouTube.
+                    </p>
+                </div>
+
+                <!-- PDF Notes Section -->
+                <div class="glassmorphism p-4">
+                    <h3 class="text-2xl font-bold mb-3 text-center">Read Your Notes Here</h3>
+                    <div class="flex flex-col items-center justify-center h-full text-center p-4">
+                        <p class="mb-4 text-gray-300">This folder contains all your notes. Click the button below to open them in a new tab.</p>
+                        <a href="https://mujcampus-my.sharepoint.com/:f:/g/personal/aditya_sinha_jaipur_manipal_edu/EjgzVyQwYfBOr3cZ37tkrMMBke13hQN1C9HGVpsC7dzcqQ?e=EKhDhR" target="_blank" rel="noopener noreferrer" class="inline-block px-6 py-3 bg-cyan-600 rounded-lg font-bold text-lg hover:bg-cyan-500 transition-all mb-6">
+                            Open Notes Folder
+                        </a>
+                        <div class="text-left w-full max-w-md">
+                            <h4 class="font-bold text-cyan-400 mb-2">Topics Covered in Notes:</h4>
+                            <ul class="list-disc list-inside text-gray-400 space-y-1">
+                                <li>Cache Memory (Multiple Files)</li>
+                                <li>Memory Organization</li>
+                                <li>Arithmetic (Chapter 6)</li>
+                                <li>Pipelining</li>
+                                <li>I/O Organization</li>
+                                <li>General CO Notes (Unit 1 & 2)</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- New Perplexity Resource Card -->
+            <div class="glassmorphism p-6 mt-8">
+                <h3 class="text-2xl font-bold mb-3 text-center text-cyan-400">Additional Interactive Resource</h3>
+                <p class="text-center text-gray-300 mb-4">You can also check out this other interactive webpage you created for more learning.</p>
+                <div class="text-center">
+                    <a href="https://www.perplexity.ai/apps/7ba02c74-733a-4492-b383-7fa36f9d05ee" target="_blank" rel="noopener noreferrer" class="inline-block px-6 py-3 bg-pink-600 rounded-lg font-bold text-lg hover:bg-pink-500 transition-all">
+                        Open Perplexity AI Webpage
+                    </a>
+                </div>
+            </div>
+        </section>
+
+    </main>
+    
+    <footer class="text-center py-6 text-gray-500 border-t border-gray-800">
+        <p>An Interactive Learning Experience</p>
+    </footer>
+
+<script>
+    // --- Cache Mapping Animation Script ---
+    const mainMemory = document.getElementById('main-memory');
+    const cacheMemory = document.getElementById('cache-memory');
+    const animationLog = document.getElementById('animation-log');
+    const directMapBtn = document.getElementById('directMapBtn');
+    const assocMapBtn = document.getElementById('assocMapBtn');
+    const setAssocMapBtn = document.getElementById('setAssocMapBtn');
+
+    const MAIN_MEMORY_BLOCKS = 16;
+    const CACHE_LINES = 4;
+    const SET_COUNT = 2; // For Set-Associative
+
+    let currentMapping = 'direct';
+    let cacheState = Array(CACHE_LINES).fill(null); 
+
+    function initializeMemory() {
+        mainMemory.innerHTML = '';
+        cacheMemory.innerHTML = '';
+        cacheState = Array(CACHE_LINES).fill(null);
+
+        for (let i = 0; i < MAIN_MEMORY_BLOCKS; i++) {
+            const block = document.createElement('div');
+            block.className = 'memory-block border border-gray-600 p-3 text-center rounded hover:bg-cyan-800';
+            block.textContent = `Block ${i}`;
+            block.dataset.blockId = i;
+            block.addEventListener('click', handleBlockClick);
+            mainMemory.appendChild(block);
+        }
+
+        for (let i = 0; i < CACHE_LINES; i++) {
+            const line = document.createElement('div');
+            line.className = 'cache-line border-2 border-dashed border-gray-600 p-3 text-center rounded h-16 flex items-center justify-center';
+            if (currentMapping === 'set-associative') {
+                 const setNumber = Math.floor(i / (CACHE_LINES / SET_COUNT));
+                 line.innerHTML = `<span class="text-xs text-gray-400 mr-2">Set ${setNumber}</span> Line ${i}`;
+            } else {
+                 line.textContent = `Line ${i}`;
+            }
+            line.dataset.lineId = i;
+            cacheMemory.appendChild(line);
+        }
+    }
+
+    function setActiveButton(activeBtn, group) {
+       group.forEach(btn => {
+            btn.classList.remove('bg-cyan-600');
+            btn.classList.add('bg-gray-700');
+        });
+        activeBtn.classList.add('bg-cyan-600');
+        activeBtn.classList.remove('bg-gray-700');
+    }
+    
+    directMapBtn.addEventListener('click', () => {
+        currentMapping = 'direct';
+        animationLog.textContent = 'Direct Mapping: block_i -> line (i % 4)';
+        setActiveButton(directMapBtn, [directMapBtn, assocMapBtn, setAssocMapBtn]);
+        initializeMemory();
+    });
+
+    assocMapBtn.addEventListener('click', () => {
+        currentMapping = 'associative';
+        animationLog.textContent = 'Associative Mapping: A block can be placed anywhere.';
+        setActiveButton(assocMapBtn, [directMapBtn, assocMapBtn, setAssocMapBtn]);
+        initializeMemory();
+    });
+
+    setAssocMapBtn.addEventListener('click', () => {
+        currentMapping = 'set-associative';
+        animationLog.textContent = `Set-Associative (2-way): block_i -> set (i % ${SET_COUNT})`;
+        setActiveButton(setAssocMapBtn, [directMapBtn, assocMapBtn, setAssocMapBtn]);
+        initializeMemory();
+    });
+
+    function handleBlockClick(event) {
+        const blockId = parseInt(event.target.dataset.blockId);
+        document.querySelectorAll('.memory-block, .cache-line').forEach(el => el.classList.remove('highlight-mm', 'highlight-cache'));
+        event.target.classList.add('highlight-mm');
+
+        let targetLineId;
+        let logMessage = '';
+
+        if (currentMapping === 'direct') {
+            targetLineId = blockId % CACHE_LINES;
+            logMessage = `Block ${blockId} maps to Line ${targetLineId} (${blockId} % ${CACHE_LINES})`;
+        } else if (currentMapping === 'associative') {
+            targetLineId = cacheState.indexOf(null);
+            if (targetLineId === -1) { targetLineId = 0; }
+            logMessage = `Block ${blockId} can go to any free line. Placing in Line ${targetLineId}.`;
+        } else if (currentMapping === 'set-associative') {
+            const setNumber = blockId % SET_COUNT;
+            const linesPerSet = CACHE_LINES / SET_COUNT;
+            const startLine = setNumber * linesPerSet;
+            const endLine = startLine + linesPerSet;
+            targetLineId = -1;
+            for(let i = startLine; i < endLine; i++) {
+                if (cacheState[i] === null) { targetLineId = i; break; }
+            }
+            if (targetLineId === -1) { targetLineId = startLine; }
+            logMessage = `Block ${blockId} maps to Set ${setNumber}. Placing in Line ${targetLineId}.`;
+        }
+
+        animationLog.textContent = logMessage;
+        const targetLine = document.querySelector(`.cache-line[data-line-id='${targetLineId}']`);
+        if (targetLine) {
+            animateBlockTransfer(event.target, targetLine, blockId, targetLineId);
+        }
+    }
+
+    function animateBlockTransfer(sourceEl, targetEl, blockId, lineId) {
+        const sourceRect = sourceEl.getBoundingClientRect();
+        const targetRect = targetEl.getBoundingClientRect();
+        const movingBlock = document.createElement('div');
+        movingBlock.textContent = `Block ${blockId}`;
+        movingBlock.className = 'moving-block';
+        document.body.appendChild(movingBlock);
+        
+        Object.assign(movingBlock.style, { 
+            left: `${sourceRect.left + window.scrollX}px`, 
+            top: `${sourceRect.top + window.scrollY}px`, 
+            width: `${sourceRect.width}px`, 
+            height: `${sourceRect.height}px` 
+        });
+
+        setTimeout(() => {
+            Object.assign(movingBlock.style, { 
+                left: `${targetRect.left + window.scrollX}px`, 
+                top: `${targetRect.top + window.scrollY}px`, 
+                width: `${targetRect.width}px`, 
+                height: `${targetRect.height}px`, 
+                opacity: '0.5' 
+            });
+        }, 100);
+
+        setTimeout(() => {
+            targetEl.classList.add('highlight-cache');
+            if (currentMapping === 'set-associative') {
+                const setNumber = Math.floor(lineId / (CACHE_LINES / SET_COUNT));
+                targetEl.innerHTML = `<span class="text-xs text-gray-400 mr-2">Set ${setNumber}</span> Block ${blockId}`;
+            } else {
+                 targetEl.textContent = `Block ${blockId}`;
+            }
+            cacheState[lineId] = blockId;
+            document.body.removeChild(movingBlock);
+        }, 1100);
+    }
+
+    // --- AMAT Calculator Script ---
+    const hitTimeInput = document.getElementById('hitTime');
+    const missRateInput = document.getElementById('missRate');
+    const missPenaltyInput = document.getElementById('missPenalty');
+    const calculateAmatBtn = document.getElementById('calculateAmat');
+    const amatResult = document.getElementById('amatResult');
+    const hierarchicalBtn = document.getElementById('hierarchicalBtn');
+    const simultaneousBtn = document.getElementById('simultaneousBtn');
+    const formulaDisplay = document.getElementById('formula-display');
+    const cpuBlock = document.getElementById('cpu-block');
+    const cacheBlock = document.getElementById('cache-block');
+    const memoryBlock = document.getElementById('memory-block');
+    const dataPacket1 = document.getElementById('data-packet-1');
+    const dataPacket2 = document.getElementById('data-packet-2');
+    const busCpuCache = document.getElementById('bus-cpu-cache');
+    const busCacheMem = document.getElementById('bus-cache-mem');
+
+    let currentAccessMode = 'hierarchical';
+
+    const formulas = {
+        hierarchical: `AMAT = <span id="f-h-tc">T<sub>c</sub></span> + (<span id="f-h-mr">MR</span> * <span id="f-h-tm">T<sub>m</sub></span>)`,
+        simultaneous: `AMAT = (<span id="f-s-hr">(1-MR)</span> * <span id="f-s-tc">T<sub>c</sub></span>) + (<span id="f-s-mr">MR</span> * <span id="f-s-tm">T<sub>m</sub></span>)`
+    };
+
+    function setAccessMode(mode) {
+        currentAccessMode = mode;
+        formulaDisplay.innerHTML = formulas[mode];
+        setActiveButton(mode === 'hierarchical' ? hierarchicalBtn : simultaneousBtn, [hierarchicalBtn, simultaneousBtn]);
+        resetAnimation();
+    }
+    
+    function setupBuses() {
+        // Bus 1: CPU <-> Cache
+        busCpuCache.style.left = `${cpuBlock.offsetLeft + cpuBlock.offsetWidth}px`;
+        busCpuCache.style.width = `${cacheBlock.offsetLeft - (cpuBlock.offsetLeft + cpuBlock.offsetWidth)}px`;
+
+        // Bus 2: Cache <-> Memory
+        busCacheMem.style.left = `${cacheBlock.offsetLeft + cacheBlock.offsetWidth}px`;
+        busCacheMem.style.width = `${memoryBlock.offsetLeft - (cacheBlock.offsetLeft + cacheBlock.offsetWidth)}px`;
+    }
+
+    function resetAnimation() {
+        dataPacket1.style.opacity = '0';
+        dataPacket2.style.opacity = '0';
+        document.querySelectorAll('#formula-display span').forEach(el => el.classList.remove('formula-highlight'));
+        amatResult.textContent = '... ns';
+    }
+
+    function highlightFormulaPart(id) {
+        document.querySelectorAll('#formula-display span').forEach(el => el.classList.remove('formula-highlight'));
+        const element = document.getElementById(id);
+        if(element) element.classList.add('formula-highlight');
+    }
+
+    function runAnimation() {
+        calculateAmatBtn.disabled = true;
+        resetAnimation();
+        
+        const tc = parseFloat(hitTimeInput.value) || 0;
+        const mr = parseFloat(missRateInput.value) || 0;
+        const tm = parseFloat(missPenaltyInput.value) || 0;
+
+        if (mr < 0 || mr > 1) {
+            amatResult.textContent = 'Error!';
+            animationLog.textContent = 'Miss Rate must be between 0 and 1.';
+            calculateAmatBtn.disabled = false;
+            return;
+        }
+        
+        // Use offsetLeft/Top for packet positions relative to the diagram container
+        const startX = cpuBlock.offsetLeft + cpuBlock.offsetWidth / 2;
+        const startY = cpuBlock.offsetTop + cpuBlock.offsetHeight / 2;
+        const cacheX = cacheBlock.offsetLeft + cacheBlock.offsetWidth / 2;
+        const cacheY = cacheBlock.offsetTop + cacheBlock.offsetHeight / 2;
+        const memX = memoryBlock.offsetLeft + memoryBlock.offsetWidth / 2;
+        const memY = memoryBlock.offsetTop + memoryBlock.offsetHeight / 2;
+
+        Object.assign(dataPacket1.style, { top: `${startY - 7}px`, left: `${startX - 7}px`, opacity: '1', transition: 'all 1s ease-in-out' });
+        Object.assign(dataPacket2.style, { top: `${startY - 7}px`, left: `${startX - 7}px`, opacity: '0', transition: 'all 1s ease-in-out' });
+        
+        setTimeout(() => { // CPU sends request
+            if (currentAccessMode === 'hierarchical') {
+                highlightFormulaPart('f-h-tc');
+                Object.assign(dataPacket1.style, { top: `${cacheY - 7}px`, left: `${cacheX - 7}px` });
+            } else { // Simultaneous
+                highlightFormulaPart('f-s-tc');
+                highlightFormulaPart('f-s-tm');
+                Object.assign(dataPacket1.style, { top: `${cacheY - 7}px`, left: `${cacheX - 7}px` });
+                Object.assign(dataPacket2.style, { opacity: '1', top: `${memY - 7}px`, left: `${memX - 7}px` });
+            }
+        }, 100);
+
+        setTimeout(() => { // Cache miss, forward to memory (for hierarchical)
+            if (currentAccessMode === 'hierarchical') {
+                highlightFormulaPart('f-h-tm');
+                Object.assign(dataPacket1.style, { top: `${memY - 7}px`, left: `${memX - 7}px`, transition: 'all 1.5s ease-in-out' });
+            }
+        }, 1200);
+
+        setTimeout(() => { // Data returns from Memory
+             if (currentAccessMode === 'hierarchical') {
+                highlightFormulaPart('f-h-mr');
+             } else {
+                highlightFormulaPart('f-s-mr');
+             }
+            Object.assign(dataPacket1.style, { top: `${startY - 7}px`, left: `${startX - 7}px`, background: '#00e5ff', transition: 'all 2s ease-in-out'});
+            dataPacket2.style.opacity = '0';
+        }, currentAccessMode === 'hierarchical' ? 2800 : 1200);
+        
+        setTimeout(() => { // Animation ends, show result
+            resetAnimation();
+            let amat;
+            if (currentAccessMode === 'hierarchical') {
+                amat = tc + (mr * tm);
+            } else {
+                amat = ((1 - mr) * tc) + (mr * tm);
+            }
+            amatResult.textContent = `${amat.toFixed(2)} ns`;
+            calculateAmatBtn.disabled = false;
+        }, currentAccessMode === 'hierarchical' ? 4900 : 3300);
+    }
+
+    hierarchicalBtn.addEventListener('click', () => setAccessMode('hierarchical'));
+    simultaneousBtn.addEventListener('click', () => setAccessMode('simultaneous'));
+    calculateAmatBtn.addEventListener('click', runAnimation);
+    
+    // --- Practice Problems Script ---
+    const probDirectBtn = document.getElementById('probDirectBtn');
+    const probSetAssocBtn = document.getElementById('probSetAssocBtn');
+    const probFullAssocBtn = document.getElementById('probFullAssocBtn');
+    const problemStatement = document.getElementById('problem-statement');
+    const solveProblemBtn = document.getElementById('solveProblemBtn');
+    const addressBar = document.getElementById('address-bar');
+    const solutionSteps = document.getElementById('solution-steps');
+
+    const practiceProblems = {
+        direct: {
+            statement: "Consider a direct mapped cache of size 16 KB with block size 256 bytes. The size of main memory is 128 KB. Find the number of bits for Tag, Line, and Word.",
+            mmSize: 128 * 1024, // 128 KB
+            cacheSize: 16 * 1024, // 16 KB
+            blockSize: 256, // 256 B
+            type: 'direct'
+        },
+        set: {
+            statement: "Consider a 2-way set associative cache of size 16 KB with block size 256 bytes. The size of main memory is 128 KB. Find the number of bits for Tag, Set, and Word.",
+            mmSize: 128 * 1024,
+            cacheSize: 16 * 1024,
+            blockSize: 256,
+            associativity: 2,
+            type: 'set'
+        },
+        full: {
+            statement: "Consider a fully associative cache of size 16 KB with block size 256 bytes. The size of main memory is 128 KB. Find the number of bits for Tag and Word.",
+            mmSize: 128 * 1024,
+            cacheSize: 16 * 1024,
+            blockSize: 256,
+            type: 'full'
+        }
+    };
+
+    let currentProblem = practiceProblems.direct;
+
+    function displayProblem(problem) {
+        currentProblem = problem;
+        problemStatement.textContent = problem.statement;
+        addressBar.innerHTML = '';
+        solutionSteps.innerHTML = '';
+    }
+
+    probDirectBtn.addEventListener('click', () => {
+        displayProblem(practiceProblems.direct);
+        setActiveButton(probDirectBtn, [probDirectBtn, probSetAssocBtn, probFullAssocBtn]);
+    });
+    probSetAssocBtn.addEventListener('click', () => {
+        displayProblem(practiceProblems.set);
+        setActiveButton(probSetAssocBtn, [probDirectBtn, probSetAssocBtn, probFullAssocBtn]);
+    });
+    probFullAssocBtn.addEventListener('click', () => {
+        displayProblem(practiceProblems.full);
+        setActiveButton(probFullAssocBtn, [probDirectBtn, probSetAssocBtn, probFullAssocBtn]);
+    });
+
+    function solveProblem() {
+        const { mmSize, cacheSize, blockSize, associativity, type } = currentProblem;
+        
+        // Calculations
+        const paBits = Math.log2(mmSize);
+        const wordBits = Math.log2(blockSize);
+        const numCacheLines = cacheSize / blockSize;
+
+        let tagBits, indexBits = 0, indexName = 'Line';
+
+        if (type === 'direct') {
+            indexBits = Math.log2(numCacheLines);
+            tagBits = paBits - indexBits - wordBits;
+        } else if (type === 'set') {
+            indexName = 'Set';
+            const numSets = numCacheLines / associativity;
+            indexBits = Math.log2(numSets);
+            tagBits = paBits - indexBits - wordBits;
+        } else { // full
+            tagBits = paBits - wordBits;
+        }
+
+        animateSolution(paBits, tagBits, indexBits, wordBits, indexName, numCacheLines);
+    }
+    
+    function animateSolution(paBits, tagBits, indexBits, wordBits, indexName, numCacheLines) {
+        addressBar.innerHTML = '';
+        solutionSteps.innerHTML = '';
+        
+        const totalBits = tagBits + indexBits + wordBits;
+        
+        const tagPercent = (tagBits / totalBits) * 100;
+        const indexPercent = (indexBits / totalBits) * 100;
+        const wordPercent = (wordBits / totalBits) * 100;
+
+        const segments = [];
+        if (tagBits > 0) segments.push({ name: 'Tag', bits: tagBits, percent: tagPercent, color: 'bg-red-500' });
+        if (indexBits > 0) segments.push({ name: indexName, bits: indexBits, percent: indexPercent, color: 'bg-green-500' });
+        if (wordBits > 0) segments.push({ name: 'Word', bits: wordBits, percent: wordPercent, color: 'bg-blue-500' });
+        
+        let delay = 0;
+        
+        // Animate address bar
+        segments.forEach((seg, i) => {
+            setTimeout(() => {
+                const segDiv = document.createElement('div');
+                segDiv.className = `address-segment ${seg.color}`;
+                segDiv.style.width = `${seg.percent}%`;
+                segDiv.innerHTML = `<span>${seg.name}</span><span>${seg.bits} bits</span>`;
+                addressBar.appendChild(segDiv);
+            }, delay);
+            delay += 500;
+        });
+
+        // Animate calculation steps
+        setTimeout(() => {
+            const step1 = document.createElement('p');
+            step1.className = 'calculation-step';
+            step1.innerHTML = `1. Physical Address Bits = log<sub>2</sub>(MM Size) = log<sub>2</sub>(${currentProblem.mmSize}) = <strong>${paBits} bits</strong>`;
+            solutionSteps.appendChild(step1);
+        }, delay);
+        delay += 500;
+
+        setTimeout(() => {
+            const step2 = document.createElement('p');
+            step2.className = 'calculation-step';
+            step2.innerHTML = `2. Word (Offset) Bits = log<sub>2</sub>(Block Size) = log<sub>2</sub>(${currentProblem.blockSize}) = <strong>${wordBits} bits</strong>`;
+            solutionSteps.appendChild(step2);
+        }, delay);
+        delay += 500;
+
+        if(indexBits > 0) {
+            setTimeout(() => {
+                 const step3 = document.createElement('p');
+                step3.className = 'calculation-step';
+                let calculationText;
+                if(currentProblem.type === 'direct') {
+                    calculationText = `Number of Lines = ${currentProblem.cacheSize} / ${currentProblem.blockSize} = ${numCacheLines}.<br/>&nbsp;&nbsp;&nbsp;${indexName} Bits = log<sub>2</sub>(${numCacheLines}) = <strong>${indexBits} bits</strong>`;
+                } else {
+                     const numSets = (currentProblem.cacheSize / currentProblem.blockSize) / currentProblem.associativity;
+                    calculationText = `Number of Sets = (Cache Size / Block Size) / K = ${numSets}.<br/>&nbsp;&nbsp;&nbsp;${indexName} Bits = log<sub>2</sub>(${numSets}) = <strong>${indexBits} bits</strong>`;
+                }
+                step3.innerHTML = `3. ${calculationText}`;
+                solutionSteps.appendChild(step3);
+            }, delay);
+            delay += 500;
+        }
+        
+         setTimeout(() => {
+            const step4 = document.createElement('p');
+            step4.className = 'calculation-step';
+            step4.innerHTML = `${indexBits > 0 ? '4.' : '3.'} Tag Bits = PA - ${indexBits > 0 ? indexName + ' -' : ''} Word = ${paBits} - ${indexBits > 0 ? indexBits + ' -' : ''} ${wordBits} = <strong>${tagBits} bits</strong>`;
+            solutionSteps.appendChild(step4);
+        }, delay);
+    }
+    
+    solveProblemBtn.addEventListener('click', solveProblem);
+
+
+    // Initial setup
+    document.addEventListener('DOMContentLoaded', () => {
+        initializeMemory();
+        setActiveButton(directMapBtn, [directMapBtn, assocMapBtn, setAssocMapBtn]);
+        setAccessMode('hierarchical');
+        setupBuses();
+        window.addEventListener('resize', setupBuses); // Recalculate bus positions on resize
+        
+        // Practice problems init
+        displayProblem(practiceProblems.direct);
+        setActiveButton(probDirectBtn, [probDirectBtn, probSetAssocBtn, probFullAssocBtn]);
+    });
+</script>
+
+</body>
+</html>
+
